@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+---
+
+<BaseLayout title="About">
+  <Nav />
+
+  <main class="pt-16">
+    <section class="max-w-3xl mx-auto px-6 pt-16 pb-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">About</p>
+      <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-8">SysDesign<span class="text-accent">Wiki</span></h1>
+
+      <div class="prose-custom space-y-6 text-ink-light leading-relaxed">
+        <p class="text-lg">
+          SysDesignWiki is an open encyclopedia dedicated to documenting the system design and architecture patterns
+          behind the world's most popular applications and services.
+        </p>
+
+        <h2 class="font-serif text-2xl font-bold text-ink pt-4">Why This Exists</h2>
+        <p>
+          Understanding how large-scale systems work is one of the most valuable skills in software engineering.
+          Yet this knowledge is scattered across blog posts, conference talks, research papers, and tribal knowledge
+          within companies. This encyclopedia aims to consolidate and present this information in a structured,
+          accessible format.
+        </p>
+
+        <h2 class="font-serif text-2xl font-bold text-ink pt-4">What Each Article Covers</h2>
+        <ul class="space-y-2 list-none pl-0">
+          <li class="flex items-start gap-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
+            <span><strong class="text-ink">Scale metrics</strong> — the numbers that define the engineering challenge</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
+            <span><strong class="text-ink">Requirements</strong> — functional and non-functional constraints</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
+            <span><strong class="text-ink">High-level architecture</strong> — visual system diagrams with Mermaid</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
+            <span><strong class="text-ink">Component breakdown</strong> — what each service does and why</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
+            <span><strong class="text-ink">Data models</strong> — entity relationships and storage strategies</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
+            <span><strong class="text-ink">Deep dives</strong> — detailed explorations of key architectural decisions</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
+            <span><strong class="text-ink">Tradeoffs</strong> — the pros and cons of each design choice</span>
+          </li>
+        </ul>
+
+        <h2 class="font-serif text-2xl font-bold text-ink pt-4">Sources & Methodology</h2>
+        <p>
+          Articles are compiled from publicly available information including engineering blogs,
+          conference presentations (QCon, InfoQ, Strange Loop), published research papers,
+          open-source projects, and technical books. Where specific implementation details are
+          not publicly known, we note educated inferences based on available evidence.
+        </p>
+
+        <h2 class="font-serif text-2xl font-bold text-ink pt-4">Technology</h2>
+        <p>
+          This site is built with <strong class="text-ink">Astro</strong> and styled with
+          <strong class="text-ink">Tailwind CSS v4</strong>. Architecture diagrams are rendered using
+          <strong class="text-ink">Mermaid.js</strong> with a custom theme to match the editorial aesthetic.
+          Typography features <strong class="text-ink">Playfair Display</strong> for headings and
+          <strong class="text-ink">Inter</strong> for body text.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-border bg-paper-warm">
+    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
+      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
+      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+    </div>
+  </footer>
+</BaseLayout>

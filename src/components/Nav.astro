@@ -1,0 +1,46 @@
+---
+const currentPath = Astro.url.pathname;
+---
+
+<nav class="fixed top-0 left-0 right-0 z-50 bg-paper/80 backdrop-blur-md border-b border-border">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3 group">
+      <div class="w-8 h-8 rounded-sm bg-accent flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+      </div>
+      <span class="font-serif text-lg font-bold tracking-tight text-ink group-hover:text-accent transition-colors">
+        SysDesign<span class="text-accent">Wiki</span>
+      </span>
+    </a>
+
+    <div class="hidden md:flex items-center gap-8">
+      <a href="/" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath === '/' ? 'text-accent' : 'text-ink-light']}>
+        Home
+      </a>
+      <a href="/catalog" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath.startsWith('/catalog') ? 'text-accent' : 'text-ink-light']}>
+        Catalog
+      </a>
+      <a href="/about" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath === '/about' ? 'text-accent' : 'text-ink-light']}>
+        About
+      </a>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <input
+          type="text"
+          placeholder="Search systems..."
+          id="search-input"
+          class="w-48 lg:w-64 h-9 pl-9 pr-3 text-sm bg-paper-warm border border-border rounded-lg focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 placeholder:text-ink-muted transition-all"
+        />
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+</nav>

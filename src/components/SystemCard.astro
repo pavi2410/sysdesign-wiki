@@ -1,0 +1,31 @@
+---
+import { categoryLabels, categoryColors } from '../data';
+import type { SystemDesign } from '../data';
+
+interface Props {
+  system: SystemDesign;
+}
+
+const { system } = Astro.props;
+const colorClass = categoryColors[system.category];
+---
+
+<a
+  href={`/systems/${system.slug}`}
+  class="group block bg-white border border-border rounded-xl p-6 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300"
+>
+  <div class="flex items-start justify-between mb-3">
+    <h3 class="font-serif text-xl font-bold text-ink group-hover:text-accent transition-colors">
+      {system.name}
+    </h3>
+    <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full shrink-0 ml-3", colorClass]}>
+      {categoryLabels[system.category]}
+    </span>
+  </div>
+  <p class="text-sm text-ink-light leading-relaxed mb-4">{system.tagline}</p>
+  <div class="flex flex-wrap gap-1.5">
+    {system.tags.slice(0, 4).map((tag) => (
+      <span class="text-xs bg-tag-bg text-tag-text px-2 py-0.5 rounded-md">{tag}</span>
+    ))}
+  </div>
+</a>

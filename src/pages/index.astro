@@ -1,0 +1,133 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import SystemCard from '../components/SystemCard.astro';
+import { systems, categoryLabels, getAllCategories } from '../data';
+
+const categories = getAllCategories();
+const featured = systems.slice(0, 3);
+---
+
+<BaseLayout title="Home">
+  <Nav />
+
+  <main class="pt-16">
+    <!-- Hero -->
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 bg-linear-to-b from-paper-warm to-paper"></div>
+      <div class="relative max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
+        <p class="text-sm font-medium uppercase tracking-[0.2em] text-accent mb-6">The Encyclopedia of</p>
+        <h1 class="font-serif text-5xl md:text-7xl font-bold text-ink leading-[1.1] mb-6">
+          System Design<br />
+          <span class="text-accent">&amp; Architecture</span>
+        </h1>
+        <p class="text-lg md:text-xl text-ink-light max-w-2xl mx-auto leading-relaxed mb-10">
+          Deep-dive into the architectures powering the world's most popular applications.
+          From messaging to streaming, explore how systems scale to billions of users.
+        </p>
+        <div class="flex items-center justify-center gap-4">
+          <a
+            href="/catalog"
+            class="inline-flex items-center gap-2 bg-accent text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-accent-hover transition-colors"
+          >
+            Browse Catalog
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a
+            href="#featured"
+            class="inline-flex items-center gap-2 text-ink-light px-6 py-3 rounded-lg font-medium text-sm border border-border hover:border-accent/40 hover:text-accent transition-all"
+          >
+            Featured Systems
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="max-w-5xl mx-auto px-6 py-12">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="text-center p-6 bg-white rounded-xl border border-border">
+          <p class="font-serif text-3xl font-bold text-accent">{systems.length}</p>
+          <p class="text-sm text-ink-muted mt-1">Systems Covered</p>
+        </div>
+        <div class="text-center p-6 bg-white rounded-xl border border-border">
+          <p class="font-serif text-3xl font-bold text-accent">{categories.length}</p>
+          <p class="text-sm text-ink-muted mt-1">Categories</p>
+        </div>
+        <div class="text-center p-6 bg-white rounded-xl border border-border">
+          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.deepDive.length, 0)}+</p>
+          <p class="text-sm text-ink-muted mt-1">Deep Dives</p>
+        </div>
+        <div class="text-center p-6 bg-white rounded-xl border border-border">
+          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.components.length, 0)}+</p>
+          <p class="text-sm text-ink-muted mt-1">Components</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured -->
+    <section id="featured" class="max-w-5xl mx-auto px-6 py-12">
+      <div class="flex items-end justify-between mb-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Featured</p>
+          <h2 class="font-serif text-3xl font-bold text-ink">Popular Systems</h2>
+        </div>
+        <a href="/catalog" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
+          View all →
+        </a>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        {featured.map((system) => (
+          <SystemCard system={system} />
+        ))}
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="max-w-5xl mx-auto px-6 py-12">
+      <div class="mb-8">
+        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Browse by</p>
+        <h2 class="font-serif text-3xl font-bold text-ink">Category</h2>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        {categories.map((cat) => {
+          const count = systems.filter((s) => s.category === cat).length;
+          return (
+            <a
+              href={`/catalog?category=${cat}`}
+              class="group flex items-center gap-4 p-5 bg-white border border-border rounded-xl hover:border-accent/40 hover:shadow-md transition-all"
+            >
+              <div class="text-left">
+                <p class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors">
+                  {categoryLabels[cat]}
+                </p>
+                <p class="text-sm text-ink-muted">{count} system{count !== 1 ? 's' : ''}</p>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- All Systems -->
+    <section class="max-w-5xl mx-auto px-6 py-12 pb-20">
+      <div class="mb-8">
+        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Complete</p>
+        <h2 class="font-serif text-3xl font-bold text-ink">All Systems</h2>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {systems.map((system) => (
+          <SystemCard system={system} />
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-border bg-paper-warm">
+    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
+      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
+      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+    </div>
+  </footer>
+</BaseLayout>

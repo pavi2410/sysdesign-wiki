@@ -1,0 +1,28 @@
+---
+interface Props {
+  sections: { title: string }[];
+}
+
+const { sections } = Astro.props;
+---
+
+<aside class="hidden xl:block sticky top-24 w-56 shrink-0 self-start">
+  <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-4">On this page</p>
+  <nav class="flex flex-col gap-1">
+    <a href="#overview" class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1">Overview</a>
+    <a href="#scale" class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1">Scale</a>
+    <a href="#requirements" class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1">Requirements</a>
+    <a href="#architecture" class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1">Architecture</a>
+    <a href="#components" class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1">Components</a>
+    <a href="#data-model" class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1">Data Model</a>
+    {sections.map((s) => (
+      <a
+        href={`#${s.title.toLowerCase().replace(/\s+/g, '-')}`}
+        class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1 pl-3 border-l border-border"
+      >
+        {s.title}
+      </a>
+    ))}
+    <a href="#tradeoffs" class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1">Tradeoffs</a>
+  </nav>
+</aside>

@@ -1,0 +1,103 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import SystemCard from '../components/SystemCard.astro';
+import { systems, categoryLabels, getAllCategories } from '../data';
+
+const categories = getAllCategories();
+---
+
+<BaseLayout title="Catalog">
+  <Nav />
+
+  <main class="pt-16">
+    <section class="max-w-5xl mx-auto px-6 pt-16 pb-8">
+      <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Encyclopedia</p>
+      <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-4">System Catalog</h1>
+      <p class="text-lg text-ink-light max-w-2xl">
+        Browse all system design articles organized by category. Each article covers architecture, components, data models, and engineering tradeoffs.
+      </p>
+    </section>
+
+    <!-- Filter tabs -->
+    <section class="max-w-5xl mx-auto px-6 py-6">
+      <div class="flex flex-wrap gap-2" id="category-filters">
+        <button
+          data-category="all"
+          class="category-btn active text-sm font-medium px-4 py-2 rounded-lg border border-accent bg-accent text-white transition-all"
+        >
+          All Systems
+        </button>
+        {categories.map((cat) => (
+          <button
+            data-category={cat}
+            class="category-btn text-sm font-medium px-4 py-2 rounded-lg border border-border bg-white text-ink-light hover:border-accent/40 hover:text-accent transition-all"
+          >
+            {categoryLabels[cat]}
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <!-- Systems grid -->
+    <section class="max-w-5xl mx-auto px-6 py-6 pb-20">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="systems-grid">
+        {systems.map((system) => (
+          <div data-category={system.category} class="system-item">
+            <SystemCard system={system} />
+          </div>
+        ))}
+      </div>
+      <p id="no-results" class="hidden text-center text-ink-muted py-12">No systems found in this category.</p>
+    </section>
+  </main>
+
+  <footer class="border-t border-border bg-paper-warm">
+    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
+      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
+      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+    </div>
+  </footer>
+</BaseLayout>
+
+<script>
+  const buttons = document.querySelectorAll('.category-btn');
+  const items = document.querySelectorAll('.system-item');
+  const noResults = document.getElementById('no-results');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const category = btn.getAttribute('data-category');
+
+      buttons.forEach((b) => {
+        b.classList.remove('active', 'border-accent', 'bg-accent', 'text-white');
+        b.classList.add('border-border', 'bg-white', 'text-ink-light');
+      });
+      btn.classList.add('active', 'border-accent', 'bg-accent', 'text-white');
+      btn.classList.remove('border-border', 'bg-white', 'text-ink-light');
+
+      let visibleCount = 0;
+      items.forEach((item) => {
+        const el = item as HTMLElement;
+        if (category === 'all' || el.dataset.category === category) {
+          el.style.display = '';
+          visibleCount++;
+        } else {
+          el.style.display = 'none';
+        }
+      });
+
+      if (noResults) {
+        noResults.classList.toggle('hidden', visibleCount > 0);
+      }
+    });
+  });
+
+  // Handle URL params
+  const params = new URLSearchParams(window.location.search);
+  const cat = params.get('category');
+  if (cat) {
+    const btn = document.querySelector(`[data-category="${cat}"]`) as HTMLElement;
+    if (btn) btn.click();
+  }
+</script>

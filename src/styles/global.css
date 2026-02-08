@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", "Georgia", serif;
+  --font-body: "Inter", "system-ui", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  --color-ink: #1a1a1a;
+  --color-ink-light: #4a4a4a;
+  --color-ink-muted: #8a8a8a;
+  --color-paper: #fafaf8;
+  --color-paper-warm: #f5f3ef;
+  --color-paper-dark: #eae7e1;
+  --color-accent: #6b4c3b;
+  --color-accent-light: #8b6c5b;
+  --color-accent-hover: #5a3b2a;
+  --color-border: #e0ddd7;
+  --color-border-dark: #c8c4bc;
+  --color-highlight: #fff8e1;
+  --color-tag-bg: #f0ece6;
+  --color-tag-text: #6b5b4b;
+
+  --color-cat-messaging: #2d6a4f;
+  --color-cat-social: #7b2d8b;
+  --color-cat-streaming: #c2185b;
+  --color-cat-transport: #1565c0;
+  --color-cat-search: #e65100;
+  --color-cat-commerce: #4e342e;
+  --color-cat-infra: #37474f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--color-ink);
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
+}
