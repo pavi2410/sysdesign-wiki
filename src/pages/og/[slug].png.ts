@@ -3,6 +3,8 @@ import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 import { systems, categoryLabels } from '../../data';
 
+export const prerender = true;
+
 export const getStaticPaths: GetStaticPaths = () => {
   return systems.map((system) => ({
     params: { slug: system.slug },
