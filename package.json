@@ -9,10 +9,13 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.17.1",
     "lucide-static": "^0.563.0",
     "mermaid": "^11.12.2",
+    "satori": "^0.19.1",
     "tailwindcss": "^4.1.18"
   }
 }

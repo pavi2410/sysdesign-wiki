@@ -4,9 +4,21 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
+  slug?: string;
 }
 
-const { title, description = 'An encyclopedia of system design and architectures for popular apps and services.' } = Astro.props;
+const siteName = 'SysDesignWiki';
+const siteUrl = (Astro.site?.toString() ?? 'https://sysdesign.wiki').replace(/\/$/, '');
+const {
+  title,
+  description = 'An encyclopedia of system design and architectures for popular apps and services. Learn how WhatsApp, Instagram, Netflix, and more are built.',
+  ogImage = '/og/default.png',
+  slug,
+} = Astro.props;
+
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const fullTitle = title.includes('—') ? title : `${title} — ${siteName}`;
 ---
 
 <html lang="en">
@@ -14,12 +26,78 @@ const { title, description = 'An encyclopedia of system design and architectures
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
+
+    <!-- Primary SEO -->
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content={siteName} />
+    <meta name="keywords" content="system design, software architecture, distributed systems, how to build, scalable systems, WhatsApp architecture, Instagram system design, Netflix architecture" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <title>{title} — System Design Encyclopedia</title>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": siteName,
+      "url": siteUrl,
+      "description": "An encyclopedia of system design and architectures for popular apps and services.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${siteUrl}/catalog?q={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
+    })} />
+
+    {slug && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": title,
+        "description": description,
+        "image": ogImage,
+        "url": canonicalUrl,
+        "publisher": {
+          "@type": "Organization",
+          "name": siteName,
+          "url": siteUrl,
+        },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": canonicalUrl,
+        },
+        "about": {
+          "@type": "Thing",
+          "name": "System Design",
+        },
+        "educationalLevel": "Advanced",
+        "learningResourceType": "Technical Reference",
+      })} />
+    )}
   </head>
   <body class="min-h-screen bg-paper text-ink">
     <slot />

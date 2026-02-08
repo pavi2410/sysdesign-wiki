@@ -3,8 +3,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import MermaidDiagram from '../../components/MermaidDiagram.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
+import CopyPromptButton from '../../components/CopyPromptButton.astro';
 import { systems, categoryLabels, categoryColors } from '../../data';
 import type { SystemDesign } from '../../data';
+import { generateBuildPrompt } from '../../lib/prompt-generator';
 
 export function getStaticPaths() {
   return systems.map((system) => ({
@@ -21,9 +23,13 @@ const { system } = Astro.props;
 const colorClass = categoryColors[system.category];
 
 const otherSystems = systems.filter((s) => s.slug !== system.slug).slice(0, 3);
+const buildPrompt = generateBuildPrompt(system);
+const seoTitle = `How to Build ${system.name} — System Design & Architecture`;
+const seoDescription = `Learn the system design and architecture behind ${system.name}. ${system.tagline}. Detailed breakdown of components, data models, and engineering tradeoffs.`;
+const ogImageUrl = `/og/${system.slug}.png`;
 ---
 
-<BaseLayout title={system.name} description={system.tagline}>
+<BaseLayout title={seoTitle} description={seoDescription} ogImage={ogImageUrl} slug={system.slug}>
   <Nav />
 
   <main class="pt-16">
@@ -225,6 +231,9 @@ const otherSystems = systems.filter((s) => s.slug !== system.slug).slice(0, 3);
             ))}
           </div>
         </section>
+
+        <!-- Copy as Prompt -->
+        <CopyPromptButton prompt={buildPrompt} systemName={system.name} />
 
         <!-- Related Systems -->
         <section class="border-t border-border pt-10">
