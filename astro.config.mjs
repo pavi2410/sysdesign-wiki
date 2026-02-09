@@ -6,10 +6,12 @@ import pagefind from 'astro-pagefind';
 
 import cloudflare from '@astrojs/cloudflare';
 
+import mdx from '@astrojs/mdx';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://sysdesign.wiki',
-  integrations: [sitemap(), pagefind()],
+  integrations: [sitemap(), pagefind(), mdx()],
 
   vite: {
     plugins: [tailwindcss()],
