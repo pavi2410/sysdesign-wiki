@@ -3,9 +3,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import SystemCard from '../components/SystemCard.astro';
 import { systems, categoryLabels, getAllCategories } from '../data';
+import { guides, guideCategoryLabels } from '../data/guides';
+import GuideCard from '../components/GuideCard.astro';
 
 const categories = getAllCategories();
 const featured = systems.slice(0, 3);
+const featuredGuides = guides.slice(0, 6);
 ---
 
 <BaseLayout
@@ -37,10 +40,10 @@ const featured = systems.slice(0, 3);
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>
           <a
-            href="#featured"
+            href="/guides"
             class="inline-flex items-center gap-2 text-ink-light px-6 py-3 rounded-lg font-medium text-sm border border-border hover:border-accent/40 hover:text-accent transition-all"
           >
-            Featured Systems
+            Feature Guides
           </a>
         </div>
       </div>
@@ -54,15 +57,15 @@ const featured = systems.slice(0, 3);
           <p class="text-sm text-ink-muted mt-1">Systems Covered</p>
         </div>
         <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{categories.length}</p>
-          <p class="text-sm text-ink-muted mt-1">Categories</p>
+          <p class="font-serif text-3xl font-bold text-accent">{guides.length}</p>
+          <p class="text-sm text-ink-muted mt-1">Feature Guides</p>
         </div>
         <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.deepDive.length, 0)}+</p>
+          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.deepDive.length, 0) + guides.reduce((acc, g) => acc + g.deepDive.length, 0)}+</p>
           <p class="text-sm text-ink-muted mt-1">Deep Dives</p>
         </div>
         <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.components.length, 0)}+</p>
+          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.components.length, 0) + guides.reduce((acc, g) => acc + g.components.length, 0)}+</p>
           <p class="text-sm text-ink-muted mt-1">Components</p>
         </div>
       </div>
@@ -82,6 +85,25 @@ const featured = systems.slice(0, 3);
       <div class="grid md:grid-cols-3 gap-6">
         {featured.map((system) => (
           <SystemCard system={system} />
+        ))}
+      </div>
+    </section>
+
+    <!-- Featured Guides -->
+    <section class="max-w-5xl mx-auto px-6 py-12">
+      <div class="flex items-end justify-between mb-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">New</p>
+          <h2 class="font-serif text-3xl font-bold text-ink">Feature Guides</h2>
+          <p class="text-sm text-ink-muted mt-2">How to build common features — from real-time events to payment processing.</p>
+        </div>
+        <a href="/guides" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
+          View all {guides.length} guides →
+        </a>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredGuides.map((guide) => (
+          <GuideCard guide={guide} />
         ))}
       </div>
     </section>

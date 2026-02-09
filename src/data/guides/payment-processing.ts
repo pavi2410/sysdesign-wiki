@@ -1,0 +1,182 @@
+import type { FeatureGuide } from './types';
+
+export const paymentProcessing: FeatureGuide = {
+  slug: 'payment-processing',
+  title: 'Payment Processing',
+  tagline: 'Idempotent charges, webhook reconciliation, and PCI compliance for online payments',
+  category: 'security',
+  tags: ['payments', 'Stripe', 'idempotency', 'PCI', 'webhooks', 'fintech'],
+  problem: `Accepting online payments is one of the highest-stakes features in software. A bug can charge customers twice, lose money, or create compliance violations. Payment processing requires integrating with payment gateways (Stripe, Adyen, Braintree), handling asynchronous payment flows (3D Secure, bank transfers), ensuring idempotency (never charge twice for the same operation), reconciling payments via webhooks, managing subscriptions and refunds, and maintaining PCI DSS compliance to protect card data. The system must be auditable, resilient to failures at any point in the flow, and eventually consistent between your database and the payment provider.`,
+  approaches: [
+    {
+      name: 'Payment Gateway Integration (Stripe, Adyen)',
+      description: `Integrate directly with a payment gateway API. Your server creates payment intents, the client collects card details via the gateway's embedded UI (Stripe Elements, Adyen Drop-in), and the gateway handles the actual charge. You never see raw card numbers, simplifying PCI compliance to SAQ-A level.`,
+      pros: [
+        'PCI scope is minimized — card data never touches your servers',
+        'Mature SDKs handle edge cases (3D Secure, retries, currency conversion)',
+        'Built-in fraud detection and risk scoring',
+        'Comprehensive dashboard for payment operations',
+      ],
+      cons: [
+        'Per-transaction fees (2.9% + $0.30 typical for Stripe)',
+        'Vendor dependency for a critical business function',
+        'Complex webhook integration for async payment events',
+        'Each gateway has its own API patterns and quirks',
+      ],
+    },
+    {
+      name: 'Payment Orchestration Layer',
+      description: `Build an abstraction layer that routes payments to multiple gateways based on rules (lowest fee, highest success rate, currency, region). Services like **Primer** or custom-built orchestrators provide gateway-agnostic payment processing with automatic failover.`,
+      pros: [
+        'Multi-gateway redundancy — failover if one gateway is down',
+        'Optimize for lowest fees per transaction',
+        'A/B test gateways for conversion rate optimization',
+        'Single API for your application regardless of gateway',
+      ],
+      cons: [
+        'Additional complexity layer',
+        'Must maintain integrations with multiple gateways',
+        'Reconciliation across gateways is harder',
+        'Adds latency from the orchestration hop',
+      ],
+    },
+    {
+      name: 'Ledger-Based Architecture',
+      description: `Model all financial operations as double-entry ledger entries. Every payment, refund, fee, and payout is recorded as a pair of debit/credit entries in an immutable ledger. The ledger is the source of truth; the payment gateway is an external system reconciled against the ledger.`,
+      pros: [
+        'Complete audit trail — every cent is accounted for',
+        'Easy reconciliation — compare ledger with gateway reports',
+        'Supports complex financial operations (partial refunds, credits, splits)',
+        'Foundation for financial reporting and compliance',
+      ],
+      cons: [
+        'More complex to implement than simple payment tracking',
+        'Requires understanding of double-entry bookkeeping',
+        'Ledger entries are immutable — corrections require compensating entries',
+        'Overkill for simple e-commerce (single product, no marketplace)',
+      ],
+    },
+  ],
+  architectureDiagram: `graph TB
+    subgraph Client
+        UI[Checkout UI]
+        ELEM[Stripe Elements<br/>Card Input]
+    end
+    subgraph Backend["Your Backend"]
+        API[Payment API]
+        IDEM[Idempotency<br/>Layer]
+        LEDGER[Ledger<br/>Service]
+        WEBHOOK[Webhook<br/>Handler]
+    end
+    subgraph Gateway["Payment Gateway"]
+        STRIPE[Stripe API]
+        STRIPE_WH[Stripe<br/>Webhooks]
+    end
+    subgraph Storage
+        DB[(Payment<br/>Database)]
+        AUDIT[(Audit Log)]
+        EVENTS[(Event Store)]
+    end
+    UI --> ELEM
+    ELEM -->|Tokenized card| API
+    API --> IDEM
+    IDEM --> STRIPE
+    STRIPE --> IDEM
+    IDEM --> LEDGER
+    LEDGER --> DB
+    LEDGER --> AUDIT
+    STRIPE_WH --> WEBHOOK
+    WEBHOOK --> LEDGER
+    WEBHOOK --> EVENTS`,
+  components: [
+    { name: 'Payment API', description: 'REST endpoints for creating payments, processing refunds, and managing subscriptions. Accepts tokenized payment methods (never raw card numbers). Validates amounts, currencies, and business rules before calling the gateway. Returns payment status and handles async confirmations.' },
+    { name: 'Idempotency Layer', description: 'Ensures that retrying a payment request doesn\'t create duplicate charges. Uses an idempotency key (client-generated UUID) stored in Redis/database. If the same key is seen again, return the cached result instead of processing a new payment. Critical for handling network failures and retries.' },
+    { name: 'Ledger Service', description: 'Maintains a double-entry ledger recording every financial transaction. Each payment creates entries: debit customer account, credit revenue account. Refunds reverse the entries. The ledger balance must always equal zero (balanced books). Provides the source of truth for financial reporting.' },
+    { name: 'Webhook Handler', description: 'Receives and processes payment events from the gateway (payment_intent.succeeded, charge.refunded, invoice.paid). Verifies webhook signatures, deduplicates events, and updates the ledger and order status. Must be idempotent — the same event may be delivered multiple times.' },
+    { name: 'Reconciliation Service', description: 'Periodically compares your ledger with the gateway\'s records (via API or settlement reports). Identifies discrepancies (missing payments, unmatched refunds, fee differences). Alerts on mismatches for manual investigation. Runs daily for operational reconciliation and monthly for accounting close.' },
+    { name: 'Fraud Detection', description: 'Evaluates payment risk before processing. Checks velocity (too many attempts from one IP), amount anomalies, device fingerprinting, and address verification (AVS). Can block suspicious payments or require additional verification (3D Secure step-up). Integrates with Stripe Radar or custom ML models.' },
+  ],
+  dataModel: `erDiagram
+    PAYMENT {
+        string payment_id PK
+        string order_id FK
+        string customer_id FK
+        string idempotency_key UK
+        string gateway_payment_id
+        int amount_cents
+        string currency
+        enum status
+        string payment_method_type
+        json metadata
+        timestamp created_at
+        timestamp updated_at
+    }
+    LEDGER_ENTRY {
+        string entry_id PK
+        string payment_id FK
+        string account_id
+        enum type
+        int amount_cents
+        string currency
+        string description
+        timestamp created_at
+    }
+    REFUND {
+        string refund_id PK
+        string payment_id FK
+        string gateway_refund_id
+        int amount_cents
+        string reason
+        enum status
+        timestamp created_at
+    }
+    PAYMENT_EVENT {
+        string event_id PK
+        string payment_id FK
+        string gateway_event_id UK
+        string event_type
+        json payload
+        boolean processed
+        timestamp received_at
+    }
+    PAYMENT ||--o{ LEDGER_ENTRY : records
+    PAYMENT ||--o{ REFUND : has
+    PAYMENT ||--o{ PAYMENT_EVENT : triggers`,
+  deepDive: [
+    {
+      title: 'Idempotency in Payment Processing',
+      content: `Double-charging a customer is the worst bug in payment processing. Idempotency prevents it.\n\n**How it works**:\n1. Client generates a unique idempotency key (UUID v4) for each payment attempt\n2. Client sends: POST /payments with header \`Idempotency-Key: abc-123\`\n3. Server checks if key exists in the idempotency store\n4. If found: return the cached response (same status, same payment ID)\n5. If not found: process the payment, store the result keyed by the idempotency key\n\n**Storage**: Redis with 24-48 hour TTL is ideal. Store the full response (status code + body) so retries return identical responses.\n\n**Race condition**: Two requests with the same key arrive simultaneously. Use Redis SETNX (set-if-not-exists) as a distributed lock. The first request wins and processes; the second waits and returns the cached result.\n\n**Stripe's approach**: Stripe accepts an \`Idempotency-Key\` header on all POST requests. Results are cached for 24 hours. If the same key is sent with different parameters, Stripe returns a 400 error — the key is tied to the original request parameters.\n\n**Critical rule**: The idempotency key must be generated by the client, not the server. If the server generates it, a network failure between server and client means the client can't retry with the same key.`,
+    },
+    {
+      title: 'Webhook-Driven Payment State Machine',
+      content: `Payments are inherently asynchronous. A credit card charge may go through 3D Secure, bank verification, and fraud checks before succeeding or failing. Model payments as a state machine driven by gateway webhooks.\n\n**Payment states**: created → processing → requires_action → succeeded → (refunded)\n                                                    ↘ failed → (retried → processing)\n\n**Webhook events** (Stripe example):\n- \`payment_intent.created\` → set status to "processing"\n- \`payment_intent.requires_action\` → redirect user to 3D Secure\n- \`payment_intent.succeeded\` → fulfill order, update ledger\n- \`payment_intent.payment_failed\` → notify customer, allow retry\n- \`charge.refunded\` → update ledger, notify customer\n\n**Reliability rules**:\n1. **Process webhooks idempotently** — Stripe may send the same event multiple times. Use the event ID for deduplication.\n2. **Verify webhook signatures** — Stripe signs webhooks with HMAC. Verify before processing.\n3. **Return 200 quickly** — Process the webhook asynchronously (enqueue and ack). Stripe retries if you don't respond within 20 seconds.\n4. **Don't rely solely on webhooks** — Use webhooks as the primary signal but also poll the payment status API as a backup. Belt and suspenders.\n5. **Handle out-of-order events** — A "succeeded" event may arrive before a "processing" event. Check the current state before applying transitions.`,
+    },
+    {
+      title: 'PCI Compliance Strategy',
+      content: `PCI DSS (Payment Card Industry Data Security Standard) has strict requirements for handling card data. Minimizing your PCI scope saves months of compliance work.\n\n**SAQ-A (minimal scope)**: Use hosted payment fields (Stripe Elements, Adyen Drop-in). Card numbers are entered in an iframe served by the gateway. Your servers never see card data. Easiest compliance — a self-assessment questionnaire.\n\n**SAQ A-EP**: Your server serves the payment page but card data is submitted directly to the gateway (JavaScript tokenization). More scope than SAQ-A but less than full PCI.\n\n**Full PCI DSS**: If you handle raw card numbers (e.g., call center, legacy integration), you need full compliance: network segmentation, encryption, access controls, penetration testing, annual audits. Extremely expensive and time-consuming.\n\n**Best practice**: Always use SAQ-A. Never let card data touch your infrastructure.\n\n**Token vault**: If you need to store payment methods for recurring billing, use the gateway's token vault. Stripe stores the card and gives you a payment method ID (pm_xxx). You store only the ID, not the card number.\n\n**Logging**: Never log card numbers, CVVs, or full card details. If you accidentally log them (stack traces, request logging), you've expanded your PCI scope. Use middleware to redact sensitive fields from logs.`,
+    },
+  ],
+  realWorldExamples: [
+    { system: 'Stripe', approach: 'The most developer-friendly payment gateway. Payment Intents API handles the full payment lifecycle including 3D Secure. Idempotency keys on all endpoints. Comprehensive webhook system. Stripe Elements for PCI-compliant card collection. Stripe Radar for ML-based fraud detection.' },
+    { system: 'Shopify', approach: 'Payment orchestration supporting 100+ payment providers via Shopify Payments (powered by Stripe) and third-party gateways. Double-entry ledger for merchant balances. Handles multi-currency, tax calculation, and marketplace payouts.' },
+    { system: 'Uber', approach: 'Real-time payment processing for millions of rides daily. Pre-authorization at ride start, final charge at ride end. Supports multiple payment methods per user with fallback ordering. Custom fraud detection for rider and driver accounts.' },
+    { system: 'Square', approach: 'Unified commerce platform handling in-person (POS terminals) and online payments. Card-present transactions use EMV chip for security. Online payments use a hosted payment form. Provides hardware (readers) and software (SDK) for omnichannel payment processing.' },
+  ],
+  tradeoffs: [
+    {
+      decision: 'Single gateway vs multi-gateway orchestration',
+      pros: ['Single: simpler integration, one dashboard, one set of webhooks', 'Multi: redundancy, lower fees through smart routing', 'Single: faster to implement, easier reconciliation'],
+      cons: ['Single: vendor dependency, no failover', 'Multi: complex reconciliation, more code to maintain', 'Multi: split data across dashboards, harder to debug issues'],
+    },
+    {
+      decision: 'Synchronous payment confirmation vs webhook-driven',
+      pros: ['Synchronous: simpler code, immediate result', 'Webhook: handles async flows (3D Secure, bank transfers)', 'Webhook: more reliable — server-to-server, retried on failure'],
+      cons: ['Synchronous: doesn\'t work for all payment methods', 'Webhook: eventual consistency, more complex state management', 'Both: use synchronous for instant payments, webhooks as confirmation'],
+    },
+    {
+      decision: 'Simple payment tracking vs double-entry ledger',
+      pros: ['Simple: faster to build, sufficient for basic e-commerce', 'Ledger: complete audit trail, easy reconciliation', 'Ledger: supports complex operations (marketplace splits, credits)'],
+      cons: ['Simple: hard to reconcile, no formal audit trail', 'Ledger: more complex, requires accounting knowledge', 'Ledger: overkill for simple single-product stores'],
+    },
+  ],
+};

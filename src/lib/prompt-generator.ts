@@ -1,4 +1,5 @@
 import type { SystemDesign } from '../data/types';
+import type { FeatureGuide } from '../data/guides/types';
 
 export function generateBuildPrompt(system: SystemDesign): string {
   const scaleLines = Object.entries(system.scale)
@@ -75,5 +76,79 @@ Based on the architecture above, please:
 5. **Plan for scale** — identify the components that will need horizontal scaling first and design them to be stateless where possible.
 
 Start by asking me clarifying questions about my specific requirements, team size, budget, and timeline. Then produce a phased implementation plan.
+`;
+}
+
+export function generateGuidePrompt(guide: FeatureGuide): string {
+  const approaches = guide.approaches
+    .map(
+      (a, i) =>
+        `### Approach ${i + 1}: ${a.name}\n${a.description}\n**Pros:** ${a.pros.join('; ')}\n**Cons:** ${a.cons.join('; ')}`
+    )
+    .join('\n\n');
+
+  const components = guide.components
+    .map((c) => `### ${c.name}\n${c.description}`)
+    .join('\n\n');
+
+  const deepDives = guide.deepDive
+    .map((d) => `### ${d.title}\n${d.content}`)
+    .join('\n\n');
+
+  const examples = guide.realWorldExamples
+    .map((e) => `- **${e.system}**: ${e.approach}`)
+    .join('\n');
+
+  const tradeoffs = guide.tradeoffs
+    .map(
+      (t) =>
+        `### ${t.decision}\n**Pros:** ${t.pros.join('; ')}\n**Cons:** ${t.cons.join('; ')}`
+    )
+    .join('\n\n');
+
+  return `# How to Build: ${guide.title}
+
+You are an expert software architect. I want to implement ${guide.title.toLowerCase()} in my application. (${guide.tagline}).
+
+Use the following architectural guide to inform the design. Adapt it to my specific needs while preserving the key patterns.
+
+---
+
+## Problem
+${guide.problem}
+
+## Architectural Approaches
+${approaches}
+
+## Key Components
+${components}
+
+## Data Model (Mermaid ER Diagram)
+\`\`\`mermaid
+${guide.dataModel}
+\`\`\`
+
+## Deep Dives
+${deepDives}
+
+## Real-World Examples
+${examples}
+
+## Tradeoffs
+${tradeoffs}
+
+---
+
+## Instructions
+
+Based on the architecture above, please:
+
+1. **Recommend an approach** best suited for my scale, team, and constraints. Justify the choice.
+2. **Design the data model** with proper indexes, partitioning, and storage strategy.
+3. **Implement the core logic** with production-ready error handling and edge cases.
+4. **Plan for scale** — identify bottlenecks and design for horizontal scaling.
+5. **Add observability** — logging, metrics, and alerting for this feature.
+
+Start by asking me clarifying questions about my specific requirements, existing tech stack, and scale targets. Then produce a phased implementation plan.
 `;
 }

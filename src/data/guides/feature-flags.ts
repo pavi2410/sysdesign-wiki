@@ -1,0 +1,182 @@
+import type { FeatureGuide } from './types';
+
+export const featureFlags: FeatureGuide = {
+  slug: 'feature-flags',
+  title: 'Feature Flags & Progressive Rollouts',
+  tagline: 'Gradual feature deployment with audience targeting, kill switches, and experimentation',
+  category: 'platform',
+  tags: ['feature-flags', 'rollout', 'A/B testing', 'deployment', 'experimentation'],
+  problem: `Shipping code and releasing features should be independent activities. Feature flags decouple deployment from release — code ships to production behind a flag and is activated for specific users, percentages, or segments without redeploying. This enables progressive rollouts (1% → 10% → 50% → 100%), instant kill switches when things go wrong, A/B experimentation, and per-customer feature gating for different plan tiers. The challenge is building a system that evaluates flags with sub-millisecond latency, scales to millions of evaluations per second, and maintains consistency so users don't see features flicker on and off.`,
+  approaches: [
+    {
+      name: 'Client-Side SDK with Cached Rules',
+      description: `The application embeds an SDK that fetches flag configurations from the flag service on startup and caches them locally. Flag evaluation happens entirely in-process with no network call per check. The SDK periodically polls for updates or receives them via streaming (SSE/WebSocket).`,
+      pros: [
+        'Sub-millisecond evaluation — no network round-trip',
+        'Works even if the flag service is down (cached rules)',
+        'Scales infinitely — evaluation is local to each instance',
+        'No added latency to request processing',
+      ],
+      cons: [
+        'Stale data window between poll intervals',
+        'SDK must be maintained for each language/runtime',
+        'Large rule sets increase memory usage per instance',
+        'Streaming updates add connection management complexity',
+      ],
+    },
+    {
+      name: 'Server-Side API Evaluation',
+      description: `Each flag check makes an API call to a centralized flag evaluation service. The service evaluates the flag against the provided user context and returns the result. Simple to implement but adds network latency to every check.`,
+      pros: [
+        'Always evaluates against the latest rules — no staleness',
+        'No SDK needed — just HTTP calls',
+        'Centralized logging of every evaluation for analytics',
+        'Easier to implement complex targeting rules server-side',
+      ],
+      cons: [
+        'Network latency on every flag check (5-50ms)',
+        'Flag service becomes a critical dependency on the hot path',
+        'Must handle flag service outages gracefully (defaults)',
+        'Higher load on the flag service at scale',
+      ],
+    },
+    {
+      name: 'Edge Evaluation with CDN Workers',
+      description: `Push flag rules to CDN edge workers (Cloudflare Workers, AWS Lambda@Edge). Flag evaluation happens at the edge, close to the user. Ideal for feature gating in SSR applications and A/B experiments that need to happen before the page renders.`,
+      pros: [
+        'Ultra-low latency — evaluated at the nearest edge PoP',
+        'Can modify responses before they reach the client',
+        'Enables A/B testing at the CDN layer (no origin hit)',
+        'Reduces load on origin servers',
+      ],
+      cons: [
+        'Limited compute in edge workers (CPU/memory constraints)',
+        'Rule propagation to all edge PoPs takes seconds',
+        'Debugging edge evaluation is harder than server-side',
+        'Not all flag evaluation contexts are available at the edge',
+      ],
+    },
+  ],
+  architectureDiagram: `graph TB
+    subgraph Clients
+        WEB[Web App]
+        MOB[Mobile App]
+        SRV[Backend Service]
+    end
+    subgraph FlagService["Flag Management"]
+        UI[Admin Dashboard]
+        API[Flag API]
+        EVAL[Evaluation Engine]
+        STREAM[SSE Stream<br/>for SDK updates]
+    end
+    subgraph Storage
+        DB[(Flag Rules DB)]
+        CACHE[(Redis Cache)]
+        EVENTS[(Event Store<br/>Evaluations)]
+    end
+    subgraph Analytics
+        EXP[Experiment<br/>Analysis]
+        DASH[Metrics<br/>Dashboard]
+    end
+    UI --> API
+    API --> DB
+    API --> CACHE
+    WEB & MOB -->|SDK polls/streams| STREAM
+    SRV -->|SDK| EVAL
+    EVAL --> CACHE
+    STREAM --> CACHE
+    EVAL --> EVENTS
+    EVENTS --> EXP
+    EVENTS --> DASH`,
+  components: [
+    { name: 'Flag Evaluation Engine', description: 'Core logic that takes a flag key and user context, evaluates targeting rules (percentage rollout, user segment, attribute matching), and returns the flag value. Must be deterministic — same input always produces same output. Uses hashing (MurmurHash3) for consistent percentage bucketing.' },
+    { name: 'Admin Dashboard', description: 'UI for creating and managing flags. Supports flag lifecycle (draft → active → archived), targeting rules (user IDs, segments, percentages), scheduling (activate at a future date), and audit logging of all flag changes.' },
+    { name: 'Client SDK', description: 'Embedded library that initializes with the project key, fetches flag rules, caches them locally, and exposes a simple API: `isEnabled("flag-key", userContext)`. Supports streaming updates via SSE and graceful fallback to defaults if the service is unreachable.' },
+    { name: 'Event Collector', description: 'Records every flag evaluation with context (user ID, flag key, variation, timestamp). Events are batched and sent asynchronously to avoid impacting request latency. Powers analytics, experimentation analysis, and debugging.' },
+    { name: 'Percentage Bucketing Service', description: 'Assigns users to percentage buckets deterministically using a hash of (flag_key + user_id). Ensures the same user always sees the same variation for a given flag, even across different servers. Supports traffic splitting for A/B experiments.' },
+    { name: 'Change Propagation System', description: 'When a flag rule changes, propagates the update to all connected SDKs. Uses SSE streams for real-time push or versioned polling endpoints. Must ensure all instances converge to the new rules within seconds.' },
+  ],
+  dataModel: `erDiagram
+    FEATURE_FLAG {
+        string flag_id PK
+        string key UK
+        string name
+        string description
+        enum status
+        json default_value
+        json variations
+        timestamp created_at
+        timestamp updated_at
+    }
+    TARGETING_RULE {
+        string rule_id PK
+        string flag_id FK
+        int priority
+        json conditions
+        string variation_key
+        int rollout_percentage
+    }
+    FLAG_SEGMENT {
+        string segment_id PK
+        string name
+        json match_rules
+        string description
+    }
+    FLAG_EVALUATION {
+        string eval_id PK
+        string flag_id FK
+        string user_id
+        string variation
+        json context
+        timestamp evaluated_at
+    }
+    FLAG_CHANGE_LOG {
+        string change_id PK
+        string flag_id FK
+        string changed_by
+        json old_value
+        json new_value
+        timestamp changed_at
+    }
+    FEATURE_FLAG ||--o{ TARGETING_RULE : has
+    TARGETING_RULE }o--o{ FLAG_SEGMENT : targets
+    FEATURE_FLAG ||--o{ FLAG_EVALUATION : evaluated_in
+    FEATURE_FLAG ||--o{ FLAG_CHANGE_LOG : tracked_by`,
+  deepDive: [
+    {
+      title: 'Consistent Percentage Bucketing',
+      content: `When rolling out to 10% of users, you need the **same 10%** to see the feature consistently. Random selection would cause the feature to flicker on/off across requests.\n\n**Algorithm**:\n1. Concatenate the flag key and user ID: \`"new-checkout" + "user_123"\`\n2. Hash with MurmurHash3 to get a 32-bit integer\n3. Normalize to 0-100: \`hash % 100\`\n4. If the result < rollout_percentage, enable the flag\n\n**Properties**:\n- **Deterministic**: Same user + flag always produces the same bucket\n- **Uniform distribution**: MurmurHash3 provides excellent distribution\n- **Independent per flag**: A user in the 10% for flag A is not necessarily in the 10% for flag B (different hash inputs)\n- **Monotonic rollout**: Users in the 10% cohort remain in the 25% cohort when you increase the percentage\n\nTo ensure monotonic rollout, sort users by their hash value and always expand the inclusion from the same end. This prevents users from losing access when the percentage increases.`,
+    },
+    {
+      title: 'Targeting Rules Engine',
+      content: `Flags support complex targeting beyond simple percentages:\n\n**Rule types**:\n- **User list**: Enable for specific user IDs (internal testing, beta users)\n- **Segment match**: Enable for users matching attributes (plan=enterprise, country=US)\n- **Percentage rollout**: Enable for N% of users (consistent bucketing)\n- **Schedule**: Enable/disable at specific times (launch events)\n- **Dependency**: Enable only if another flag is also enabled\n\n**Evaluation order**: Rules are evaluated in priority order. First matching rule wins. If no rule matches, the default variation is returned.\n\n**Context attributes**: The calling code provides a user context object with attributes like userId, email, plan, country, deviceType. The evaluation engine matches these against rule conditions using operators: equals, contains, startsWith, regex, semver comparison, and set membership.\n\n**Performance**: With cached rules, evaluation of even complex targeting rules takes <0.1ms. The bottleneck is context enrichment (looking up user attributes), which should be cached or pre-computed.`,
+    },
+    {
+      title: 'Kill Switch and Incident Response',
+      content: `Feature flags are the fastest way to mitigate incidents caused by new code.\n\n**Kill switch pattern**: Every significant feature ships behind a flag. If the feature causes errors, latency spikes, or customer complaints, an on-call engineer can disable the flag instantly through the admin dashboard — no deployment needed.\n\n**Best practices**:\n- **One-click disable**: The dashboard should have a prominent "kill" button per flag with no confirmation dialogs\n- **Propagation speed**: Flag changes should reach all instances within 5-10 seconds (SSE streaming is ideal)\n- **Safe defaults**: When the flag service is unreachable, default to the "off" variation for new features (fail closed)\n- **Automatic rollback**: Monitor error rates per flag variation. If the "on" variation's error rate exceeds a threshold, automatically disable the flag and alert the team\n- **Flag hygiene**: Remove flags after full rollout. Stale flags accumulate tech debt. Set expiration dates and alert when flags are past their expected lifetime\n\n**Blast radius control**: Combine flags with progressive rollout. Start at 1%, monitor metrics for 30 minutes, expand to 10%, monitor, expand to 50%, then 100%. Each step is a checkpoint where you can pull back.`,
+    },
+  ],
+  realWorldExamples: [
+    { system: 'LaunchDarkly', approach: 'Industry-leading feature flag platform. Client-side SDKs with streaming updates via SSE. Supports complex targeting rules, experiments, and feature workflows. Evaluates billions of flags per day with sub-millisecond SDK evaluation.' },
+    { system: 'GitHub', approach: 'Built an internal feature flag system called "Flipper". Uses Chatops integration — engineers enable flags via Slack commands. Progressive rollout to staff → percentage of users → full rollout. Used for every major feature launch.' },
+    { system: 'Netflix', approach: 'Uses feature flags extensively for A/B testing UI changes. Their experimentation platform evaluates flags at the edge to determine which UI variation each user sees. Tests hundreds of variations simultaneously.' },
+    { system: 'Meta', approach: 'Gatekeeper system controls feature access for billions of users. Supports complex targeting (country, OS version, account age). Flag changes propagate to all servers within seconds via a custom pub/sub system.' },
+  ],
+  tradeoffs: [
+    {
+      decision: 'Client SDK vs API-based evaluation',
+      pros: ['SDK: zero-latency evaluation, resilient to service outages', 'API: always fresh rules, no SDK maintenance burden', 'SDK: scales horizontally with your application instances'],
+      cons: ['SDK: stale data between updates, memory overhead per instance', 'API: adds network latency, flag service on critical path', 'SDK: must build and maintain for each language/platform'],
+    },
+    {
+      decision: 'Polling vs streaming for rule updates',
+      pros: ['Polling: simple, stateless, works through any proxy', 'Streaming (SSE): near-instant propagation, lower bandwidth', 'Polling: predictable load on the flag service'],
+      cons: ['Polling: stale data during the poll interval (5-30s)', 'Streaming: connection management, reconnection handling', 'Streaming: higher connection count on the flag service'],
+    },
+    {
+      decision: 'Build vs buy (LaunchDarkly, Split, etc.)',
+      pros: ['Build: full control, no per-seat pricing, custom integrations', 'Buy: faster time-to-value, battle-tested at scale, analytics included', 'Build: no vendor dependency for a critical path system'],
+      cons: ['Build: significant engineering investment (2-6 months for a solid system)', 'Buy: per-seat/per-evaluation pricing adds up quickly', 'Build: ongoing maintenance burden (SDKs, dashboard, analytics)'],
+    },
+  ],
+};

@@ -27,6 +27,14 @@
   --color-cat-search: #e65100;
   --color-cat-commerce: #4e342e;
   --color-cat-infra: #37474f;
+
+  --color-gcat-realtime: #0d7377;
+  --color-gcat-platform: #5b21b6;
+  --color-gcat-data: #b45309;
+  --color-gcat-reliability: #064e3b;
+  --color-gcat-security: #991b1b;
+  --color-gcat-media: #7c3aed;
+  --color-gcat-collaboration: #0369a1;
 }
 
 html {

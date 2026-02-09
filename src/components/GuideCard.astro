@@ -1,0 +1,31 @@
+---
+import { guideCategoryLabels, guideCategoryColors } from '../data/guides';
+import type { FeatureGuide } from '../data/guides';
+
+interface Props {
+  guide: FeatureGuide;
+}
+
+const { guide } = Astro.props;
+const colorClass = guideCategoryColors[guide.category];
+---
+
+<a
+  href={`/guides/${guide.slug}`}
+  class="group block bg-white border border-border rounded-xl p-6 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300"
+>
+  <div class="flex flex-wrap items-center gap-2 mb-3">
+    <h3 class="font-serif text-xl font-bold text-ink group-hover:text-accent transition-colors">
+      {guide.title}
+    </h3>
+    <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full whitespace-nowrap", colorClass]}>
+      {guideCategoryLabels[guide.category]}
+    </span>
+  </div>
+  <p class="text-sm text-ink-light leading-relaxed mb-4">{guide.tagline}</p>
+  <div class="flex flex-wrap gap-1.5">
+    {guide.tags.slice(0, 4).map((tag) => (
+      <span class="text-xs bg-tag-bg text-tag-text px-2 py-0.5 rounded-md">{tag}</span>
+    ))}
+  </div>
+</a>

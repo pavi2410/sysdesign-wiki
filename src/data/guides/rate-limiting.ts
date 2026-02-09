@@ -1,0 +1,164 @@
+import type { FeatureGuide } from './types';
+
+export const rateLimiting: FeatureGuide = {
+  slug: 'rate-limiting',
+  title: 'Rate Limiting & Throttling',
+  tagline: 'Token bucket, sliding window, and distributed rate limiting to protect your APIs',
+  category: 'reliability',
+  tags: ['rate-limiting', 'throttling', 'API', 'Redis', 'protection'],
+  problem: `APIs must protect against abuse, prevent resource exhaustion, and ensure fair usage across clients. Without rate limiting, a single misbehaving client can overwhelm your servers, a bot can scrape your entire database, or a retry storm from a downstream service can cascade into a full outage. Rate limiting controls how many requests a client can make within a time window. The challenge is implementing it efficiently in a distributed system where requests hit different servers, with minimal latency overhead, configurable per-client limits, and graceful handling of limit breaches.`,
+  approaches: [
+    {
+      name: 'Token Bucket Algorithm',
+      description: `Each client has a "bucket" that fills with tokens at a steady rate. Each request consumes one token. If the bucket is empty, the request is rejected. The bucket has a maximum capacity, allowing short bursts up to that capacity. The most widely used algorithm for API rate limiting.`,
+      pros: [
+        'Allows bursts while enforcing average rate',
+        'Simple to implement and understand',
+        'Smooth rate limiting — no hard window boundaries',
+        'Memory efficient — one counter and timestamp per client',
+      ],
+      cons: [
+        'Burst size must be configured carefully — too large defeats the purpose',
+        'Distributed implementation requires atomic operations',
+        'Doesn\'t enforce strict per-second limits (bursts can exceed instantaneous rate)',
+      ],
+    },
+    {
+      name: 'Sliding Window Log',
+      description: `Store the timestamp of every request in a sorted set. To check the limit, count requests within the current window (e.g., last 60 seconds). Most accurate but most memory-intensive — stores every request timestamp.`,
+      pros: [
+        'Most accurate — exact count within any rolling window',
+        'No boundary issues between windows',
+        'Smooth rate limiting behavior',
+      ],
+      cons: [
+        'High memory usage — stores every request timestamp',
+        'Expensive count operation on large windows',
+        'Cleanup of old entries adds overhead',
+        'Not practical for high-volume endpoints',
+      ],
+    },
+    {
+      name: 'Sliding Window Counter',
+      description: `Hybrid of fixed window and sliding window. Maintain counters for the current and previous fixed windows. Estimate the sliding window count by weighting the previous window's count by the overlap percentage. Balances accuracy and efficiency.`,
+      pros: [
+        'Low memory — only two counters per client per window',
+        'Smooth behavior — no hard boundary spikes',
+        'Good approximation of true sliding window',
+        'Easy to implement with Redis INCR and TTL',
+      ],
+      cons: [
+        'Approximate — not exact count within the window',
+        'Slight inaccuracy at window boundaries',
+        'Weighted calculation adds minor complexity',
+      ],
+    },
+  ],
+  architectureDiagram: `graph TB
+    subgraph Clients
+        C1[Client A<br/>100 req/min]
+        C2[Client B<br/>1000 req/min]
+        C3[Client C<br/>Unlimited]
+    end
+    subgraph Edge["API Gateway / Edge"]
+        LB[Load Balancer]
+        RL1[Rate Limiter<br/>Instance 1]
+        RL2[Rate Limiter<br/>Instance 2]
+    end
+    subgraph RateStore["Rate Limit Store"]
+        REDIS[(Redis Cluster<br/>Counters & Buckets)]
+    end
+    subgraph Backend["Backend Services"]
+        API1[API Server 1]
+        API2[API Server 2]
+    end
+    subgraph Config["Configuration"]
+        RULES[(Rate Limit Rules<br/>Per-client / Per-tier)]
+    end
+    C1 & C2 & C3 --> LB
+    LB --> RL1 & RL2
+    RL1 & RL2 --> REDIS
+    RL1 & RL2 --> RULES
+    RL1 & RL2 -->|Allowed| API1 & API2
+    RL1 & RL2 -->|429 Too Many Requests| C1`,
+  components: [
+    { name: 'Rate Limiter Middleware', description: 'Intercepts every request before it reaches the application. Extracts the rate limit key (API key, user ID, IP address), checks the current count against the configured limit, and either allows the request or returns 429 Too Many Requests with Retry-After header.' },
+    { name: 'Rate Limit Store (Redis)', description: 'Centralized counter store shared across all API gateway instances. Uses Redis for atomic increment operations (INCR) and automatic TTL-based cleanup. Redis Cluster for high availability. Lua scripts for atomic token bucket operations.' },
+    { name: 'Rate Limit Configuration', description: 'Rules engine defining limits per client tier, endpoint, and HTTP method. Example: free tier = 100 req/min, pro = 1000 req/min, enterprise = custom. Rules stored in a config database and cached locally on each gateway instance.' },
+    { name: 'Rate Limit Headers', description: 'Returns standard headers on every response: X-RateLimit-Limit (max allowed), X-RateLimit-Remaining (tokens left), X-RateLimit-Reset (when the window resets), Retry-After (seconds to wait on 429). Helps clients implement backoff.' },
+    { name: 'Abuse Detection', description: 'Monitors for patterns beyond simple rate limits: credential stuffing (many failed logins), scraping (sequential page access), DDoS (distributed attack from many IPs). Can dynamically lower limits or block clients based on behavioral analysis.' },
+    { name: 'Rate Limit Dashboard', description: 'Visualizes current usage per client, identifies clients approaching limits, shows historical usage patterns, and provides controls for adjusting limits in real time. Critical for customer support and capacity planning.' },
+  ],
+  dataModel: `erDiagram
+    RATE_LIMIT_RULE {
+        string rule_id PK
+        string client_tier
+        string endpoint_pattern
+        int requests_per_window
+        int window_seconds
+        int burst_size
+        boolean enabled
+    }
+    RATE_LIMIT_COUNTER {
+        string key PK
+        int count
+        timestamp window_start
+        timestamp expires_at
+    }
+    RATE_LIMIT_OVERRIDE {
+        string client_id PK
+        string endpoint_pattern
+        int custom_limit
+        string reason
+        timestamp expires_at
+    }
+    RATE_LIMIT_EVENT {
+        string event_id PK
+        string client_id
+        string endpoint
+        boolean allowed
+        int current_count
+        int limit_value
+        timestamp created_at
+    }
+    RATE_LIMIT_RULE ||--o{ RATE_LIMIT_COUNTER : enforced_by
+    RATE_LIMIT_OVERRIDE ||--o{ RATE_LIMIT_COUNTER : overrides
+    RATE_LIMIT_COUNTER ||--o{ RATE_LIMIT_EVENT : generates`,
+  deepDive: [
+    {
+      title: 'Token Bucket with Redis Lua Script',
+      content: `Implementing a distributed token bucket requires atomic operations. A Redis Lua script ensures atomicity:\n\n**Algorithm**:\n1. Calculate tokens to add since last request: \`tokens_to_add = (now - last_refill) * rate\`\n2. Update bucket: \`tokens = min(bucket_capacity, current_tokens + tokens_to_add)\`\n3. Check if enough tokens: if \`tokens >= 1\`, consume and allow; else reject\n4. Store updated state: \`{tokens, last_refill_time}\`\n\n**Redis Lua script** (executed atomically):\n- KEYS[1] = rate limit key\n- ARGV[1] = bucket capacity, ARGV[2] = refill rate, ARGV[3] = current timestamp\n- Returns: {allowed: 0/1, remaining: N, retry_after: seconds}\n\n**Advantages of Lua script**: The entire check-and-update runs as a single atomic operation on Redis. No race conditions between concurrent requests. No distributed locks needed.\n\n**Performance**: A Redis Lua script executing a token bucket check takes ~0.1ms. With Redis pipelining, you can check thousands of rate limits per second per Redis connection.`,
+    },
+    {
+      title: 'Multi-Dimensional Rate Limiting',
+      content: `Real APIs need limits on multiple dimensions simultaneously:\n\n**Per-client**: 1000 requests/minute per API key\n**Per-endpoint**: 100 requests/minute to POST /api/upload per API key\n**Per-IP**: 50 requests/second from any single IP\n**Global**: 10,000 requests/second total across all clients for a specific endpoint\n\n**Implementation**: Check all applicable limits for each request. The request is allowed only if ALL limits pass. Use Redis pipeline to check multiple keys in a single round-trip:\n\n1. INCR api_key:{key}:global → check against 1000/min\n2. INCR api_key:{key}:endpoint:{path} → check against 100/min  \n3. INCR ip:{ip}:second → check against 50/sec\n4. INCR global:{path}:second → check against 10000/sec\n\n**Priority clients**: Some clients need higher limits. Store per-client overrides that supersede tier defaults. Enterprise clients may have "soft" limits that alert but don't reject.\n\n**Graduated response**: Instead of hard rejection at the limit, implement a graduated response:\n- 80% of limit: return warning header\n- 100% of limit: start throttling (add 100ms delay per request)\n- 120% of limit: return 429 Too Many Requests\n- 200%+ of limit: temporarily block the client`,
+    },
+    {
+      title: 'Handling Rate Limit Failures',
+      content: `What happens when Redis (the rate limit store) is down?\n\n**Fail-open**: Allow all requests when the rate limiter is unavailable. Keeps the API functional but removes all protection. Suitable when availability is more important than protection.\n\n**Fail-closed**: Reject all requests when the rate limiter is unavailable. Maximum safety but causes a complete outage. Suitable for security-critical endpoints.\n\n**Local fallback**: Each API gateway instance maintains a local in-memory rate limiter as a fallback. Less accurate (per-instance limits instead of global) but provides basic protection. Configure local limits at 1/N of the global limit (N = number of instances).\n\n**Circuit breaker**: If Redis latency exceeds 5ms (normally 0.1ms), open the circuit breaker and fall back to local rate limiting. Close the circuit after Redis recovers. This prevents Redis slowness from adding latency to every API request.\n\n**Retry storms**: When clients get 429 responses, they should use exponential backoff with jitter. But many clients retry immediately, creating a storm when the window resets. Mitigate by:\n- Adding jitter to Retry-After headers\n- Gradually releasing blocked clients instead of all-at-once\n- Implementing client-side rate limiting in your SDKs`,
+    },
+  ],
+  realWorldExamples: [
+    { system: 'Stripe', approach: 'Token bucket rate limiting per API key. Returns detailed rate limit headers (X-RateLimit-Limit, X-RateLimit-Remaining). Different limits per endpoint (read vs write). Test mode has separate limits from live mode.' },
+    { system: 'GitHub API', approach: 'Fixed window rate limiting: 5000 requests/hour for authenticated users, 60/hour for unauthenticated. Rate limit info available via a dedicated /rate_limit endpoint. GraphQL API has a separate "point" budget per query complexity.' },
+    { system: 'Cloudflare', approach: 'Multi-layer rate limiting at the edge. Basic rate limiting in the free plan, advanced rules (per-path, per-header) in paid plans. Distributed across global edge network — rate limits are synchronized across PoPs within seconds.' },
+    { system: 'Discord', approach: 'Per-route and global rate limits. Returns rate limit info in response headers. Implements a "rate limit bucket" system where related endpoints share a bucket. Bot-specific rate limits separate from user limits.' },
+  ],
+  tradeoffs: [
+    {
+      decision: 'Token bucket vs sliding window counter',
+      pros: ['Token bucket: natural burst handling, smooth rate limiting', 'Sliding window: more intuitive limits ("100 per minute means 100 per minute")', 'Token bucket: single atomic operation per check'],
+      cons: ['Token bucket: burst can exceed instantaneous rate target', 'Sliding window: slightly more complex, approximate at boundaries', 'Token bucket: burst size is an extra parameter to tune'],
+    },
+    {
+      decision: 'Gateway-level vs application-level rate limiting',
+      pros: ['Gateway: protects all services, single implementation point', 'Application: access to business context (user tier, endpoint semantics)', 'Gateway: rejects early, saves backend resources'],
+      cons: ['Gateway: limited context for fine-grained rules', 'Application: each service must implement rate limiting', 'Both layers is ideal but adds complexity'],
+    },
+    {
+      decision: 'Fail-open vs fail-closed on rate limiter failure',
+      pros: ['Fail-open: API stays available during Redis outage', 'Fail-closed: guaranteed protection, no abuse during outage', 'Local fallback: compromise between availability and protection'],
+      cons: ['Fail-open: vulnerable to abuse when rate limiter is down', 'Fail-closed: rate limiter outage = API outage', 'Local fallback: less accurate (per-instance, not global)'],
+    },
+  ],
+};
