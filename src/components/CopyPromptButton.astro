@@ -2,9 +2,10 @@
 interface Props {
   prompt: string;
   systemName: string;
+  label?: string;
 }
 
-const { prompt, systemName } = Astro.props;
+const { prompt, systemName, label = 'Implement' } = Astro.props;
 ---
 
 <div class="copy-prompt-wrapper my-10 p-6 bg-white border border-border rounded-xl">
@@ -16,7 +17,7 @@ const { prompt, systemName } = Astro.props;
       </svg>
     </div>
     <div class="flex-1 min-w-0">
-      <h3 class="font-serif text-lg font-bold text-ink mb-1">Implement {systemName}</h3>
+      <h3 class="font-serif text-lg font-bold text-ink mb-1">{label} {systemName}</h3>
       <p class="text-sm text-ink-muted mb-4">
         Copy a detailed architecture prompt to use with any AI coding assistant. It includes the full system design, data models, components, and tradeoffs — ready to kickstart your own implementation.
       </p>
