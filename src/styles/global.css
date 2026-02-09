@@ -77,3 +77,94 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-ink-muted);
 }
+
+/* Pagefind UI overrides */
+#nav-search {
+  --pagefind-ui-scale: 0.7;
+  --pagefind-ui-primary: var(--color-accent);
+  --pagefind-ui-text: var(--color-ink);
+  --pagefind-ui-background: var(--color-paper-warm);
+  --pagefind-ui-border: var(--color-border);
+  --pagefind-ui-tag: var(--color-tag-bg);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 8px;
+  --pagefind-ui-font: var(--font-body);
+}
+
+#nav-search .pagefind-ui__search-input {
+  width: 12rem;
+  height: 2.25rem;
+  font-size: 0.875rem;
+  background: var(--color-paper-warm);
+  border-color: var(--color-border);
+  transition: all 0.2s;
+}
+
+@media (min-width: 1024px) {
+  #nav-search .pagefind-ui__search-input {
+    width: 16rem;
+  }
+}
+
+#nav-search .pagefind-ui__search-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px oklch(from var(--color-accent) l c h / 0.15);
+}
+
+#nav-search .pagefind-ui__result-link {
+  color: var(--color-accent);
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+
+#nav-search .pagefind-ui__result-link:hover {
+  color: var(--color-accent-hover);
+}
+
+#nav-search .pagefind-ui__results-area {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: 28rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--color-paper);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.15);
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  z-index: 100;
+}
+
+#nav-search .pagefind-ui__result {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem 0;
+}
+
+#nav-search .pagefind-ui__result:last-child {
+  border-bottom: none;
+}
+
+#nav-search .pagefind-ui__result-excerpt {
+  font-size: 0.8125rem;
+  color: var(--color-ink-light);
+  line-height: 1.5;
+}
+
+#nav-search mark {
+  background-color: var(--color-highlight);
+  color: var(--color-ink);
+  padding: 0.05em 0.2em;
+  border-radius: 2px;
+}
+
+#nav-search .pagefind-ui__search-clear {
+  color: var(--color-ink-muted);
+}
+
+#nav-search .pagefind-ui__message {
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+  padding: 0.5rem 0;
+}

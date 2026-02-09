@@ -14,6 +14,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.17.1",
+    "astro-pagefind": "^1.8.5",
     "lucide-static": "^0.563.0",
     "mermaid": "^11.12.2",
     "satori": "^0.19.1",
