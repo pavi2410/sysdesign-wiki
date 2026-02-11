@@ -1,0 +1,253 @@
+---
+name: Twitter / X
+tagline: Real-time global public conversation with fan-out at scale
+category: social
+tags: [social, timeline, fan-out, real-time, search, trending]
+---
+import { Mermaid, Scale, ComponentList, ComponentCard, Requirements, Tradeoff } from '@/components/mdx';
+
+## Overview
+
+Twitter (now X) is a real-time microblogging platform where users post short messages (tweets) that are distributed to their followers' timelines. The core technical challenge is the fan-out problem: when a user with millions of followers tweets, that tweet must appear in millions of timelines within seconds. Twitter processes over 500 million tweets per day and serves billions of timeline requests.
+
+## Scale
+
+<Scale items={{
+  "Monthly active users": "550M+",
+  "Tweets per day": "500M+",
+  "Timeline requests/sec": "~300K",
+  "Data storage": "Petabytes",
+}} />
+
+## Requirements
+
+<Requirements
+  functional={[
+    'Post tweets (text, images, video, polls)',
+    'Home timeline (algorithmic + chronological)',
+    'Retweets, likes, replies, and bookmarks',
+    'Real-time trending topics',
+    'Full-text tweet search',
+    'Direct messages',
+    'Follow/follower social graph',
+  ]}
+  nonFunctional={[
+    'Sub-second timeline delivery',
+    'Handle viral tweet fan-out (celebrity problem)',
+    'Real-time search indexing',
+    'High write throughput for peak events',
+    'Global availability',
+    'Support for real-time event spikes',
+  ]}
+/>
+
+## High-Level Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Clients
+        MOB[Mobile Apps]
+        WEB[Web Client]
+        API3[API Clients]
+    end
+    subgraph Edge
+        LB[Load Balancer]
+        CDN[CDN]
+    end
+    subgraph Services["Core Services"]
+        TW[Tweet Service]
+        TL[Timeline Service]
+        FO[Fan-Out Service]
+        SG[Social Graph]
+        SR[Search Service]
+        TR[Trending Service]
+    end
+    subgraph Cache["Caching Layer"]
+        TMC[(Timeline Cache)]
+        TC[(Tweet Cache)]
+        UC[(User Cache)]
+    end
+    subgraph Storage["Storage"]
+        MH[(Manhattan KV)]
+        ES[(Earlybird Index)]
+        BL[(Blob Store)]
+    end
+    subgraph Stream["Stream Processing"]
+        KF[(Kafka)]
+        HP[Heron]
+    end
+    MOB & WEB & API3 --> LB
+    LB --> TW & TL & SR & TR
+    TW --> FO
+    FO --> TMC
+    FO --> KF
+    TL --> TMC & TC & UC
+    SR --> ES
+    TR --> HP
+    TW --> MH
+    KF --> HP`} caption="Twitter — High-level system architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="Tweet Service">
+Handles tweet creation, storage, and retrieval. Persists tweets to Manhattan (distributed KV store) and triggers the fan-out pipeline.
+</ComponentCard>
+<ComponentCard name="Fan-Out Service">
+When a tweet is published, pushes the tweet ID into Redis timeline caches of all followers. Uses different strategies for high and low follower-count users.
+</ComponentCard>
+<ComponentCard name="Timeline Service">
+Assembles a user's home timeline by reading from pre-computed timeline cache (Redis) and hydrating tweet objects. Applies ranking algorithms for the algorithmic feed.
+</ComponentCard>
+<ComponentCard name="Social Graph Service">
+Manages the follow/follower graph using FlockDB. Supports queries like "who follows X" and "does A follow B" at massive scale.
+</ComponentCard>
+<ComponentCard name="Search (Earlybird)">
+Real-time search engine that indexes tweets within seconds of posting. Built on a custom inverted index optimized for recency-biased queries.
+</ComponentCard>
+<ComponentCard name="Trending Service">
+Analyzes the real-time tweet stream using Heron to detect emerging topics. Distinguishes trends from sustained high-volume topics.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    USER {
+        bigint user_id PK
+        string username UK
+        string display_name
+        int followers_count
+        int following_count
+        boolean is_verified
+    }
+    TWEET {
+        bigint tweet_id PK
+        bigint user_id FK
+        string text
+        bigint reply_to_id
+        int like_count
+        int retweet_count
+    }
+    TIMELINE_ENTRY {
+        bigint user_id FK
+        bigint tweet_id FK
+        float score
+    }
+    FOLLOW {
+        bigint follower_id FK
+        bigint followee_id FK
+    }
+    USER ||--o{ TWEET : posts
+    USER ||--o{ FOLLOW : follows
+    USER ||--o{ TIMELINE_ENTRY : has
+    TWEET ||--o{ TIMELINE_ENTRY : appears_in`} caption="Twitter — Entity relationship diagram" />
+
+## The Fan-Out Problem
+
+The fan-out problem is Twitter's defining architectural challenge.
+
+**Fan-Out-on-Write (Push):**
+- When a tweet is posted, push the tweet ID to every follower's timeline cache
+- Each user's timeline is a Redis sorted set of (tweet_id, timestamp)
+- Timeline cache holds ~800 most recent tweet IDs
+- **Used for**: Users with < ~50K followers
+
+**Fan-Out-on-Read (Pull):**
+- For celebrity users (130M+ followers), fan-out-on-write is prohibitive
+- Their tweets are fetched at read-time and merged with the pre-computed timeline
+- **Used for**: Users with > ~50K followers
+
+**The Math:**
+- Average user: ~200 followers → 200 Redis writes per tweet
+- Celebrity with 50M followers → 50M writes per tweet (200GB at 4KB each!)
+- The hybrid approach is essential
+
+**Timeline Assembly:**
+1. Read pre-computed timeline from Redis (pushed tweets)
+2. Fetch recent tweets from followed celebrities (pulled tweets)
+3. Merge by timestamp
+4. Apply ML ranking for "For You" tab
+5. Hydrate tweet objects
+6. Return final timeline
+
+<Mermaid chart={`graph LR
+    subgraph Write["Tweet by @alice - 500 followers"]
+        T1[New Tweet] --> FOS[Fan-Out Service]
+        FOS --> R1[Timeline: @bob]
+        FOS --> R2[Timeline: @carol]
+        FOS --> RN[Timeline: +498 more]
+    end
+    subgraph Read["@bob opens Home"]
+        RC[Redis Cache] --> MRG[Merge + Rank]
+        CEL[Celebrity tweets] --> MRG
+        MRG --> HYD[Hydrate]
+        HYD --> FINAL[Final Timeline]
+    end`} caption="The Fan-Out Problem" />
+
+## Real-Time Search with Earlybird
+
+Twitter's search engine, **Earlybird**, is designed for real-time search — indexing tweets within seconds.
+
+**Architecture:**
+- Tweets flow through Kafka into Earlybird indexer instances
+- Each instance maintains an **in-memory inverted index** for recent tweets
+- Older tweets stored in on-disk index segments
+- Queries fanned out to all index partitions and results merged
+
+**Index Design:**
+- **Inverted index**: Maps terms to posting lists (tweet IDs)
+- **Real-time segment**: New tweets in a mutable in-memory segment
+- **Optimized segments**: Periodically flushed to read-only segments
+- **Recency ranking**: Results biased toward recent tweets
+
+**Query Processing:**
+1. Parse query into tokens with operators (AND, OR, from:, filter:)
+2. Fan out to all Earlybird partitions
+3. Each partition returns top-K local results
+4. Merge, deduplicate, and globally rank
+5. Social signals (likes, retweets) boost relevance
+
+Earlybird indexes tweets and makes them searchable in **under 10 seconds**.
+
+## Trending Topics Detection
+
+Trending topics are detected in real-time from the global tweet stream.
+
+**Pipeline:**
+1. All tweets flow through Kafka into the stream processing layer
+2. **Heron** processes the stream (successor to Storm)
+3. Hashtags, keywords, and phrases are extracted and counted in sliding windows
+4. Algorithm distinguishes **trends** (sudden spikes) from **sustained volume**
+
+**Trend Detection Algorithm:**
+- Maintains baseline expected volume for each term (hourly, daily, weekly patterns)
+- Detects when current volume **significantly exceeds** the baseline
+- Uses statistical tests (z-score) to determine significance
+- Filters spam, adult content, and manipulation attempts
+
+**Personalization:**
+- Trends are localized by geography and language
+- "Trends for you" incorporates user interests and social graph
+- Each user may see different trending topics
+
+The system processes ~6K tweets/second average (150K+ during peaks) with sub-minute trend detection latency.
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="Hybrid fan-out (push + pull)"
+  pros={['Avoids 50M+ writes for celebrity tweets', 'Fast timeline reads for most users', 'Balances write amplification']}
+  cons={['Complex merge logic', 'Celebrity tweet latency is higher', 'Two code paths to maintain']}
+/>
+
+<Tradeoff
+  decision="Redis for timeline caching"
+  pros={['Sub-millisecond read latency', 'Sorted sets are perfect for timelines', 'Simple and battle-tested']}
+  cons={['Memory-intensive at Twitter scale', 'Data loss risk on failures', 'Cost of billions of sorted sets']}
+/>
+
+<Tradeoff
+  decision="Custom search engine (Earlybird)"
+  pros={['Optimized for real-time indexing', 'Recency-biased ranking built-in', 'Fine-grained control over index lifecycle']}
+  cons={['Huge engineering investment', 'Maintenance burden', 'No community contributions']}
+/>

@@ -1,0 +1,242 @@
+---
+name: Telegram
+tagline: Cloud-native messaging with unlimited storage and channels
+category: messaging
+tags: [messaging, cloud, channels, MTProto, distributed]
+---
+import { Mermaid, Scale, ComponentList, ComponentCard, Requirements, Tradeoff } from '@/components/mdx';
+
+## Overview
+
+Telegram is a cloud-based messaging platform serving over 800 million monthly active users. Unlike WhatsApp, Telegram stores all messages in the cloud, enabling seamless multi-device access. It supports massive group chats (up to 200K members), channels with unlimited subscribers, and a rich bot platform. Its custom MTProto protocol is optimized for speed and reliability across unreliable networks.
+
+## Scale
+
+<Scale items={{
+  "Monthly active users": "800M+",
+  "Messages per day": "~15B",
+  "Concurrent connections": "Millions",
+  "Storage model": "Full cloud history",
+}} />
+
+## Requirements
+
+<Requirements
+  functional={[
+    'Cloud-based messaging with full history sync',
+    'Channels with unlimited subscribers',
+    'Groups up to 200,000 members',
+    'Bot platform and Bot API',
+    'Secret chats with E2E encryption',
+    'File sharing up to 2GB per file',
+  ]}
+  nonFunctional={[
+    'Multi-datacenter distribution for resilience',
+    'Fast delivery across unreliable networks',
+    'Seamless sync across unlimited devices',
+    'Scalable fan-out for million-subscriber channels',
+    'High availability across geopolitical regions',
+    'Efficient binary protocol (MTProto)',
+  ]}
+/>
+
+## High-Level Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Clients
+        A[Mobile Apps]
+        B[Desktop Apps]
+        C[Web Apps]
+        D[Bot Clients]
+    end
+    subgraph Edge["Edge Layer"]
+        AP[Access Points]
+        LB[Load Balancer]
+    end
+    subgraph Core["Core Infrastructure"]
+        AUTH[Auth Service]
+        MSG[Message Router]
+        CH[Channel Service]
+        GRP[Group Service]
+        BOT[Bot API]
+        SYNC[Sync Service]
+    end
+    subgraph Storage["Distributed Storage"]
+        KV[(Distributed KV)]
+        FS[(File Store)]
+        IDX[(Search Index)]
+        CACHE[(Cache)]
+    end
+    subgraph DC["Multi-DC"]
+        DC1[Americas]
+        DC2[Europe]
+        DC3[Asia]
+    end
+    A & B & C & D --> AP
+    AP --> LB
+    LB --> AUTH & MSG
+    MSG --> CH & GRP & SYNC
+    BOT --> MSG
+    MSG --> KV & CACHE
+    CH --> KV
+    DC1 <--> DC2 <--> DC3`} caption="Telegram — High-level system architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="Access Points">
+Geographically distributed entry points that establish MTProto connections. Clients connect to the nearest access point for minimal latency.
+</ComponentCard>
+<ComponentCard name="Message Router">
+Core routing engine that determines the destination datacenter and server for each message. Handles both 1:1 and fan-out delivery.
+</ComponentCard>
+<ComponentCard name="Channel Service">
+Manages channels with potentially millions of subscribers. Uses an efficient lazy-loading approach — messages are stored once and fetched on demand.
+</ComponentCard>
+<ComponentCard name="Sync Service">
+Maintains a sequence of updates per user across all their devices. Each device tracks its own sync point and fetches missed updates on reconnection.
+</ComponentCard>
+<ComponentCard name="Bot API Service">
+HTTP-based API layer for third-party bots. Translates between the Bot API (JSON/HTTP) and internal MTProto-based communication.
+</ComponentCard>
+<ComponentCard name="Media Service">
+Handles upload, storage, and delivery of files up to 2GB. Files are split into parts and distributed across the storage cluster.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    USER {
+        bigint user_id PK
+        string phone_number
+        string username
+        string first_name
+    }
+    CHAT {
+        bigint chat_id PK
+        enum chat_type
+        string title
+        int member_count
+    }
+    MESSAGE {
+        bigint message_id PK
+        bigint chat_id FK
+        bigint sender_id FK
+        string text
+        timestamp date
+    }
+    CHANNEL {
+        bigint channel_id PK
+        string title
+        string username
+        int subscriber_count
+    }
+    USER_DEVICE {
+        bigint device_id PK
+        bigint user_id FK
+        bigint pts
+        bigint qts
+    }
+    USER ||--o{ MESSAGE : sends
+    CHAT ||--o{ MESSAGE : contains
+    USER ||--o{ USER_DEVICE : has
+    CHANNEL ||--o{ MESSAGE : broadcasts`} caption="Telegram — Entity relationship diagram" />
+
+## MTProto Protocol
+
+Telegram uses its custom **MTProto** protocol, designed for speed and reliability on mobile networks.
+
+**Key Design Decisions:**
+- **Binary encoding**: Messages use TL (Type Language) serialization, more compact than JSON/Protobuf
+- **Transport flexibility**: Works over TCP, HTTP, and UDP with automatic fallback
+- **Encryption layers**: Server-client encryption (default) and optional E2E (Secret Chats)
+- **Built-in ACK**: Automatic resend for lost packets
+
+**Connection Optimization:**
+- Persistent TCP connections with keepalive
+- Request pipelining — multiple RPC calls over a single connection
+- Compression of large payloads using gzip
+- Quick reconnection with session resumption (no full handshake)
+
+MTProto achieves significantly faster message delivery than HTTPS-based alternatives, especially on high-latency mobile connections.
+
+<Mermaid chart={`sequenceDiagram
+    participant C as Client
+    participant AP as Access Point
+    participant DC as Datacenter
+    participant S as Storage
+    Note over C,AP: MTProto Handshake
+    C->>AP: req_pq_multi
+    AP->>C: res_pq
+    C->>AP: req_DH_params
+    AP->>C: server_DH_params_ok
+    C->>AP: set_client_DH_params
+    AP->>C: auth_key established
+    Note over C,S: Message Send
+    C->>AP: msg_container [encrypted]
+    AP->>DC: Route to user DC
+    DC->>S: Persist message
+    DC->>AP: new_message update
+    AP->>C: msg_ack + updates`} caption="MTProto Protocol" />
+
+## Multi-Datacenter Architecture
+
+Telegram operates across **multiple datacenters** worldwide, with each user assigned to a "home" datacenter.
+
+**Datacenter Assignment:**
+- Users are assigned to the nearest DC at registration
+- Each DC is a complete, autonomous unit with its own storage
+- User data lives in their home DC
+
+**Cross-DC Communication:**
+- When User A (DC1) messages User B (DC3), the message routes through a high-speed inter-DC backbone
+- Media files may be cached in non-home DCs for faster access
+- Secret chats require both participants' DCs to coordinate
+
+**Benefits:**
+- **Data sovereignty**: Users' data stays in their assigned region
+- **Latency optimization**: Most operations happen within a single DC
+- **Resilience**: DC failures are isolated
+- **Regulatory compliance**: Data kept in specific geographic regions
+
+## Channel Fan-Out Strategy
+
+Channels are Telegram's broadcast mechanism, with some having **millions of subscribers**. Telegram uses a **read-optimized** approach:
+
+**Storage Model:**
+- Channel messages are stored **once** in the channel's message history
+- Subscribers do NOT get individual copies (no write amplification)
+- When a subscriber opens a channel, messages are fetched from the shared store
+
+**Notification Fan-Out:**
+- Only notifications (not full messages) are fanned out
+- Notifications are batched and sent in bulk
+- Muted channels skip notification delivery entirely
+
+**Read State Tracking:**
+- Each subscriber has a simple pointer (last_read_msg_id) per channel
+- Unread count = latest_msg_id - last_read_msg_id
+- O(1) per subscriber, no per-user message copies
+
+This allows channels to scale to millions of subscribers without proportional storage or write costs.
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="Cloud storage vs. E2E encryption by default"
+  pros={['Seamless multi-device sync', 'Full message history search', 'No backup hassles']}
+  cons={['Server can theoretically access messages', 'Privacy concerns', 'Larger storage infrastructure needed']}
+/>
+
+<Tradeoff
+  decision="Custom MTProto vs. standard protocols"
+  pros={['Optimized for mobile networks', 'Lower latency than HTTPS', 'Built-in reconnection']}
+  cons={['Security scrutiny from custom crypto', 'Higher barrier for third-party clients', 'Complex maintenance']}
+/>
+
+<Tradeoff
+  decision="User-DC assignment model"
+  pros={['Data locality for fast operations', 'Simple data ownership model', 'Geographic compliance']}
+  cons={['Cross-DC messages have higher latency', 'DC migration is complex', 'Uneven load distribution possible']}
+/>

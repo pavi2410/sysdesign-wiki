@@ -1,0 +1,268 @@
+---
+title: WebSocket Infrastructure
+tagline: Persistent bidirectional connections at scale for real-time applications
+category: real-time
+tags: [WebSocket, real-time, bidirectional, scaling, pub/sub]
+---
+import { Mermaid, ComponentList, ComponentCard, ApproachList, Approach, Example, Tradeoff } from '@/components/mdx';
+
+## The Problem
+
+Applications like chat, multiplayer games, collaborative editors, and live trading platforms require low-latency bidirectional communication between client and server. HTTP request-response adds too much overhead per interaction. WebSockets upgrade an HTTP connection to a persistent, full-duplex TCP channel — but scaling millions of concurrent WebSocket connections across a fleet of servers introduces challenges around connection management, message routing, state synchronization, and fault tolerance.
+
+## Architectural Approaches
+
+<ApproachList>
+<Approach
+  name="Sticky Sessions with In-Process State"
+  pros={[
+    'Simplest implementation — no external state store needed',
+    'Low latency for messages between users on the same server',
+    'Easy to reason about — each server is self-contained',
+  ]}
+  cons={[
+    'Server failure drops all connections on that instance',
+    'Cross-server messaging requires an additional routing layer',
+    'Uneven load distribution as sticky sessions prevent rebalancing',
+    'Horizontal scaling is limited by single-server capacity',
+  ]}
+>
+Route each client to a specific server instance using sticky sessions (IP hash, cookie, or connection ID). Each server holds connection state in memory and routes messages locally. Simple to build but limited in scale and resilience.
+</Approach>
+<Approach
+  name="Pub/Sub Backbone with Stateless Gateways"
+  pros={[
+    'Gateways are interchangeable — easy horizontal scaling',
+    'Server failure only requires clients to reconnect to any instance',
+    'Clean separation between connection management and business logic',
+    'Supports broadcast, multicast, and unicast patterns',
+  ]}
+  cons={[
+    'Added latency from pub/sub hop (typically 1-5ms)',
+    'Pub/sub becomes a critical dependency — must be highly available',
+    'Fan-out to all gateways can be wasteful for unicast messages',
+    'Message ordering across partitions requires careful design',
+  ]}
+>
+WebSocket gateway servers are stateless beyond holding connections. All message routing goes through a central **pub/sub system** (Redis Pub/Sub, NATS, Kafka). When user A sends a message to user B, the gateway publishes to the bus, and the gateway holding B's connection delivers it.
+</Approach>
+<Approach
+  name="Distributed Actor Model"
+  pros={[
+    'Natural modeling of concurrent connections and rooms',
+    "Built-in fault isolation — one actor crash doesn't affect others",
+    'Location-transparent messaging simplifies cross-node routing',
+    'Supervision trees enable automatic recovery',
+  ]}
+  cons={[
+    'Requires a runtime that supports the actor model',
+    'Debugging distributed actors can be complex',
+    'Mailbox overflow under load requires backpressure design',
+    'Less common skillset in most engineering teams',
+  ]}
+>
+Each connection and each chat room/channel is modeled as an **actor** (Erlang/Elixir processes, Akka actors, Cloudflare Durable Objects). Actors communicate via message passing and can be distributed across nodes. The runtime handles location transparency and fault recovery.
+</Approach>
+</ApproachList>
+
+## Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Clients
+        C1[Web Client]
+        C2[Mobile Client]
+        C3[Desktop Client]
+    end
+    subgraph Edge["Edge Layer"]
+        LB[Load Balancer - Layer 4 Sticky]
+        WS1[WS Gateway 1]
+        WS2[WS Gateway 2]
+        WS3[WS Gateway 3]
+    end
+    subgraph Backbone["Message Backbone"]
+        PS[Pub/Sub - Redis / NATS]
+        REG[Connection Registry]
+    end
+    subgraph Services["Backend Services"]
+        API[REST API]
+        AUTH[Auth Service]
+        MSG[Message Service]
+    end
+    subgraph Storage
+        DB[(Database)]
+        CACHE[(Redis Cache)]
+        MQ[(Message Queue)]
+    end
+    C1 & C2 & C3 -->|WS Upgrade| LB
+    LB --> WS1 & WS2 & WS3
+    WS1 & WS2 & WS3 -->|Pub/Sub| PS
+    WS1 & WS2 & WS3 --> REG
+    WS1 & WS2 & WS3 --> AUTH
+    MSG --> PS
+    API --> MSG
+    MSG --> DB
+    MSG --> MQ
+    WS1 & WS2 & WS3 --> CACHE`} caption="WebSocket Infrastructure — High-level architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="WebSocket Gateway">
+Accepts WebSocket upgrades, manages connection lifecycle (open, message, ping/pong, close), authenticates on connect, and routes messages to/from the pub/sub backbone. Each instance handles 50K-500K concurrent connections depending on message throughput.
+</ComponentCard>
+<ComponentCard name="Connection Registry">
+Maps user IDs to gateway instances and connection IDs. Stored in Redis with TTL-based expiry. Used for targeted message delivery and presence tracking. Updated on connect/disconnect events.
+</ComponentCard>
+<ComponentCard name="Pub/Sub Backbone">
+Routes messages between gateway instances. Redis Pub/Sub for low-latency fan-out, or NATS/Kafka for higher durability. Supports channel-based subscriptions for rooms/topics and user-specific channels for DMs.
+</ComponentCard>
+<ComponentCard name="Message Service">
+Handles message persistence, history retrieval, and delivery receipts. Writes to the database and publishes events to the pub/sub bus. Decoupled from the gateway layer for independent scaling.
+</ComponentCard>
+<ComponentCard name="Auth Middleware">
+Validates JWT or session tokens during the WebSocket handshake. Rejects unauthorized connections before the upgrade completes. May also handle per-message authorization for sensitive operations.
+</ComponentCard>
+<ComponentCard name="Health & Heartbeat Manager">
+Sends periodic WebSocket ping frames to detect dead connections. Cleans up stale entries in the connection registry. Monitors gateway health and triggers graceful draining during deploys.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    WS_CONNECTION {
+        string connection_id PK
+        string user_id FK
+        string gateway_id
+        string subscribed_channels
+        timestamp connected_at
+        timestamp last_ping
+    }
+    CHANNEL {
+        string channel_id PK
+        string type
+        string name
+        json metadata
+        timestamp created_at
+    }
+    MESSAGE {
+        string message_id PK
+        string channel_id FK
+        string sender_id FK
+        string content
+        string type
+        timestamp created_at
+    }
+    CHANNEL_MEMBER {
+        string channel_id FK
+        string user_id FK
+        enum role
+        timestamp joined_at
+    }
+    CHANNEL ||--o{ MESSAGE : contains
+    CHANNEL ||--o{ CHANNEL_MEMBER : has
+    WS_CONNECTION }o--o{ CHANNEL : subscribes`} caption="WebSocket Infrastructure — Entity relationship diagram" />
+
+## Connection Lifecycle
+
+A WebSocket connection goes through several stages:
+
+1. **HTTP Upgrade** — Client sends an HTTP request with `Upgrade: websocket` header. Server validates auth token (from query param or cookie) and responds with 101 Switching Protocols.
+2. **Initialization** — Server registers the connection in the registry, subscribes to relevant pub/sub channels, and sends an initial state payload (unread counts, presence data).
+3. **Steady State** — Bidirectional message exchange. Server sends ping frames every 30s; client responds with pong. Messages are routed through the pub/sub backbone.
+4. **Graceful Close** — Either side sends a close frame with a status code. Server unsubscribes from channels, removes the registry entry, and notifies presence subscribers.
+5. **Abnormal Close** — Network failure or crash. Detected via ping timeout (typically 60-90s). Cleanup runs asynchronously, and the client reconnects with exponential backoff.
+
+**Reconnection**: Clients should implement exponential backoff with jitter (e.g., 1s, 2s, 4s + random 0-1s). On reconnect, send the last received message ID to enable server-side replay of missed messages.
+
+<Mermaid chart={`sequenceDiagram
+    participant C as Client
+    participant LB as Load Balancer
+    participant GW as WS Gateway
+    participant R as Registry
+    participant PS as Pub/Sub
+    C->>LB: HTTP Upgrade + Auth Token
+    LB->>GW: Forward (sticky)
+    GW->>GW: Validate Token
+    GW->>R: Register connection
+    GW->>PS: Subscribe channels
+    GW->>C: 101 Switching Protocols
+    loop Steady State
+        C->>GW: Send message
+        GW->>PS: Publish
+        PS->>GW: Deliver to recipients
+        GW->>C: Receive message
+    end
+    C->>GW: Close frame
+    GW->>R: Deregister
+    GW->>PS: Unsubscribe`} caption="Connection Lifecycle" />
+
+## Scaling to Millions of Connections
+
+**Per-server limits**: A single server with 16GB RAM can hold ~500K idle WebSocket connections (each consuming ~30KB). Active connections with message buffering need more memory. Key OS tunings:
+- Set `ulimit -n` to 1M+ for file descriptors
+- Tune `net.core.somaxconn` and TCP buffer sizes
+- Use epoll (Linux) or kqueue (BSD/macOS) for efficient I/O multiplexing
+
+**Horizontal scaling strategy**:
+1. **Add gateway instances** behind a Layer 4 load balancer
+2. **Shard pub/sub channels** to avoid hotspots (e.g., partition by channel ID hash)
+3. **Separate read and write paths** — message persistence can be async
+4. **Use connection draining** during deploys — stop accepting new connections, wait for existing ones to close or migrate
+
+**Cost optimization**: WebSocket connections are long-lived and consume resources even when idle. Consider:
+- Downgrading idle connections to SSE or long-polling
+- Implementing connection quotas per user
+- Using serverless WebSocket services (AWS API Gateway WebSocket, Cloudflare Durable Objects) for variable workloads
+
+## Message Ordering and Delivery
+
+**Within a connection**: TCP guarantees in-order delivery. Messages sent on a single WebSocket connection arrive in order.
+
+**Across connections**: When a user reconnects to a different gateway, message ordering depends on the pub/sub system. Solutions:
+- Assign **sequence numbers** per channel. Clients buffer and reorder if needed.
+- Use **Kafka partitions** keyed by channel ID for strict per-channel ordering.
+- Accept **eventual consistency** for non-critical updates (typing indicators, presence).
+
+**Delivery guarantees**:
+- **At-most-once**: Default WebSocket behavior. Message lost if connection drops mid-delivery.
+- **At-least-once**: Persist messages before acknowledging to sender. Replay on reconnect using last-message-ID. Clients deduplicate using message IDs.
+- **Exactly-once**: Very expensive. Requires idempotent message processing and acknowledgment tracking. Rarely needed — at-least-once with client dedup is sufficient for most use cases.
+
+## Real-World Examples
+
+<Example system="Slack">
+Uses WebSocket connections for real-time messaging with a Gateway Fleet pattern. Falls back to long-polling when WebSocket is unavailable. Messages are persisted in MySQL and routed via an internal message bus.
+</Example>
+
+<Example system="Discord">
+Runs millions of concurrent WebSocket connections on Elixir/Erlang gateway nodes. Each guild (server) is managed by a process that handles message fan-out to connected members. Uses consistent hashing for guild-to-node assignment.
+</Example>
+
+<Example system="Figma">
+WebSocket connections for real-time collaborative design. Uses a custom CRDT-based sync protocol over WebSocket for conflict-free concurrent editing. Each document session is managed by a dedicated server process.
+</Example>
+
+<Example system="Binance">
+Streams real-time market data to millions of traders via WebSocket. Uses a tiered fan-out architecture: internal pub/sub → edge gateways → client connections. Supports per-symbol and aggregate streams.
+</Example>
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="Layer 4 (TCP) vs Layer 7 (HTTP) load balancing"
+  pros={['L4 is simpler and lower latency for persistent connections', 'L7 enables smarter routing (auth-aware, header-based)', 'L4 avoids HTTP parsing overhead on every frame']}
+  cons={['L4 cannot inspect WebSocket frames for routing decisions', 'L7 adds latency but enables features like rate limiting at the LB', 'Sticky sessions at L4 can cause hotspots']}
+/>
+
+<Tradeoff
+  decision="Redis Pub/Sub vs Kafka for message backbone"
+  pros={['Redis Pub/Sub: ultra-low latency (~0.1ms), simple setup', 'Kafka: durable, replayable, ordered per partition', 'Redis: better for ephemeral real-time events']}
+  cons={['Redis Pub/Sub: fire-and-forget, no durability or replay', 'Kafka: higher latency (5-50ms), more operational complexity', 'Kafka: overkill for ephemeral events like typing indicators']}
+/>
+
+<Tradeoff
+  decision="Connection-per-user vs multiplexed connections"
+  pros={['One connection per user is simpler to implement and debug', 'Multiplexing reduces connection count for multi-tab users', 'SharedWorker or BroadcastChannel can share one WS across tabs']}
+  cons={['Multiple connections per user waste server resources', 'Multiplexing adds client-side complexity', 'SharedWorker support varies across browsers']}
+/>

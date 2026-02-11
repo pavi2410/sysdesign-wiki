@@ -1,43 +1,34 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Nav from '../../components/Nav.astro';
-import MermaidDiagram from '../../components/MermaidDiagram.astro';
-import GuideTableOfContents from '../../components/GuideTableOfContents.astro';
-import CopyPromptButton from '../../components/CopyPromptButton.astro';
-import { guides, guideCategoryLabels, guideCategoryColors } from '../../data/guides';
-import type { FeatureGuide } from '../../data/guides';
-import { generateGuidePrompt } from '../../lib/prompt-generator';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Nav from '@/components/Nav.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+import CopyPromptButton from '@/components/CopyPromptButton.astro';
+import { getCollection, render } from 'astro:content';
+import { guideCategoryLabels, guideCategoryColors } from '@/lib/categories';
+import { generateGuidePromptFromMdx } from '@/lib/prompt-generator';
 
-export function getStaticPaths() {
-  return guides.map((guide) => ({
-    params: { slug: guide.slug },
-    props: { guide },
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
   }));
 }
 
-interface Props {
-  guide: FeatureGuide;
-}
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const { title, tagline, category, tags } = entry.data;
+const colorClass = guideCategoryColors[category];
 
-const { guide } = Astro.props;
-const colorClass = guideCategoryColors[guide.category];
-
-const otherGuides = guides.filter((g) => g.slug !== guide.slug).slice(0, 3);
-
-function renderInline(text: string): string {
-  return text
-    .replace(/`([^`]+)`/g, '<code class="text-sm bg-paper-warm text-accent px-1.5 py-0.5 rounded font-mono">$1</code>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-ink font-semibold">$1</strong>')
-    .replace(/\\n/g, '')
-    .replace(/\n/g, '<br/>');
-}
-const buildPrompt = generateGuidePrompt(guide);
-const seoTitle = `How to Implement ${guide.title} — System Design Guide`;
-const seoDescription = `Learn how to build ${guide.title.toLowerCase()} in your system. ${guide.tagline}. Architectural approaches, components, data models, and real-world examples.`;
-const ogImageUrl = `/og/guides/${guide.slug}.png`;
+const allGuides = await getCollection('guides');
+const otherGuides = allGuides.filter((g) => g.id !== entry.id).slice(0, 3);
+const buildPrompt = generateGuidePromptFromMdx(entry);
+const seoTitle = `How to Implement ${title} — System Design Guide`;
+const seoDescription = `Learn how to build ${title.toLowerCase()} in your system. ${tagline}. Architectural approaches, components, data models, and real-world examples.`;
+const ogImageUrl = `/og/guides/${entry.id}.png`;
 ---
 
-<BaseLayout title={seoTitle} description={seoDescription} ogImage={ogImageUrl} slug={guide.slug}>
+<BaseLayout title={seoTitle} description={seoDescription} ogImage={ogImageUrl} slug={entry.id}>
   <Nav />
 
   <main class="pt-16">
@@ -48,13 +39,13 @@ const ogImageUrl = `/og/guides/${guide.slug}.png`;
           <a href="/guides" class="text-sm text-ink-muted hover:text-accent transition-colors">Guides</a>
           <span class="text-ink-muted">/</span>
           <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full", colorClass]}>
-            {guideCategoryLabels[guide.category]}
+            {guideCategoryLabels[category]}
           </span>
         </div>
-        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{guide.title}</h1>
-        <p class="text-xl text-ink-light max-w-3xl">{guide.tagline}</p>
+        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{title}</h1>
+        <p class="text-xl text-ink-light max-w-3xl">{tagline}</p>
         <div class="flex flex-wrap gap-2 mt-5">
-          {guide.tags.map((tag) => (
+          {tags.map((tag) => (
             <span class="text-xs bg-tag-bg text-tag-text px-2.5 py-1 rounded-md">{tag}</span>
           ))}
         </div>
@@ -64,198 +55,17 @@ const ogImageUrl = `/og/guides/${guide.slug}.png`;
     <!-- Content -->
     <div class="max-w-7xl mx-auto px-6 py-12 flex gap-12">
       <!-- Table of Contents -->
-      <GuideTableOfContents sections={guide.deepDive} approachCount={guide.approaches.length} />
+      <TableOfContents headings={headings} />
 
       <!-- Main content -->
       <article class="flex-1 min-w-0 max-w-4xl">
-
-        <!-- Problem -->
-        <section id="problem" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-4 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            The Problem
-          </h2>
-          <p class="text-ink-light leading-relaxed text-lg">{guide.problem}</p>
-        </section>
-
-        <!-- Approaches -->
-        {guide.approaches.length > 0 && (
-          <section id="approaches" class="mb-14">
-            <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-              <span class="w-8 h-[2px] bg-accent"></span>
-              Architectural Approaches
-            </h2>
-            <div class="space-y-6">
-              {guide.approaches.map((approach, i) => (
-                <div class="bg-white border border-border rounded-xl p-6">
-                  <div class="flex items-start gap-4 mb-4">
-                    <span class="font-mono text-xs text-accent bg-paper-warm w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <div>
-                      <h3 class="font-serif text-lg font-bold text-ink mb-1">{approach.name}</h3>
-                      <p class="text-sm text-ink-light leading-relaxed" set:html={renderInline(approach.description)} />
-                    </div>
-                  </div>
-                  <div class="grid md:grid-cols-2 gap-4 pl-11">
-                    <div>
-                      <p class="text-xs font-semibold uppercase tracking-widest text-green-700 mb-2">Pros</p>
-                      <ul class="space-y-1.5">
-                        {approach.pros.map((pro) => (
-                          <li class="flex items-start gap-2 text-sm text-ink-light">
-                            <span class="text-green-600 mt-0.5 shrink-0">+</span>
-                            {pro}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <p class="text-xs font-semibold uppercase tracking-widest text-red-700 mb-2">Cons</p>
-                      <ul class="space-y-1.5">
-                        {approach.cons.map((con) => (
-                          <li class="flex items-start gap-2 text-sm text-ink-light">
-                            <span class="text-red-600 mt-0.5 shrink-0">−</span>
-                            {con}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <!-- Architecture Diagram -->
-        <section id="architecture" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Architecture
-          </h2>
-          <MermaidDiagram chart={guide.architectureDiagram} caption={`${guide.title} — High-level architecture`} />
-        </section>
-
-        <!-- Components -->
-        <section id="components" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Key Components
-          </h2>
-          <div class="space-y-4">
-            {guide.components.map((comp, i) => (
-              <div class="bg-white border border-border rounded-xl p-5 hover:border-accent/30 transition-colors">
-                <div class="flex items-start gap-4">
-                  <span class="font-mono text-xs text-accent bg-paper-warm w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div>
-                    <h3 class="font-serif text-lg font-bold text-ink mb-1">{comp.name}</h3>
-                    <p class="text-sm text-ink-light leading-relaxed" set:html={renderInline(comp.description)} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <!-- Data Model -->
-        <section id="data-model" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Data Model
-          </h2>
-          <MermaidDiagram chart={guide.dataModel} caption={`${guide.title} — Entity relationship diagram`} />
-        </section>
-
-        <!-- Deep Dives -->
-        {guide.deepDive.map((section) => (
-          <section id={section.title.toLowerCase().replace(/\s+/g, '-')} class="mb-14">
-            <h2 class="font-serif text-2xl font-bold text-ink mb-4 flex items-center gap-3">
-              <span class="w-8 h-[2px] bg-accent"></span>
-              {section.title}
-            </h2>
-            <div class="text-ink-light leading-relaxed space-y-4 deep-dive-content">
-              {section.content.split('\n\n').map((para) => {
-                if (para.startsWith('- ') || para.startsWith('1. ')) {
-                  const items = para.split('\n').filter(Boolean);
-                  return (
-                    <ul class="space-y-1.5 pl-0 list-none">
-                      {items.map((item) => {
-                        const text = item.replace(/^[-\d.]+\s*/, '');
-                        return (
-                          <li class="flex items-start gap-2.5 text-sm" set:html={`<span class="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0"></span><span>${renderInline(text)}</span>`} />
-                        );
-                      })}
-                    </ul>
-                  );
-                }
-                return <p set:html={renderInline(para)} />;
-              })}
-            </div>
-            {section.diagram && (
-              <MermaidDiagram chart={section.diagram} caption={section.title} />
-            )}
-          </section>
-        ))}
-
-        <!-- Real-World Examples -->
-        <section id="real-world" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Real-World Examples
-          </h2>
-          <div class="space-y-4">
-            {guide.realWorldExamples.map((example) => (
-              <div class="bg-white border border-border rounded-xl p-5">
-                <h3 class="font-serif text-lg font-bold text-ink mb-1">{example.system}</h3>
-                <p class="text-sm text-ink-light leading-relaxed">{example.approach}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <!-- Tradeoffs -->
-        <section id="tradeoffs" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Architectural Tradeoffs
-          </h2>
-          <div class="space-y-6">
-            {guide.tradeoffs.map((tradeoff) => (
-              <div class="bg-white border border-border rounded-xl p-6">
-                <h3 class="font-serif text-lg font-bold text-ink mb-4">{tradeoff.decision}</h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <p class="text-xs font-semibold uppercase tracking-widest text-green-700 mb-2">Pros</p>
-                    <ul class="space-y-1.5">
-                      {tradeoff.pros.map((pro) => (
-                        <li class="flex items-start gap-2 text-sm text-ink-light">
-                          <span class="text-green-600 mt-0.5 shrink-0">+</span>
-                          {pro}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold uppercase tracking-widest text-red-700 mb-2">Cons</p>
-                    <ul class="space-y-1.5">
-                      {tradeoff.cons.map((con) => (
-                        <li class="flex items-start gap-2 text-sm text-ink-light">
-                          <span class="text-red-600 mt-0.5 shrink-0">−</span>
-                          {con}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <!-- MDX Content -->
+        <div class="guide-content">
+          <Content />
+        </div>
 
         <!-- Copy as Prompt -->
-        <CopyPromptButton prompt={buildPrompt} systemName={guide.title} label="Implement" />
+        <CopyPromptButton prompt={buildPrompt} systemName={title} label="Implement" />
 
         <!-- Related Guides -->
         <section class="border-t border-border pt-10">
@@ -263,13 +73,13 @@ const ogImageUrl = `/og/guides/${guide.slug}.png`;
           <div class="grid md:grid-cols-3 gap-4">
             {otherGuides.map((other) => (
               <a
-                href={`/guides/${other.slug}`}
+                href={`/guides/${other.id}`}
                 class="group block bg-white border border-border rounded-xl p-5 hover:border-accent/40 hover:shadow-md transition-all"
               >
                 <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">
-                  {other.title}
+                  {other.data.title}
                 </h3>
-                <p class="text-xs text-ink-muted">{other.tagline}</p>
+                <p class="text-xs text-ink-muted">{other.data.tagline}</p>
               </a>
             ))}
           </div>
@@ -285,3 +95,77 @@ const ogImageUrl = `/og/guides/${guide.slug}.png`;
     </div>
   </footer>
 </BaseLayout>
+
+<style is:global>
+  @reference "../../styles/global.css";
+
+  .guide-content h2 {
+    @apply font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3;
+  }
+
+  .guide-content h2::before {
+    content: '';
+    @apply w-8 h-[2px] bg-accent inline-block;
+  }
+
+  .guide-content > h2 {
+    @apply mt-14;
+  }
+
+  .guide-content > h2:first-of-type {
+    @apply mt-0;
+  }
+
+  .guide-content p {
+    @apply text-ink-light leading-relaxed mb-4;
+  }
+
+  .guide-content h2 + p {
+    @apply text-ink-light leading-relaxed text-lg;
+  }
+
+  .guide-content strong {
+    @apply text-ink font-semibold;
+  }
+
+  .guide-content > ol {
+    counter-reset: ol-counter;
+    @apply pl-0 list-none space-y-1.5 mb-4;
+  }
+
+  .guide-content > ol > li {
+    counter-increment: ol-counter;
+    @apply flex items-start gap-2.5 text-sm text-ink-light;
+  }
+
+  .guide-content > ol > li::before {
+    content: counter(ol-counter) '.';
+    @apply font-semibold text-accent shrink-0 mt-0;
+  }
+
+  .guide-content > ul {
+    @apply space-y-1.5 pl-0 list-none mb-4;
+  }
+
+  .guide-content > ul > li {
+    @apply text-sm text-ink-light pl-4 relative;
+  }
+
+  .guide-content > ul > li::before {
+    content: '';
+    @apply w-1.5 h-1.5 rounded-full bg-accent absolute left-0 top-2 inline-block;
+  }
+
+  .guide-content > figure,
+  .guide-content > .grid,
+  .guide-content > .space-y-4,
+  .guide-content > .space-y-6,
+  .guide-content > .component-list,
+  .guide-content > .approach-list {
+    @apply mb-6;
+  }
+
+  .guide-content > div.bg-white {
+    @apply mb-4;
+  }
+</style>

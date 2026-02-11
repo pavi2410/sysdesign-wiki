@@ -1,0 +1,231 @@
+---
+name: Slack
+tagline: Channel-based messaging for the enterprise workplace
+category: messaging
+tags: [messaging, real-time, enterprise, collaboration, search, websocket]
+---
+import { Mermaid, Scale, ComponentList, ComponentCard, Requirements, Tradeoff } from '@/components/mdx';
+
+## Overview
+
+Slack is a channel-based messaging platform that transformed workplace communication. Serving millions of daily active users across 750,000+ organizations, Slack's architecture must support real-time message delivery, powerful full-text search across years of message history, enterprise compliance requirements, and cross-organization collaboration via Slack Connect. Built as a PHP monolith that evolved into a service-oriented architecture, Slack's engineering emphasizes reliability, searchability, and deep third-party integrations.
+
+## Scale
+
+<Scale items={{
+  "Daily active users": "30M+",
+  "Messages sent per day": "1.5B+",
+  "Connected apps & integrations": "2,600+",
+  "Paid customers": "200,000+",
+}} />
+
+## Requirements
+
+<Requirements
+  functional={[
+    'Channel-based messaging (public, private, DM, group DM)',
+    'Threaded conversations within channels',
+    'Full-text search across all messages and files',
+    'File sharing and previews',
+    'App integrations and slash commands',
+    'Slack Connect for cross-organization channels',
+    'Reactions, mentions, and rich message formatting',
+  ]}
+  nonFunctional={[
+    'Real-time message delivery (<500ms)',
+    'High availability (99.99% SLA for Enterprise Grid)',
+    'Compliance — message retention, eDiscovery, DLP',
+    'Horizontal scalability for large organizations (500K+ users)',
+    'Searchable message history spanning years',
+    'Data residency controls for regulated industries',
+  ]}
+/>
+
+## High-Level Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Clients
+        WEB[Web App]
+        DESK[Desktop App]
+        MOB[Mobile App]
+    end
+    subgraph Edge["Edge Layer"]
+        LB[Load Balancer]
+        RTGW[Real-time Gateway]
+    end
+    subgraph Services["Core Services"]
+        MSG[Message Service]
+        CH[Channel Service]
+        SEARCH[Search Service]
+        FILE[File Service]
+        NOTIF[Notification Service]
+        INT[Integration Service]
+        PRES[Presence Service]
+    end
+    subgraph Storage["Storage Layer"]
+        MYSQL[(MySQL Vitess)]
+        ES[(Elasticsearch)]
+        MC[(Memcached)]
+        S3[(Object Store)]
+        MQ[(Job Queue)]
+    end
+    WEB & DESK & MOB --> LB
+    LB --> RTGW
+    RTGW --> MSG & CH & PRES
+    MSG --> MYSQL
+    MSG --> MQ
+    MSG --> NOTIF
+    CH --> MYSQL
+    SEARCH --> ES
+    FILE --> S3
+    INT --> MQ
+    PRES --> MC
+    NOTIF --> MQ`} caption="Slack — High-level system architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="Real-time Gateway">
+Maintains WebSocket connections to all online clients. Uses a channel-based pub/sub model — when a message is posted, the gateway fans it out to all connected members of that channel in real time.
+</ComponentCard>
+<ComponentCard name="Message Service">
+Handles message creation, editing, deletion, and threading. Messages are stored in MySQL (sharded via Vitess) and indexed asynchronously into Elasticsearch for search.
+</ComponentCard>
+<ComponentCard name="Channel Service">
+Manages channel metadata, membership, and permissions. Supports public channels, private channels, DMs, group DMs, and Slack Connect shared channels across organizations.
+</ComponentCard>
+<ComponentCard name="Search Service">
+Provides full-text search across messages, files, and channels using Elasticsearch. Supports filters (from:, in:, has:, before:, after:) and respects channel-level access controls.
+</ComponentCard>
+<ComponentCard name="File Service">
+Handles file uploads, virus scanning, thumbnail generation, and CDN distribution. Files are stored in S3-compatible object storage with metadata in MySQL.
+</ComponentCard>
+<ComponentCard name="Integration Service">
+Manages incoming/outgoing webhooks, slash commands, and the Slack App platform. Processes events from 2,600+ third-party integrations via a job queue.
+</ComponentCard>
+<ComponentCard name="Notification Service">
+Delivers push notifications, email digests, and badge counts. Respects per-channel notification preferences and Do Not Disturb schedules.
+</ComponentCard>
+<ComponentCard name="Presence Service">
+Tracks online/away/DND status for all users. Uses an in-memory cache with heartbeat-based expiry to keep presence state current.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    WORKSPACE {
+        string workspace_id PK
+        string name
+        string domain
+        string plan_tier
+    }
+    USER {
+        string user_id PK
+        string workspace_id FK
+        string display_name
+        string email
+        enum status
+        timestamp last_active
+    }
+    CHANNEL {
+        string channel_id PK
+        string workspace_id FK
+        string name
+        enum type
+        boolean is_archived
+        timestamp created_at
+    }
+    MESSAGE {
+        string message_id PK
+        string channel_id FK
+        string user_id FK
+        string thread_ts
+        string text
+        json blocks
+        timestamp ts
+        boolean edited
+    }
+    CHANNEL_MEMBER {
+        string channel_id FK
+        string user_id FK
+        timestamp last_read
+    }
+    USER ||--o{ MESSAGE : sends
+    CHANNEL ||--o{ MESSAGE : contains
+    CHANNEL ||--o{ CHANNEL_MEMBER : has
+    USER ||--o{ CHANNEL_MEMBER : belongs_to
+    WORKSPACE ||--o{ USER : has
+    WORKSPACE ||--o{ CHANNEL : has`} caption="Slack — Entity relationship diagram" />
+
+## Channel Fanout and Real-time Delivery
+
+When a user posts a message to a channel, Slack must deliver it to every online member of that channel in real time. This is the **channel fanout** problem.
+
+1. **Message ingestion**: The message hits the Message Service, which persists it to MySQL and publishes an event to the internal message bus.
+2. **Fanout service**: A dedicated service reads the channel's membership list and determines which gateway servers hold WebSocket connections for those members.
+3. **Targeted push**: Instead of broadcasting to all gateways, Slack routes the message only to the specific gateway servers that have connected members — a **targeted fanout** approach.
+4. **Client update**: Each gateway pushes the message over the member's WebSocket connection. The client inserts it into the correct channel view.
+
+For very large channels (10K+ members), Slack uses a **lazy loading** strategy — only members who currently have the channel open receive the message immediately. Others see an unread indicator and fetch messages on demand.
+
+<Mermaid chart={`sequenceDiagram
+    participant U as User A
+    participant GW1 as Gateway 1
+    participant MS as Message Service
+    participant FAN as Fanout Service
+    participant GW2 as Gateway 2
+    participant M1 as Member B
+    participant M2 as Member C
+    U->>GW1: Post message
+    GW1->>MS: Persist message
+    MS->>FAN: Fanout event
+    FAN->>FAN: Lookup channel members
+    FAN->>GW1: Push to Member B
+    FAN->>GW2: Push to Member C
+    GW1->>M1: WebSocket push
+    GW2->>M2: WebSocket push`} caption="Channel Fanout and Real-time Delivery" />
+
+## Search Architecture
+
+Slack's search is a critical differentiator — users expect to find any message or file ever shared, instantly.
+
+**Indexing pipeline**: Messages are asynchronously indexed into Elasticsearch after being written to MySQL. The index includes message text, sender, channel, timestamps, and file metadata. Slack shards its Elasticsearch indices per-workspace for isolation.
+
+**Access control**: Search results are filtered by the requesting user's channel memberships. This is enforced at query time by intersecting search hits with the user's accessible channel set.
+
+**Query parsing**: Slack supports structured queries like `from:alice in:#engineering after:2024-01-01 has:link`. These are parsed into Elasticsearch bool queries with the appropriate filters.
+
+**Ranking**: Results are ranked by a combination of recency, relevance (BM25), and social signals (reactions, thread replies). Recent messages in active channels are boosted.
+
+## Vitess-based MySQL Sharding
+
+Slack's primary data store is MySQL, sharded using **Vitess** to scale horizontally.
+
+**Sharding strategy**: Data is sharded by workspace ID, so all data for a single workspace lives on the same shard. This keeps most queries (channel lists, message history, membership) shard-local.
+
+**Why Vitess?**: Slack migrated from a hand-rolled sharding layer to Vitess for its connection pooling, query routing, and online schema migration capabilities. Vitess handles thousands of MySQL instances behind a unified query interface.
+
+**Large workspace handling**: Enterprise Grid workspaces with 500K+ users require dedicated shards. Slack's infrastructure can split and rebalance shards without downtime.
+
+**Caching layer**: Memcached sits in front of MySQL for hot data — channel membership lists, user profiles, and workspace settings. Cache invalidation is event-driven.
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="PHP monolith evolving to SOA"
+  pros={['Rapid initial development', 'Gradual migration reduces risk', 'Shared business logic in mature codebase']}
+  cons={['Monolith coupling slows independent deployments', 'Cross-service calls add latency', 'Migration is a multi-year effort']}
+/>
+
+<Tradeoff
+  decision="MySQL + Vitess over NoSQL"
+  pros={['Strong consistency and ACID transactions', 'Mature tooling and operational expertise', 'Vitess provides horizontal scaling']}
+  cons={['Schema migrations are complex at scale', 'Join performance degrades across shards', 'Less flexible than document stores for evolving schemas']}
+/>
+
+<Tradeoff
+  decision="Targeted fanout over broadcast"
+  pros={['Efficient — only routes to relevant gateways', 'Scales better for large deployments', 'Reduces unnecessary network traffic']}
+  cons={['Requires maintaining a real-time membership-to-gateway mapping', 'More complex than simple pub/sub broadcast', 'Edge cases with stale membership state']}
+/>

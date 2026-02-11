@@ -1,0 +1,33 @@
+---
+interface Props {
+  functional: string[];
+  nonFunctional: string[];
+}
+
+const { functional, nonFunctional } = Astro.props;
+---
+
+<div class="grid md:grid-cols-2 gap-6">
+  <div class="bg-white border border-border rounded-xl p-6">
+    <h3 class="font-serif text-lg font-bold text-ink mb-4">Functional</h3>
+    <ul class="space-y-2">
+      {functional.map((req) => (
+        <li class="flex items-start gap-2.5 text-sm text-ink-light">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0"></span>
+          {req}
+        </li>
+      ))}
+    </ul>
+  </div>
+  <div class="bg-white border border-border rounded-xl p-6">
+    <h3 class="font-serif text-lg font-bold text-ink mb-4">Non-Functional</h3>
+    <ul class="space-y-2">
+      {nonFunctional.map((req) => (
+        <li class="flex items-start gap-2.5 text-sm text-ink-light">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0"></span>
+          {req}
+        </li>
+      ))}
+    </ul>
+  </div>
+</div>

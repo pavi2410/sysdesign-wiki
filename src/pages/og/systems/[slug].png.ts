@@ -2,15 +2,15 @@ import type { APIRoute, GetStaticPaths } from 'astro';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { guideCategoryLabels } from '@/lib/categories';
+import { categoryLabels } from '@/lib/categories';
 
 export const prerender = true;
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const guides = await getCollection('guides');
-  return guides.map((guide) => ({
-    params: { slug: guide.id },
-    props: { guide },
+  const systems = await getCollection('systems');
+  return systems.map((system) => ({
+    params: { slug: system.id },
+    props: { system },
   }));
 };
 
@@ -25,7 +25,7 @@ async function loadGoogleFont(family: string, weight: number): Promise<ArrayBuff
 }
 
 export const GET: APIRoute = async ({ props }) => {
-  const { guide } = props as { guide: CollectionEntry<'guides'> };
+  const { system } = props as { system: CollectionEntry<'systems'> };
 
   const [playfairBold, interRegular, interSemibold] = await Promise.all([
     loadGoogleFont('Playfair Display', 700),
@@ -34,17 +34,17 @@ export const GET: APIRoute = async ({ props }) => {
   ]);
 
   const categoryColor: Record<string, string> = {
-    'real-time': '#0d7377',
-    platform: '#5b21b6',
-    data: '#b45309',
-    reliability: '#064e3b',
-    security: '#991b1b',
-    media: '#7c3aed',
-    collaboration: '#0369a1',
+    messaging: '#2d6a4f',
+    social: '#7b2d8b',
+    streaming: '#c2185b',
+    transport: '#1565c0',
+    search: '#e65100',
+    commerce: '#4e342e',
+    infra: '#37474f',
   };
 
-  const color = categoryColor[guide.data.category] ?? '#6b4c3b';
-  const tagList = guide.data.tags.slice(0, 5);
+  const color = categoryColor[system.data.category] ?? '#6b4c3b';
+  const tagList = system.data.tags.slice(0, 5);
 
   const svg = await satori(
     {
@@ -75,7 +75,7 @@ export const GET: APIRoute = async ({ props }) => {
               },
             },
           },
-          // Decorative background circle
+          // Decorative background element
           {
             type: 'div',
             props: {
@@ -87,23 +87,7 @@ export const GET: APIRoute = async ({ props }) => {
                 height: '400px',
                 borderRadius: '50%',
                 backgroundColor: color,
-                opacity: 0.05,
-              },
-            },
-          },
-          // Second decorative circle
-          {
-            type: 'div',
-            props: {
-              style: {
-                position: 'absolute',
-                bottom: '-60px',
-                left: '-60px',
-                width: '250px',
-                height: '250px',
-                borderRadius: '50%',
-                backgroundColor: color,
-                opacity: 0.03,
+                opacity: 0.04,
               },
             },
           },
@@ -119,7 +103,7 @@ export const GET: APIRoute = async ({ props }) => {
                 flex: 1,
               },
               children: [
-                // Top: branding + category badge
+                // Top: branding + category
                 {
                   type: 'div',
                   props: {
@@ -195,13 +179,13 @@ export const GET: APIRoute = async ({ props }) => {
                             padding: '6px 18px',
                             borderRadius: '20px',
                           },
-                          children: guideCategoryLabels[guide.data.category],
+                          children: categoryLabels[system.data.category],
                         },
                       },
                     ],
                   },
                 },
-                // Middle: label + title + tagline
+                // Middle: title + tagline
                 {
                   type: 'div',
                   props: {
@@ -221,7 +205,7 @@ export const GET: APIRoute = async ({ props }) => {
                             letterSpacing: '0.15em',
                             color: color,
                           },
-                          children: 'Feature Guide',
+                          children: 'System Design & Architecture',
                         },
                       },
                       {
@@ -229,14 +213,14 @@ export const GET: APIRoute = async ({ props }) => {
                         props: {
                           style: {
                             fontFamily: 'Playfair Display',
-                            fontSize: '60px',
+                            fontSize: '64px',
                             fontWeight: 700,
                             color: '#1a1a1a',
                             lineHeight: 1.1,
                             margin: 0,
                             letterSpacing: '-0.02em',
                           },
-                          children: guide.data.title,
+                          children: `How to Build ${system.data.name}`,
                         },
                       },
                       {
@@ -249,7 +233,7 @@ export const GET: APIRoute = async ({ props }) => {
                             margin: 0,
                             maxWidth: '700px',
                           },
-                          children: guide.data.tagline,
+                          children: system.data.tagline,
                         },
                       },
                     ],

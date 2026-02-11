@@ -1,0 +1,280 @@
+---
+title: Custom Domains
+tagline: Let users map their own domains to your SaaS with DNS verification and automatic TLS
+category: platform
+tags: [custom-domains, DNS, TLS, SaaS, multi-tenant, CNAME]
+---
+import { Mermaid, ComponentList, ComponentCard, ApproachList, Approach, Example, Tradeoff } from '@/components/mdx';
+
+## The Problem
+
+SaaS platforms often need to let customers use their own domain names (e.g., docs.acme.com instead of acme.yourapp.com). This requires DNS verification to prove domain ownership, automatic TLS certificate provisioning so HTTPS works seamlessly, and a reverse proxy layer that routes incoming requests to the correct tenant. The system must handle certificate renewal, DNS propagation delays, domain conflicts, and the operational complexity of managing thousands of certificates across a fleet of edge servers.
+
+## Architectural Approaches
+
+<ApproachList>
+<Approach
+  name="Wildcard Certificate + CNAME"
+  pros={[
+    'Simple setup for subdomain-based tenants',
+    'Single wildcard cert covers all subdomains',
+    'CNAME setup is familiar to most users',
+  ]}
+  cons={[
+    'Custom domains still need individual TLS certificates',
+    'CNAME cannot be used at the zone apex (bare domain)',
+    'DNS propagation can take hours — poor UX during setup',
+  ]}
+>
+Issue a single wildcard certificate (*.yourapp.com) for your platform domain. Customers create a CNAME record pointing their domain to a dedicated endpoint (e.g., custom.yourapp.com). The reverse proxy inspects the Host header and routes to the correct tenant. For the customer's own domain, provision individual certificates via Let's Encrypt.
+</Approach>
+<Approach
+  name="Automatic Certificate Provisioning with ACME"
+  pros={[
+    "Fully automated — zero manual certificate management",
+    "Free certificates via Let's Encrypt",
+    'Supports both apex domains and subdomains',
+    'HTTP-01 challenge requires no DNS access from the customer',
+  ]}
+  cons={[
+    "Rate limits: Let's Encrypt allows 50 certs/domain/week",
+    'HTTP-01 challenge requires the domain to already point to your servers',
+    'Certificate provisioning takes 10-60 seconds — not instant',
+    'Must handle ACME failures gracefully (DNS not propagated yet)',
+  ]}
+>
+When a customer adds a custom domain, automatically provision a TLS certificate using the **ACME protocol** (Let's Encrypt, ZeroSSL). Use HTTP-01 or DNS-01 challenges for validation. Store certificates in a centralized store and distribute to edge servers. Automate renewal 30 days before expiry.
+</Approach>
+<Approach
+  name="Managed Edge Service (Cloudflare for SaaS, AWS CloudFront)"
+  pros={[
+    'Zero infrastructure to manage for TLS and edge routing',
+    'Global CDN and DDoS protection included',
+    'Handles certificate lifecycle automatically',
+    'Supports advanced features like Orange-to-Orange (customer also on Cloudflare)',
+  ]}
+  cons={[
+    'Per-hostname pricing can be expensive at scale',
+    'Vendor lock-in to the edge provider',
+    'Less control over routing logic and error pages',
+    "Customer DNS must point to the provider's network",
+  ]}
+>
+Delegate custom domain handling to a managed edge platform. **Cloudflare for SaaS** (Custom Hostnames API) handles DNS verification, TLS provisioning, and edge routing. Your backend just registers domains via API and the platform handles the rest.
+</Approach>
+</ApproachList>
+
+## Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Customer["Customer Setup"]
+        DNS[Customer DNS - CNAME to proxy.yourapp.com]
+    end
+    subgraph Edge["Edge / Proxy Layer"]
+        LB[Load Balancer]
+        RP1[Reverse Proxy 1 - Caddy / Nginx]
+        RP2[Reverse Proxy 2 - Caddy / Nginx]
+    end
+    subgraph Platform["Platform Services"]
+        DV[Domain Verification Service]
+        CP[Certificate Provisioner]
+        RT[Routing Table Service]
+        API[Tenant API]
+    end
+    subgraph Storage
+        CS[(Certificate Store - Vault / S3)]
+        DB[(Domain Registry Database)]
+        CACHE[(Route Cache - Redis)]
+    end
+    subgraph CA["Certificate Authority"]
+        LE[ACME Server - Lets Encrypt]
+    end
+    DNS -->|HTTPS| LB
+    LB --> RP1 & RP2
+    RP1 & RP2 --> CACHE
+    RP1 & RP2 --> CS
+    API --> DV
+    DV --> DB
+    API --> CP
+    CP --> LE
+    CP --> CS
+    RT --> DB
+    RT --> CACHE`} caption="Custom Domains — High-level architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="Domain Verification Service">
+Validates that the customer owns the domain they want to connect. Supports DNS-based verification (check for a TXT record with a unique token) and HTTP-based verification (check for a file at a well-known URL). Runs verification checks periodically and on-demand.
+</ComponentCard>
+<ComponentCard name="Certificate Provisioner">
+Automates TLS certificate issuance and renewal via the ACME protocol (Let's Encrypt). Handles HTTP-01 and DNS-01 challenges, stores issued certificates securely, and schedules renewals 30 days before expiry. Implements retry logic for transient ACME failures.
+</ComponentCard>
+<ComponentCard name="Reverse Proxy / Edge Router">
+Terminates TLS using the correct certificate for each incoming domain. Inspects the SNI (Server Name Indication) in the TLS handshake to select the certificate, then routes the request to the correct tenant backend based on the Host header. Caddy excels here with built-in ACME support.
+</ComponentCard>
+<ComponentCard name="Routing Table Service">
+Maintains the mapping of custom domains to tenant IDs. Populated when customers add/verify domains. Cached in Redis for sub-millisecond lookups at the proxy layer. Supports multiple domains per tenant and domain-to-path mappings.
+</ComponentCard>
+<ComponentCard name="Certificate Store">
+Securely stores TLS private keys and certificates. Options include HashiCorp Vault, AWS Secrets Manager, or encrypted S3. Must support fast retrieval for proxy certificate loading. Distributes certificates to all edge nodes on issuance/renewal.
+</ComponentCard>
+<ComponentCard name="Domain Management API">
+REST API for tenants to add, verify, and remove custom domains. Returns verification instructions (DNS records to add), tracks verification status, and triggers certificate provisioning once verified.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    CUSTOM_DOMAIN {
+        string domain_id PK
+        string tenant_id FK
+        string domain_name UK
+        enum verification_status
+        string verification_token
+        enum certificate_status
+        timestamp verified_at
+        timestamp certificate_expires_at
+        timestamp created_at
+    }
+    TLS_CERTIFICATE {
+        string cert_id PK
+        string domain_id FK
+        string certificate_pem
+        string private_key_ref
+        string issuer
+        timestamp issued_at
+        timestamp expires_at
+        boolean active
+    }
+    DOMAIN_ROUTE {
+        string route_id PK
+        string domain_id FK
+        string tenant_id FK
+        string target_path
+        json headers
+        boolean active
+    }
+    VERIFICATION_ATTEMPT {
+        string attempt_id PK
+        string domain_id FK
+        enum method
+        enum result
+        string error_message
+        timestamp attempted_at
+    }
+    CUSTOM_DOMAIN ||--o{ TLS_CERTIFICATE : has
+    CUSTOM_DOMAIN ||--|| DOMAIN_ROUTE : maps_to
+    CUSTOM_DOMAIN ||--o{ VERIFICATION_ATTEMPT : verified_by`} caption="Custom Domains — Entity relationship diagram" />
+
+## DNS Verification Flow
+
+Before provisioning a TLS certificate, you must verify that the customer owns the domain. Two common methods:
+
+**DNS TXT Record Verification**:
+1. Generate a unique token: `_yourapp-verify.customer.com TXT "v=yourapp1 token=abc123"`
+2. Customer adds the TXT record to their DNS
+3. Your service periodically queries DNS for the record
+4. Once found and matched, mark domain as verified
+5. Customer then adds CNAME/A record pointing to your servers
+
+**HTTP Verification**:
+1. Generate a token and instruct customer to serve it at `http://customer.com/.well-known/yourapp-verify`
+2. Your service makes an HTTP request to that URL
+3. If the response contains the expected token, domain is verified
+
+**DNS propagation**: TXT records can take 1-48 hours to propagate. Poll every 5 minutes for up to 72 hours before marking verification as failed. Show propagation status to the customer using multiple DNS resolver checks (Google 8.8.8.8, Cloudflare 1.1.1.1).
+
+<Mermaid chart={`sequenceDiagram
+    participant U as Customer
+    participant API as Platform API
+    participant DNS as DNS Service
+    participant CA as Lets Encrypt
+    participant RP as Reverse Proxy
+    U->>API: Add domain "shop.acme.com"
+    API->>API: Generate verification token
+    API->>U: Add TXT record: _verify.shop.acme.com
+    U->>DNS: Add TXT record
+    loop Every 5 minutes
+        API->>DNS: Query TXT record
+    end
+    DNS->>API: Record found and matches
+    API->>API: Mark domain verified
+    API->>U: Domain verified! Add CNAME
+    U->>DNS: Add CNAME to proxy.yourapp.com
+    API->>CA: Request certificate (ACME)
+    CA->>API: HTTP-01 challenge
+    API->>CA: Challenge response
+    CA->>API: Certificate issued
+    API->>RP: Deploy certificate
+    API->>U: Custom domain active!`} caption="DNS Verification and Certificate Provisioning Flow" />
+
+## TLS Certificate Management at Scale
+
+Managing thousands of TLS certificates introduces operational challenges:
+
+**Issuance**: Let's Encrypt rate limits to 50 certificates per registered domain per week. If you're issuing certificates for customer.com subdomains, this is rarely a problem. But for high-volume onboarding, pre-warm by requesting certificates in advance or use multiple ACME accounts.
+
+**Storage**: Private keys must be stored securely. Use a secrets manager (Vault, AWS Secrets Manager) with encryption at rest. Never store private keys in plain text in your database.
+
+**Distribution**: When a certificate is issued or renewed, all reverse proxy instances need it. Options:
+- **Shared storage**: All proxies read from a central store (S3, Vault). Adds latency on first request.
+- **Push distribution**: Certificate provisioner pushes to all proxy instances via API. Faster but more complex.
+- **On-demand with caching**: Proxy fetches certificate on first TLS handshake for a domain, caches locally. Caddy does this natively.
+
+**Renewal**: Certificates expire in 90 days (Let's Encrypt). Schedule renewal at 60 days. Run a daily cron job to renew certificates expiring within 30 days. Alert on any certificates expiring within 7 days as a safety net.
+
+**Revocation**: When a customer removes their domain, revoke the certificate and remove it from all proxy instances. While not strictly necessary (it will expire naturally), it's good hygiene.
+
+## Reverse Proxy Architecture
+
+The reverse proxy is the critical path — every request flows through it.
+
+**Caddy** is the top choice for custom domains because it has built-in ACME support, automatic HTTPS, and on-demand TLS certificate provisioning. It can request a certificate the first time a new domain hits the server.
+
+**Nginx** with Lua modules (OpenResty) or dynamic certificate loading can also work but requires more custom code.
+
+**Certificate selection**: During the TLS handshake, the client sends the domain name via SNI (Server Name Indication). The proxy uses this to select the correct certificate BEFORE the HTTP request is visible. This means certificate lookup must be fast — use an in-memory cache with the domain-to-certificate mapping.
+
+**Routing**: After TLS termination, the proxy inspects the Host header and looks up the tenant in the routing table (Redis-cached). Routes to the correct tenant backend, injecting tenant context headers (`X-Tenant-ID`, `X-Custom-Domain`).
+
+**Fallback**: If no certificate exists for a domain (new domain, not yet provisioned), serve a branded landing page explaining setup is in progress. Never show a browser certificate error.
+
+## Real-World Examples
+
+<Example system="Vercel">
+Customers add custom domains in the dashboard. Vercel checks DNS configuration, automatically provisions Let's Encrypt certificates, and routes via their global edge network. Supports apex domains via A records and subdomains via CNAME.
+</Example>
+
+<Example system="Shopify">
+Manages millions of custom domains for merchant stores. Uses a massive Nginx/OpenResty fleet with dynamic certificate loading. Certificates are provisioned via Let's Encrypt and stored in a distributed certificate store.
+</Example>
+
+<Example system="Notion">
+Notion Sites allows publishing pages under custom domains. Uses Cloudflare for SaaS (Custom Hostnames) to handle DNS verification, TLS, and edge routing without managing proxy infrastructure directly.
+</Example>
+
+<Example system="Ghost">
+Ghost(Pro) hosting supports custom domains with automatic SSL via Let's Encrypt. Uses Caddy as the reverse proxy with on-demand TLS, provisioning certificates automatically on first request.
+</Example>
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="Self-managed proxy vs Cloudflare for SaaS"
+  pros={['Self-managed: full control, no per-hostname fees', 'Cloudflare: zero infrastructure, built-in CDN/DDoS protection', 'Self-managed: works with any DNS provider']}
+  cons={['Self-managed: significant operational burden at scale', 'Cloudflare: per-hostname pricing ($0.10/month/hostname at scale)', 'Self-managed: must handle certificate lifecycle, distribution, and renewal']}
+/>
+
+<Tradeoff
+  decision="HTTP-01 vs DNS-01 ACME challenge"
+  pros={['HTTP-01: no DNS access needed, works once domain points to your server', 'DNS-01: works before DNS is pointed to you, supports wildcard certs', 'HTTP-01: simpler implementation, no DNS API integration needed']}
+  cons={['HTTP-01: requires domain to already resolve to your servers', "DNS-01: requires integration with customer's DNS provider API", 'DNS-01: more complex but necessary for apex domains behind CDNs']}
+/>
+
+<Tradeoff
+  decision="On-demand vs pre-provisioned certificates"
+  pros={['On-demand: no wasted certificates for unverified domains', 'Pre-provisioned: zero latency on first request', 'On-demand: scales naturally with actual usage']}
+  cons={['On-demand: first request has 10-60s delay for certificate issuance', 'Pre-provisioned: wastes resources on domains that may never receive traffic', 'On-demand: must handle ACME failures gracefully in the request path']}
+/>

@@ -1,35 +1,34 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Nav from '../../components/Nav.astro';
-import MermaidDiagram from '../../components/MermaidDiagram.astro';
-import TableOfContents from '../../components/TableOfContents.astro';
-import CopyPromptButton from '../../components/CopyPromptButton.astro';
-import { systems, categoryLabels, categoryColors } from '../../data';
-import type { SystemDesign } from '../../data';
-import { generateBuildPrompt } from '../../lib/prompt-generator';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Nav from '@/components/Nav.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+import CopyPromptButton from '@/components/CopyPromptButton.astro';
+import { getCollection, render } from 'astro:content';
+import { categoryLabels, categoryColors } from '@/lib/categories';
+import { generateBuildPromptFromMdx } from '@/lib/prompt-generator';
 
-export function getStaticPaths() {
-  return systems.map((system) => ({
-    params: { slug: system.slug },
-    props: { system },
+export async function getStaticPaths() {
+  const systems = await getCollection('systems');
+  return systems.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
   }));
 }
 
-interface Props {
-  system: SystemDesign;
-}
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const { name, tagline, category, tags } = entry.data;
+const colorClass = categoryColors[category];
 
-const { system } = Astro.props;
-const colorClass = categoryColors[system.category];
-
-const otherSystems = systems.filter((s) => s.slug !== system.slug).slice(0, 3);
-const buildPrompt = generateBuildPrompt(system);
-const seoTitle = `How to Build ${system.name} — System Design & Architecture`;
-const seoDescription = `Learn the system design and architecture behind ${system.name}. ${system.tagline}. Detailed breakdown of components, data models, and engineering tradeoffs.`;
-const ogImageUrl = `/og/${system.slug}.png`;
+const allSystems = await getCollection('systems');
+const otherSystems = allSystems.filter((s) => s.id !== entry.id).slice(0, 3);
+const buildPrompt = generateBuildPromptFromMdx(entry);
+const seoTitle = `How to Build ${name} — System Design & Architecture`;
+const seoDescription = `Learn the system design and architecture behind ${name}. ${tagline}. Detailed breakdown of components, data models, and engineering tradeoffs.`;
+const ogImageUrl = `/og/systems/${entry.id}.png`;
 ---
 
-<BaseLayout title={seoTitle} description={seoDescription} ogImage={ogImageUrl} slug={system.slug}>
+<BaseLayout title={seoTitle} description={seoDescription} ogImage={ogImageUrl} slug={entry.id}>
   <Nav />
 
   <main class="pt-16">
@@ -37,16 +36,16 @@ const ogImageUrl = `/og/${system.slug}.png`;
     <section class="bg-paper-warm border-b border-border">
       <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
         <div class="flex items-center gap-3 mb-4">
-          <a href="/catalog" class="text-sm text-ink-muted hover:text-accent transition-colors">Catalog</a>
+          <a href="/systems" class="text-sm text-ink-muted hover:text-accent transition-colors">Systems</a>
           <span class="text-ink-muted">/</span>
           <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full", colorClass]}>
-            {categoryLabels[system.category]}
+            {categoryLabels[category]}
           </span>
         </div>
-        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{system.name}</h1>
-        <p class="text-xl text-ink-light max-w-3xl">{system.tagline}</p>
+        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{name}</h1>
+        <p class="text-xl text-ink-light max-w-3xl">{tagline}</p>
         <div class="flex flex-wrap gap-2 mt-5">
-          {system.tags.map((tag) => (
+          {tags.map((tag) => (
             <span class="text-xs bg-tag-bg text-tag-text px-2.5 py-1 rounded-md">{tag}</span>
           ))}
         </div>
@@ -56,184 +55,17 @@ const ogImageUrl = `/og/${system.slug}.png`;
     <!-- Content -->
     <div class="max-w-7xl mx-auto px-6 py-12 flex gap-12">
       <!-- Table of Contents -->
-      <TableOfContents sections={system.deepDive} />
+      <TableOfContents headings={headings} />
 
       <!-- Main content -->
       <article class="flex-1 min-w-0 max-w-4xl">
-
-        <!-- Overview -->
-        <section id="overview" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-4 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Overview
-          </h2>
-          <p class="text-ink-light leading-relaxed text-lg">{system.overview}</p>
-        </section>
-
-        <!-- Scale -->
-        <section id="scale" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Scale
-          </h2>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(system.scale).map(([key, value]) => (
-              <div class="bg-paper-warm border border-border rounded-xl p-4 text-center">
-                <p class="font-serif text-xl font-bold text-accent">{value}</p>
-                <p class="text-xs text-ink-muted mt-1">{key}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <!-- Requirements -->
-        <section id="requirements" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Requirements
-          </h2>
-          <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-white border border-border rounded-xl p-6">
-              <h3 class="font-serif text-lg font-bold text-ink mb-4">Functional</h3>
-              <ul class="space-y-2">
-                {system.requirements.functional.map((req) => (
-                  <li class="flex items-start gap-2.5 text-sm text-ink-light">
-                    <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0"></span>
-                    {req}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div class="bg-white border border-border rounded-xl p-6">
-              <h3 class="font-serif text-lg font-bold text-ink mb-4">Non-Functional</h3>
-              <ul class="space-y-2">
-                {system.requirements.nonFunctional.map((req) => (
-                  <li class="flex items-start gap-2.5 text-sm text-ink-light">
-                    <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0"></span>
-                    {req}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <!-- High-Level Architecture -->
-        <section id="architecture" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            High-Level Architecture
-          </h2>
-          <MermaidDiagram chart={system.highLevelDiagram} caption={`${system.name} — High-level system architecture`} />
-        </section>
-
-        <!-- Components -->
-        <section id="components" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Key Components
-          </h2>
-          <div class="space-y-4">
-            {system.components.map((comp, i) => (
-              <div class="bg-white border border-border rounded-xl p-5 hover:border-accent/30 transition-colors">
-                <div class="flex items-start gap-4">
-                  <span class="font-mono text-xs text-accent bg-paper-warm w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div>
-                    <h3 class="font-serif text-lg font-bold text-ink mb-1">{comp.name}</h3>
-                    <p class="text-sm text-ink-light leading-relaxed">{comp.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <!-- Data Model -->
-        <section id="data-model" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Data Model
-          </h2>
-          <MermaidDiagram chart={system.dataModel} caption={`${system.name} — Entity relationship diagram`} />
-        </section>
-
-        <!-- Deep Dives -->
-        {system.deepDive.map((section) => (
-          <section id={section.title.toLowerCase().replace(/\s+/g, '-')} class="mb-14">
-            <h2 class="font-serif text-2xl font-bold text-ink mb-4 flex items-center gap-3">
-              <span class="w-8 h-[2px] bg-accent"></span>
-              {section.title}
-            </h2>
-            <div class="text-ink-light leading-relaxed space-y-4 deep-dive-content">
-              {section.content.split('\n\n').map((para) => {
-                if (para.startsWith('**') || para.includes('**')) {
-                  return <p set:html={para.replace(/\*\*(.*?)\*\*/g, '<strong class="text-ink font-semibold">$1</strong>').replace(/\n/g, '<br/>')} />;
-                }
-                if (para.startsWith('- ') || para.startsWith('1. ')) {
-                  const items = para.split('\n').filter(Boolean);
-                  return (
-                    <ul class="space-y-1.5 pl-0 list-none">
-                      {items.map((item) => {
-                        const text = item.replace(/^[-\d.]+\s*/, '');
-                        return (
-                          <li class="flex items-start gap-2.5 text-sm" set:html={`<span class="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0"></span><span>${text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-ink font-semibold">$1</strong>')}</span>`} />
-                        );
-                      })}
-                    </ul>
-                  );
-                }
-                return <p set:html={para.replace(/\*\*(.*?)\*\*/g, '<strong class="text-ink font-semibold">$1</strong>').replace(/\n/g, '<br/>')} />;
-              })}
-            </div>
-            {section.diagram && (
-              <MermaidDiagram chart={section.diagram} caption={section.title} />
-            )}
-          </section>
-        ))}
-
-        <!-- Tradeoffs -->
-        <section id="tradeoffs" class="mb-14">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-accent"></span>
-            Architectural Tradeoffs
-          </h2>
-          <div class="space-y-6">
-            {system.tradeoffs.map((tradeoff) => (
-              <div class="bg-white border border-border rounded-xl p-6">
-                <h3 class="font-serif text-lg font-bold text-ink mb-4">{tradeoff.decision}</h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <p class="text-xs font-semibold uppercase tracking-widest text-green-700 mb-2">Pros</p>
-                    <ul class="space-y-1.5">
-                      {tradeoff.pros.map((pro) => (
-                        <li class="flex items-start gap-2 text-sm text-ink-light">
-                          <span class="text-green-600 mt-0.5 shrink-0">+</span>
-                          {pro}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold uppercase tracking-widest text-red-700 mb-2">Cons</p>
-                    <ul class="space-y-1.5">
-                      {tradeoff.cons.map((con) => (
-                        <li class="flex items-start gap-2 text-sm text-ink-light">
-                          <span class="text-red-600 mt-0.5 shrink-0">−</span>
-                          {con}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <!-- MDX Content -->
+        <div class="system-content">
+          <Content />
+        </div>
 
         <!-- Copy as Prompt -->
-        <CopyPromptButton prompt={buildPrompt} systemName={system.name} label="Build Your Own" />
+        <CopyPromptButton prompt={buildPrompt} systemName={name} label="Build Your Own" />
 
         <!-- Related Systems -->
         <section class="border-t border-border pt-10">
@@ -241,13 +73,13 @@ const ogImageUrl = `/og/${system.slug}.png`;
           <div class="grid md:grid-cols-3 gap-4">
             {otherSystems.map((other) => (
               <a
-                href={`/systems/${other.slug}`}
+                href={`/systems/${other.id}`}
                 class="group block bg-white border border-border rounded-xl p-5 hover:border-accent/40 hover:shadow-md transition-all"
               >
                 <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">
-                  {other.name}
+                  {other.data.name}
                 </h3>
-                <p class="text-xs text-ink-muted">{other.tagline}</p>
+                <p class="text-xs text-ink-muted">{other.data.tagline}</p>
               </a>
             ))}
           </div>
@@ -263,3 +95,76 @@ const ogImageUrl = `/og/${system.slug}.png`;
     </div>
   </footer>
 </BaseLayout>
+
+<style is:global>
+  @reference "../../styles/global.css";
+
+  .system-content h2 {
+    @apply font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3;
+  }
+
+  .system-content h2::before {
+    content: '';
+    @apply w-8 h-[2px] bg-accent inline-block;
+  }
+
+  .system-content > h2 {
+    @apply mt-14;
+  }
+
+  .system-content > h2:first-of-type {
+    @apply mt-0;
+  }
+
+  .system-content p {
+    @apply text-ink-light leading-relaxed mb-4;
+  }
+
+  .system-content h2 + p {
+    @apply text-ink-light leading-relaxed text-lg;
+  }
+
+  .system-content strong {
+    @apply text-ink font-semibold;
+  }
+
+  .system-content > ol {
+    counter-reset: ol-counter;
+    @apply pl-0 list-none space-y-1.5 mb-4;
+  }
+
+  .system-content > ol > li {
+    counter-increment: ol-counter;
+    @apply flex items-start gap-2.5 text-sm text-ink-light;
+  }
+
+  .system-content > ol > li::before {
+    content: counter(ol-counter) '.';
+    @apply font-semibold text-accent shrink-0 mt-0;
+  }
+
+  .system-content > ul {
+    @apply space-y-1.5 pl-0 list-none mb-4;
+  }
+
+  .system-content > ul > li {
+    @apply text-sm text-ink-light pl-4 relative;
+  }
+
+  .system-content > ul > li::before {
+    content: '';
+    @apply w-1.5 h-1.5 rounded-full bg-accent absolute left-0 top-2 inline-block;
+  }
+
+  .system-content > figure,
+  .system-content > .grid,
+  .system-content > .space-y-4,
+  .system-content > .space-y-6,
+  .system-content > .component-list {
+    @apply mb-6;
+  }
+
+  .system-content > div.bg-white {
+    @apply mb-4;
+  }
+</style>

@@ -1,0 +1,256 @@
+---
+title: File Upload Pipeline
+tagline: Chunked and resumable uploads, server-side processing, and CDN delivery at scale
+category: media
+tags: [upload, files, chunked, resumable, S3, CDN]
+---
+import { Mermaid, ComponentList, ComponentCard, ApproachList, Approach, Example, Tradeoff } from '@/components/mdx';
+
+## The Problem
+
+File uploads seem simple until you handle large files (multi-GB videos), unreliable networks (mobile users losing connection mid-upload), concurrent uploads from thousands of users, and post-upload processing (virus scanning, thumbnail generation, format conversion). A production upload pipeline needs resumable uploads (don't restart a 2GB upload from scratch), direct-to-storage uploads (bypass your API server), progress tracking, file validation, and an async processing pipeline that transforms uploads into the formats your application needs.
+
+## Architectural Approaches
+
+<ApproachList>
+<Approach
+  name="Presigned URL Direct Upload"
+  pros={[
+    'API server handles zero file bytes — massively reduces bandwidth and CPU',
+    'Scales naturally — cloud storage handles concurrent uploads',
+    'Client can upload directly from browser/mobile with progress tracking',
+    'Built-in multipart upload support in S3/GCS for large files',
+  ]}
+  cons={[
+    'Two-step process: get presigned URL, then upload',
+    'Harder to validate file content before it reaches storage',
+    'CORS configuration required for browser uploads',
+    'Presigned URLs have expiry — must handle edge cases',
+  ]}
+>
+Generate a presigned URL from your API server that allows the client to upload directly to cloud storage (S3, GCS, R2). Your server never handles the file bytes — it only generates the upload URL and is notified via event/webhook when the upload completes. Best for most use cases.
+</Approach>
+<Approach
+  name="Chunked Upload via API Server"
+  pros={[
+    'Full control over each chunk — validate, transform, scan in real-time',
+    'Resumable by nature — only re-upload failed chunks',
+    'Works behind restrictive firewalls that block direct cloud storage access',
+    'Can implement deduplication (hash each chunk, skip known chunks)',
+  ]}
+  cons={[
+    'API server handles all file bytes — bandwidth and CPU intensive',
+    'More complex client-side implementation (chunking, tracking, reassembly)',
+    'Must manage temporary chunk storage and cleanup',
+    'Harder to scale than direct-to-storage uploads',
+  ]}
+>
+Client splits the file into chunks (1-10MB each) and uploads each chunk to your API server, which reassembles them. Supports resume by tracking which chunks have been received. Used when you need server-side validation or transformation before storage.
+</Approach>
+<Approach
+  name="tus Protocol (Resumable Upload Standard)"
+  pros={[
+    'Standardized protocol — interoperable clients and servers',
+    'Built-in resumability with offset tracking',
+    'Rich ecosystem of client (Uppy) and server (tusd) libraries',
+    'Protocol handles all edge cases (network failures, concurrent chunks)',
+  ]}
+  cons={[
+    'Additional protocol to implement and maintain',
+    'May be overkill for simple upload scenarios',
+    'Server must handle tus-specific endpoints and headers',
+    'Less control than a fully custom implementation',
+  ]}
+>
+**tus** is an open protocol for resumable file uploads over HTTP. Clients and servers implement the tus specification, which defines how to create uploads, send chunks, and resume interrupted transfers. Libraries available for every major platform.
+</Approach>
+</ApproachList>
+
+## Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Client
+        APP[Web/Mobile App]
+        UPPY[Upload Client - Uppy / Custom]
+    end
+    subgraph API["API Layer"]
+        UPLOAD_API[Upload API - Presigned URLs]
+        WEBHOOK[Upload Complete Webhook]
+    end
+    subgraph Storage["Storage Layer"]
+        S3[(Object Storage - S3 / R2 / GCS)]
+        TMP[(Temp Storage - Processing)]
+    end
+    subgraph Processing["Processing Pipeline"]
+        Q[Job Queue]
+        SCAN[Virus Scanner]
+        THUMB[Thumbnail Generator]
+        TRANSCODE[Format Converter]
+        META[Metadata Extractor]
+    end
+    subgraph Delivery["Delivery"]
+        CDN[CDN - CloudFront / CF]
+    end
+    subgraph DB["Database"]
+        FILES[(File Registry)]
+    end
+    APP --> UPPY
+    UPPY --> UPLOAD_API
+    UPLOAD_API -->|Presigned URL| UPPY
+    UPPY -->|Direct upload| S3
+    S3 -->|Event notification| WEBHOOK
+    WEBHOOK --> Q
+    Q --> SCAN & THUMB & TRANSCODE & META
+    SCAN & THUMB & TRANSCODE & META --> TMP
+    TMP --> S3
+    WEBHOOK --> FILES
+    S3 --> CDN`} caption="File Upload Pipeline — High-level architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="Upload API">
+Generates presigned upload URLs, validates upload metadata (file type, size limits), and tracks upload state. Returns a presigned URL with a 15-60 minute expiry. For multipart uploads, orchestrates the initiation, part URLs, and completion API calls.
+</ComponentCard>
+<ComponentCard name="Upload Client (Uppy)">
+Client-side library handling file selection, chunking, progress tracking, and retry logic. Uppy is the most popular open-source option with tus, S3, and XHR upload plugins. Provides drag-and-drop UI, progress bars, and thumbnail previews.
+</ComponentCard>
+<ComponentCard name="Processing Pipeline">
+Async job queue triggered by upload completion events. Runs processing steps: virus scanning (ClamAV), thumbnail generation (sharp/ImageMagick), video transcoding (FFmpeg), metadata extraction (EXIF, duration, dimensions), and format conversion. Each step is an independent job for parallel processing.
+</ComponentCard>
+<ComponentCard name="File Registry">
+Database tracking all uploaded files: original filename, storage key, content type, size, processing status, generated variants (thumbnails, transcoded versions), and access permissions. The canonical record of what exists in storage.
+</ComponentCard>
+<ComponentCard name="Virus Scanner">
+Scans uploaded files for malware before they are served to other users. Uses ClamAV or a cloud scanning service. Quarantines infected files and notifies the uploader. Must scan before the file is accessible via CDN.
+</ComponentCard>
+<ComponentCard name="CDN Delivery Layer">
+Serves processed files via a CDN for low-latency global delivery. Signed URLs for access-controlled files. Image optimization (WebP conversion, responsive resizing) at the edge. Cache headers optimized per file type.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    UPLOAD {
+        string upload_id PK
+        string user_id FK
+        string filename
+        string content_type
+        int size_bytes
+        string storage_key
+        enum status
+        string upload_url
+        timestamp created_at
+        timestamp completed_at
+    }
+    FILE_VARIANT {
+        string variant_id PK
+        string upload_id FK
+        string variant_type
+        string storage_key
+        string content_type
+        int size_bytes
+        json metadata
+        timestamp created_at
+    }
+    PROCESSING_JOB {
+        string job_id PK
+        string upload_id FK
+        string job_type
+        enum status
+        json result
+        string error_message
+        timestamp started_at
+        timestamp completed_at
+    }
+    UPLOAD ||--o{ FILE_VARIANT : generates
+    UPLOAD ||--o{ PROCESSING_JOB : triggers`} caption="File Upload Pipeline — Entity relationship diagram" />
+
+## S3 Multipart Upload Flow
+
+For files larger than 100MB, S3 multipart upload splits the file into parts uploaded in parallel.
+
+**Flow**:
+1. **Initiate**: API calls `CreateMultipartUpload` → returns an upload ID
+2. **Upload Parts**: Client uploads each part (5MB-5GB each) with the upload ID and part number. Each part returns an ETag.
+3. **Complete**: API calls `CompleteMultipartUpload` with the list of part numbers and ETags. S3 assembles the final object.
+4. **Abort**: If upload fails, call `AbortMultipartUpload` to clean up parts.
+
+**Presigned approach**: Generate a presigned URL for each part. Client uploads parts directly to S3. Your server only orchestrates the initiate/complete calls.
+
+**Resume**: If a part upload fails, only that part needs to be re-uploaded. List uploaded parts with `ListParts` and resume from the last successful part.
+
+**Parallel uploads**: Upload multiple parts simultaneously (3-5 concurrent parts is typical). Total upload time = file_size / (part_count × bandwidth_per_connection). A 1GB file with 5 parallel 100MB parts completes 5x faster than sequential upload.
+
+**Cleanup**: Set an S3 lifecycle rule to abort incomplete multipart uploads after 7 days. Otherwise, orphaned parts accumulate and incur storage costs.
+
+## File Validation and Security
+
+Uploaded files are untrusted user input — treat them with extreme caution.
+
+**Content type validation**: Don't trust the client's Content-Type header. Validate by reading the file's magic bytes (file signature). A .jpg file should start with `FF D8 FF`. Libraries: `file-type` (Node.js), `python-magic`.
+
+**Size limits**: Enforce per-file and per-user limits. Check BEFORE the upload completes — presigned URLs can include a content-length-range condition. S3 presigned POSTs support conditions like `["content-length-range", 0, 10485760]` (10MB max).
+
+**Filename sanitization**: Never use the original filename for storage. Generate a random key (UUID or hash). Store the original filename in the database for display only. This prevents path traversal attacks and filename collisions.
+
+**Image-specific**: Reprocess all uploaded images (strip EXIF metadata for privacy, re-encode to prevent polyglot files). Use a library like sharp to decode and re-encode. This neutralizes steganography and embedded exploits.
+
+**Virus scanning**: Scan every file before it's accessible. Use ClamAV (open source) or a cloud API (VirusTotal, AWS GuardDuty). Quarantine suspicious files and notify the uploader. Never serve a file that hasn't been scanned.
+
+**Storage isolation**: Store uploads in a separate bucket/container from your application code. Never store uploads in a web-accessible directory. Serve only through your CDN or via presigned download URLs.
+
+## Progress Tracking and UX
+
+File uploads are one of the few user-facing operations that can take minutes. Good UX is critical.
+
+**Client-side progress**: XMLHttpRequest and fetch both support upload progress events. Show a progress bar with percentage, upload speed, and estimated time remaining. For chunked uploads, track per-chunk and overall progress.
+
+**Server-side status**: Store upload status in the database: pending → uploading → processing → complete. Clients can poll a status endpoint or subscribe via SSE for real-time updates. Show processing status after upload completes (e.g., "Generating thumbnails...").
+
+**Retry UX**: On failure, show "Upload failed. Retry?" button — don't silently restart. For resumable uploads, show "Resuming from 67%..." to reassure the user that progress wasn't lost.
+
+**Drag and drop**: Support drag-and-drop file selection alongside the traditional file picker. Show a drop zone overlay when files are dragged over the page. Uppy provides this out of the box.
+
+**Batch uploads**: For multiple files, show individual progress per file with an overall progress summary. Allow canceling individual files without affecting others. Process files in parallel (2-3 concurrent uploads) for faster batch completion.
+
+**Mobile considerations**: Mobile networks are unreliable. Use smaller chunk sizes (1-2MB vs 5-10MB on desktop). Implement aggressive retry logic. Consider pausing uploads when the app is backgrounded and resuming when it returns to the foreground.
+
+## Real-World Examples
+
+<Example system="Dropbox">
+Chunked upload API with 150MB max chunk size. Block-level deduplication — only new/changed blocks are uploaded. Delta sync reduces upload size for file modifications. Client compresses chunks before upload for bandwidth savings.
+</Example>
+
+<Example system="YouTube">
+Resumable upload protocol for video files up to 256GB. Uploads go to Google Cloud Storage. Triggers a massive transcoding pipeline (dozens of output formats/resolutions). Processing can take minutes to hours depending on video length.
+</Example>
+
+<Example system="Cloudflare R2">
+S3-compatible object storage with zero egress fees. Supports multipart uploads up to 5TB per object. Integrated with Cloudflare CDN for instant global delivery. Workers can intercept uploads for custom processing.
+</Example>
+
+<Example system="Transloadit">
+File upload and processing service. Handles upload (tus protocol), transformation (resize, transcode, watermark), and delivery. Assembly concept: define a processing pipeline as a JSON template. Used by companies that don't want to build processing infrastructure.
+</Example>
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="Presigned URL (direct-to-storage) vs upload through API server"
+  pros={['Presigned: zero bandwidth on API server, scales effortlessly', 'Through API: full control, can validate/process in real-time', 'Presigned: client gets direct S3 upload speed (no middleman)']}
+  cons={["Presigned: can't validate file content before it reaches storage", 'Through API: API server is a bottleneck, expensive bandwidth', 'Presigned: more complex client-side flow (two-step)']}
+/>
+
+<Tradeoff
+  decision="Process synchronously vs async pipeline"
+  pros={['Sync: immediate availability of processed files', 'Async: upload completes instantly, processing happens in background', 'Async: can retry failed processing without re-uploading']}
+  cons={['Sync: slow uploads (waiting for processing), blocks the request', 'Async: files not immediately available after upload', 'Async: must track processing status and handle failures']}
+/>
+
+<Tradeoff
+  decision="tus protocol vs custom chunked upload"
+  pros={['tus: standardized, rich ecosystem (Uppy + tusd)', 'Custom: full control, tailored to your exact needs', 'tus: resumability and error handling solved for you']}
+  cons={['tus: additional protocol complexity, another server to run', 'Custom: must implement chunking, resume, and error handling', 'tus: may be overkill for simple upload scenarios']}
+/>

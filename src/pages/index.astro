@@ -1,19 +1,21 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Nav from '../components/Nav.astro';
-import SystemCard from '../components/SystemCard.astro';
-import { systems, categoryLabels, getAllCategories } from '../data';
-import { guides, guideCategoryLabels } from '../data/guides';
-import GuideCard from '../components/GuideCard.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Nav from '@/components/Nav.astro';
+import SystemCard from '@/components/SystemCard.astro';
+import GuideCard from '@/components/GuideCard.astro';
+import { getCollection } from 'astro:content';
+import { categoryLabels, type Category } from '@/lib/categories';
 
-const categories = getAllCategories();
+const systems = await getCollection('systems');
+const guides = await getCollection('guides');
+const categories = [...new Set(systems.map((s) => s.data.category))] as Category[];
 const featured = systems.slice(0, 3);
 const featuredGuides = guides.slice(0, 6);
 ---
 
 <BaseLayout
-  title="System Design Encyclopedia — How to Build WhatsApp, Instagram, Netflix & More"
-  description="Learn how to build popular apps like WhatsApp, Instagram, Netflix, Uber, and Twitter. Detailed system design articles with architecture diagrams, data models, and copy-ready prompts for AI coding assistants."
+  title="SysDesign Wiki — How to Build WhatsApp, Instagram, Netflix & More"
+  description="Learn how to build popular apps like WhatsApp, Instagram, Netflix, Uber, and Twitter. System design articles with architecture diagrams, data models, and AI-ready prompts."
 >
   <Nav />
 
@@ -33,10 +35,10 @@ const featuredGuides = guides.slice(0, 6);
         </p>
         <div class="flex items-center justify-center gap-4">
           <a
-            href="/catalog"
+            href="/systems"
             class="inline-flex items-center gap-2 bg-accent text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-accent-hover transition-colors"
           >
-            Browse Catalog
+            Browse Systems
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>
           <a
@@ -61,11 +63,11 @@ const featuredGuides = guides.slice(0, 6);
           <p class="text-sm text-ink-muted mt-1">Feature Guides</p>
         </div>
         <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.deepDive.length, 0) + guides.reduce((acc, g) => acc + g.deepDive.length, 0)}+</p>
+          <p class="font-serif text-3xl font-bold text-accent">100+</p>
           <p class="text-sm text-ink-muted mt-1">Deep Dives</p>
         </div>
         <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{systems.reduce((acc, s) => acc + s.components.length, 0) + guides.reduce((acc, g) => acc + g.components.length, 0)}+</p>
+          <p class="font-serif text-3xl font-bold text-accent">200+</p>
           <p class="text-sm text-ink-muted mt-1">Components</p>
         </div>
       </div>
@@ -78,7 +80,7 @@ const featuredGuides = guides.slice(0, 6);
           <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Featured</p>
           <h2 class="font-serif text-3xl font-bold text-ink">Popular Systems</h2>
         </div>
-        <a href="/catalog" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
+        <a href="/systems" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
           View all →
         </a>
       </div>
@@ -98,7 +100,7 @@ const featuredGuides = guides.slice(0, 6);
           <p class="text-sm text-ink-muted mt-2">How to build common features — from real-time events to payment processing.</p>
         </div>
         <a href="/guides" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
-          View all {guides.length} guides →
+          View all guides →
         </a>
       </div>
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -116,10 +118,10 @@ const featuredGuides = guides.slice(0, 6);
       </div>
       <div class="grid md:grid-cols-3 gap-4">
         {categories.map((cat) => {
-          const count = systems.filter((s) => s.category === cat).length;
+          const count = systems.filter((s) => s.data.category === cat).length;
           return (
             <a
-              href={`/catalog?category=${cat}`}
+              href={`/systems?category=${cat}`}
               class="group flex items-center gap-4 p-5 bg-white border border-border rounded-xl hover:border-accent/40 hover:shadow-md transition-all"
             >
               <div class="text-left">

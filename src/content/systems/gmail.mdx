@@ -1,0 +1,237 @@
+---
+name: Gmail
+tagline: The world's largest email service with AI-powered organization and search
+category: messaging
+tags: [email, messaging, search, spam-filtering, google, ML]
+---
+import { Mermaid, Scale, ComponentList, ComponentCard, Requirements, Tradeoff } from '@/components/mdx';
+
+## Overview
+
+Gmail is the world's largest email service with 1.8B+ users, processing and storing hundreds of billions of emails. Its architecture must handle high-throughput email delivery (receiving and sending), massive full-text search across years of email history, real-time spam and phishing detection that blocks 99.9%+ of threats, and smart features like auto-categorization, Smart Reply, and Smart Compose. Gmail pioneered the "search, don't sort" approach to email with its label-based organization and conversation threading. Built on Google's Bigtable and Spanner infrastructure, Gmail provides strong consistency and global availability.
+
+## Scale
+
+<Scale items={{
+  "Users": "1.8B+",
+  "Emails sent/received per day": "300B+",
+  "Spam blocked per day": "~15B",
+  "Storage per free account": "15 GB",
+}} />
+
+## Requirements
+
+<Requirements
+  functional={[
+    'Send and receive emails with attachments',
+    'Conversation threading and label-based organization',
+    'Full-text search across all emails',
+    'Spam, phishing, and malware detection',
+    'Auto-categorization (Primary, Social, Promotions, Updates)',
+    'Smart Reply and Smart Compose suggestions',
+    'Calendar and Drive integration',
+  ]}
+  nonFunctional={[
+    'Email delivery latency <5 seconds for 99th percentile',
+    'Spam detection accuracy >99.9%',
+    'Search results in <500ms across years of email',
+    'High availability (99.99%+ uptime)',
+    'Strong consistency — no lost or duplicated emails',
+    'Compliance: encryption in transit, DLP, retention policies',
+  ]}
+/>
+
+## High-Level Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Clients
+        WEB[Web Client]
+        ANDROID[Android App]
+        IOS[iOS App]
+        IMAP[IMAP/POP Clients]
+    end
+    subgraph Edge["Edge / MTA"]
+        MX[MX Servers]
+        LB[Load Balancer]
+        TLS[TLS Termination]
+    end
+    subgraph Services["Core Services"]
+        SMTP[SMTP Service]
+        DELIVER[Delivery Service]
+        SPAM[Spam Filter]
+        SEARCH[Search Service]
+        LABEL[Label & Category Service]
+        SMART[Smart Features]
+        NOTIF[Notification Service]
+    end
+    subgraph Storage["Storage"]
+        BT[(Bigtable - Email Store)]
+        SPANNER[(Spanner - Metadata)]
+        INDEX[(Search Index)]
+        ML[(ML Models)]
+    end
+    WEB & ANDROID & IOS --> LB
+    IMAP --> LB
+    MX --> TLS
+    TLS --> SMTP
+    SMTP --> SPAM
+    SPAM --> DELIVER
+    DELIVER --> BT & SPANNER
+    DELIVER --> NOTIF
+    DELIVER --> LABEL
+    LB --> SEARCH & LABEL & SMART
+    SEARCH --> INDEX
+    LABEL --> SPANNER
+    SMART --> ML`} caption="Gmail — High-level system architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="SMTP / MX Service">
+Receives inbound emails via SMTP from other mail servers. Google operates MX (Mail Exchange) servers at multiple locations worldwide. Handles TLS encryption, DKIM/SPF/DMARC validation, and initial connection-level spam filtering (IP reputation).
+</ComponentCard>
+<ComponentCard name="Spam Filter">
+Multi-layer spam and phishing detection that blocks 99.9%+ of threats. Combines rule-based filters, ML classifiers (trained on user reports), URL reputation scanning, attachment sandboxing, and real-time threat intelligence. Processes every inbound and outbound email.
+</ComponentCard>
+<ComponentCard name="Delivery Service">
+Routes emails to the correct user's mailbox. Handles conversation threading (grouping replies into threads), label application, and triggers for filters/rules. Writes email content to Bigtable and metadata to Spanner.
+</ComponentCard>
+<ComponentCard name="Search Service">
+Full-text search across all of a user's emails using an inverted index. Supports operators like from:, to:, subject:, has:attachment, before:, after:, label:, is:starred. Index is updated in near real-time as new emails arrive.
+</ComponentCard>
+<ComponentCard name="Label & Category Service">
+Manages Gmail's label system (labels replace folders — an email can have multiple labels). Auto-categorization ML model classifies emails into Primary, Social, Promotions, and Updates tabs based on sender patterns and content.
+</ComponentCard>
+<ComponentCard name="Smart Features">
+AI-powered features including Smart Reply (suggesting short responses), Smart Compose (autocomplete while typing), nudges (reminders about emails needing a response), and important-first inbox prioritization.
+</ComponentCard>
+<ComponentCard name="Notification Service">
+Delivers push notifications to mobile devices and manages email notification settings. Batches notifications for less important categories and respects quiet hours.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    USER {
+        string user_id PK
+        string email_address UK
+        bigint storage_used
+        bigint storage_quota
+        json settings
+    }
+    THREAD {
+        string thread_id PK
+        string user_id FK
+        string subject
+        int message_count
+        timestamp last_message_at
+    }
+    MESSAGE {
+        string message_id PK
+        string thread_id FK
+        string user_id FK
+        string from_address
+        json to_addresses
+        string subject
+        string snippet
+        bigint size_bytes
+        boolean is_read
+        boolean is_starred
+        timestamp received_at
+    }
+    LABEL {
+        string label_id PK
+        string user_id FK
+        string name
+        enum type
+        string color
+    }
+    MESSAGE_LABEL {
+        string message_id FK
+        string label_id FK
+    }
+    ATTACHMENT {
+        string attachment_id PK
+        string message_id FK
+        string filename
+        string mime_type
+        bigint size_bytes
+        string blob_ref
+    }
+    USER ||--o{ THREAD : has
+    THREAD ||--o{ MESSAGE : contains
+    USER ||--o{ LABEL : defines
+    MESSAGE ||--o{ MESSAGE_LABEL : has
+    LABEL ||--o{ MESSAGE_LABEL : applied_to
+    MESSAGE ||--o{ ATTACHMENT : has`} caption="Gmail — Entity relationship diagram" />
+
+## Spam Detection Pipeline
+
+Gmail blocks ~15 billion spam emails per day with a 99.9%+ detection rate — one of the most effective spam filters ever built.
+
+**Multi-layer approach**:
+1. **Connection-level**: IP reputation, SPF/DKIM/DMARC validation, rate limiting. Rejects obvious spam before the email body is even received.
+2. **Content analysis**: ML classifiers analyze email headers, body text, URLs, and attachments. Models are trained on billions of user-reported spam signals.
+3. **URL scanning**: Every URL in every email is checked against Google's Safe Browsing database. Suspicious URLs are sandboxed — clicked links go through a Google redirect that re-checks the destination in real time.
+4. **Attachment scanning**: Attachments are scanned for malware using multiple antivirus engines and sandboxed execution. Encrypted attachments and password-protected ZIPs receive extra scrutiny.
+5. **Behavioral signals**: New sender patterns, bulk sending characteristics, and engagement rates (do users delete without reading?) feed into the spam model.
+
+**Adversarial training**: Spammers constantly evolve tactics. Gmail's models are retrained daily on fresh data, and the system can deploy emergency rules within minutes of detecting a new spam campaign.
+
+<Mermaid chart={`graph LR
+    EMAIL[Inbound Email] --> IP[IP Reputation]
+    IP -->|Pass| AUTH[SPF/DKIM/DMARC]
+    AUTH -->|Pass| ML[ML Classifier]
+    ML -->|Pass| URL[URL Scanner]
+    URL -->|Pass| ATT[Attachment Scan]
+    ATT -->|Pass| INBOX[Deliver to Inbox]
+    IP -->|Fail| REJECT[Reject]
+    AUTH -->|Fail| SPAM[Spam Folder]
+    ML -->|Spam| SPAM
+    URL -->|Malicious| WARN[Phishing Warning]
+    ATT -->|Malware| BLOCK[Block Attachment]`} caption="Spam Detection Pipeline" />
+
+## Bigtable Email Storage
+
+Gmail stores email content in **Bigtable**, Google's distributed wide-column store, which provides the performance characteristics email needs.
+
+**Data model**: Each user's emails are stored in a single Bigtable row range, sorted by a key combining user_id and reverse timestamp. This means the most recent emails are physically stored together, making inbox loading a single sequential read.
+
+**Column families**: Email data is split into column families — headers (small, frequently read), body (larger, read on demand), and attachments (large blobs stored separately with references). This allows loading the inbox (headers only) without reading full email bodies.
+
+**Compaction and storage**: Bigtable's LSM-tree storage engine handles Gmail's write-heavy workload (billions of new emails daily) efficiently. Background compaction merges sorted runs and reclaims space from deleted emails.
+
+**Metadata in Spanner**: While email content lives in Bigtable, structured metadata (labels, thread relationships, search index pointers) lives in Spanner for its strong consistency and SQL query capabilities. A label change needs to be instantly visible across all devices — Spanner's external consistency guarantees this.
+
+## Smart Reply and Smart Compose
+
+Gmail's **Smart Reply** suggests three short response options, while **Smart Compose** autocompletes sentences as users type. Both are on-device and server-side ML features.
+
+**Smart Reply**: A sequence-to-sequence model reads the incoming email and generates three diverse response suggestions (e.g., "Thanks!", "Sounds good, I'll be there.", "Let me check and get back to you."). The model is trained on anonymized response patterns — not on reading users' actual emails. A diversity mechanism ensures the three suggestions cover different intents.
+
+**Smart Compose**: As the user types a reply, a language model predicts the next few words and displays them as gray text. The model conditions on the email being replied to (for context) and the user's typing so far. Pressing Tab accepts the suggestion.
+
+**On-device inference**: Both features run a lightweight model on-device for privacy (the email content doesn't leave the device for these features). A larger server-side model provides higher-quality suggestions when available.
+
+**Personalization**: The models adapt to individual writing style over time — learning common phrases, greetings, and sign-offs that a specific user tends to write.
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="Labels over folders"
+  pros={['An email can have multiple labels — more flexible than folders', 'Search-centric approach reduces need for manual organization', 'Enables auto-categorization without moving emails']}
+  cons={['Unfamiliar to users coming from folder-based email', 'Can lead to label proliferation', 'IMAP mapping to labels is imperfect']}
+/>
+
+<Tradeoff
+  decision="Bigtable + Spanner over single database"
+  pros={['Bigtable optimized for large sequential reads (email loading)', 'Spanner provides strong consistency for metadata operations', 'Each optimized for its access pattern']}
+  cons={['Two systems to maintain and keep in sync', 'Cross-system transactions are complex', 'Operational overhead of running both']}
+/>
+
+<Tradeoff
+  decision="Aggressive spam filtering with ML"
+  pros={['99.9%+ spam detection rate', 'Adapts to new spam techniques automatically', 'Protects users from phishing and malware']}
+  cons={['False positives — legitimate emails occasionally marked as spam', 'ML models are opaque — hard to explain why an email was filtered', 'Constant retraining required to stay ahead of adversaries']}
+/>

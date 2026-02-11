@@ -1,0 +1,51 @@
+---
+interface Props {
+  name: string;
+  pros: string[];
+  cons: string[];
+}
+
+const { name, pros, cons } = Astro.props;
+---
+
+<div class="bg-white border border-border rounded-xl p-6 approach-card" style="counter-increment: approach-counter;">
+  <div class="flex items-start gap-4 mb-4">
+    <span class="approach-number font-mono text-xs text-accent bg-paper-warm w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 font-bold"></span>
+    <div>
+      <h3 class="font-serif text-lg font-bold text-ink mb-1">{name}</h3>
+      <div class="text-sm text-ink-light leading-relaxed">
+        <slot />
+      </div>
+    </div>
+  </div>
+  <div class="grid md:grid-cols-2 gap-4 pl-11">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-green-700 mb-2">Pros</p>
+      <ul class="space-y-1.5">
+        {pros.map((pro) => (
+          <li class="flex items-start gap-2 text-sm text-ink-light">
+            <span class="text-green-600 mt-0.5 shrink-0">+</span>
+            {pro}
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-red-700 mb-2">Cons</p>
+      <ul class="space-y-1.5">
+        {cons.map((con) => (
+          <li class="flex items-start gap-2 text-sm text-ink-light">
+            <span class="text-red-600 mt-0.5 shrink-0">−</span>
+            {con}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  .approach-card .approach-number::before {
+    content: counter(approach-counter, decimal-leading-zero);
+  }
+</style>

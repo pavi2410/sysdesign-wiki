@@ -1,0 +1,25 @@
+---
+interface Props {
+  name: string;
+}
+
+const { name } = Astro.props;
+---
+
+<div class="bg-white border border-border rounded-xl p-5 hover:border-accent/30 transition-colors component-card" style="counter-increment: component-counter;">
+  <div class="flex items-start gap-4">
+    <span class="component-number font-mono text-xs text-accent bg-paper-warm w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 font-bold"></span>
+    <div>
+      <h3 class="font-serif text-lg font-bold text-ink mb-1">{name}</h3>
+      <div class="text-sm text-ink-light leading-relaxed">
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .component-card .component-number::before {
+    content: counter(component-counter, decimal-leading-zero);
+  }
+</style>
