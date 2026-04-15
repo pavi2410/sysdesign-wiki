@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import satori from 'satori';
-import { Resvg } from '@resvg/resvg-js';
+import { satori } from '@cf-wasm/satori/workerd';
+import { Resvg } from '@cf-wasm/resvg/workerd';
 
 export const prerender = true;
 
@@ -181,7 +181,7 @@ export const GET: APIRoute = async () => {
     }
   );
 
-  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } });
+  const resvg = await Resvg.async(svg, { fitTo: { mode: 'width', value: 1200 } });
   const pngData = resvg.render();
   const pngBuffer = pngData.asPng();
 

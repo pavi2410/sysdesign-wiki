@@ -3,9 +3,7 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 import pagefind from 'astro-pagefind';
-
 import cloudflare from '@astrojs/cloudflare';
-
 import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
@@ -16,17 +14,6 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
-    ssr: {
-      external: ['@resvg/resvg-js'],
-    },
-    build: {
-      rollupOptions: {
-        external: ['@resvg/resvg-js'],
-      },
-    },
-    optimizeDeps: {
-      exclude: ['@resvg/resvg-js'],
-    },
   },
 
   adapter: cloudflare(),

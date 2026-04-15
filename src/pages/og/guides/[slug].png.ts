@@ -1,6 +1,6 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
-import satori from 'satori';
-import { Resvg } from '@resvg/resvg-js';
+import { satori } from '@cf-wasm/satori/workerd';
+import { Resvg } from '@cf-wasm/resvg/workerd';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { guideCategoryLabels } from '@/lib/categories';
 
@@ -295,7 +295,7 @@ export const GET: APIRoute = async ({ props }) => {
     }
   );
 
-  const resvg = new Resvg(svg, {
+  const resvg = await Resvg.async(svg, {
     fitTo: { mode: 'width', value: 1200 },
   });
   const pngData = resvg.render();

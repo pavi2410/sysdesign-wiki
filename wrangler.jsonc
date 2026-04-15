@@ -1,5 +1,5 @@
 {
-	"main": "dist/_worker.js/index.js",
+  "main": "@astrojs/cloudflare/entrypoints/server",
 	"name": "system-design-encyclopedia",
   "compatibility_date": "2026-02-08",
   "compatibility_flags": [
