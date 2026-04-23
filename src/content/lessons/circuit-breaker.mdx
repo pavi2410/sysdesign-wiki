@@ -1,0 +1,39 @@
+---
+title: Circuit Breaker
+tagline: Stop calling an unhealthy dependency before failures cascade through the system.
+category: reliability
+level: intermediate
+timeMinutes: 4
+tags: [circuit-breaker, resilience, failures, reliability]
+relatedGuides: [webhooks, rate-limiting, caching-strategies]
+relatedSystems: [netflix, slack, github]
+prerequisites: [retry-exponential-backoff]
+---
+
+## What it is
+
+A circuit breaker tracks calls to a dependency and temporarily stops sending traffic when failures cross a threshold.
+
+## Why it matters
+
+If a dependency is down, blindly retrying can make the outage worse. Circuit breakers fail fast, preserve resources, and give the dependency time to recover.
+
+## How it works
+
+The breaker starts closed. After enough failures, it opens and immediately rejects or falls back. After a cooldown, it becomes half-open and allows limited test requests.
+
+## When to use it
+
+Use it around remote services, payment providers, search clusters, notification providers, and any dependency that can become slow or unavailable.
+
+## Tradeoffs / failure modes
+
+Thresholds are hard. Opening too eagerly causes avoidable downtime; opening too late allows cascading failure. Fallbacks must be honest about degraded behavior.
+
+## Tiny example
+
+If a webhook provider times out repeatedly, the delivery service opens the circuit and queues retries instead of tying up workers.
+
+## Related guides and systems
+
+See Webhooks, Rate Limiting, Caching Strategies, Netflix, Slack, and GitHub.

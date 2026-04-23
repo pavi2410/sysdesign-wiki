@@ -1,0 +1,39 @@
+---
+title: Idempotency
+tagline: Make repeated requests safe so retries do not create duplicate side effects.
+category: reliability
+level: foundational
+timeMinutes: 4
+tags: [idempotency, retries, reliability, API]
+relatedGuides: [payment-processing, webhooks, job-queues, file-upload-pipeline]
+relatedSystems: [github, slack, gmail]
+prerequisites: []
+---
+
+## What it is
+
+An idempotent operation can be performed multiple times and still has the same effect as performing it once.
+
+## Why it matters
+
+Distributed systems retry after timeouts, network failures, and worker crashes. Without idempotency, a retry can double-charge a card, send duplicate emails, or create duplicate records.
+
+## How it works
+
+Clients send an idempotency key or the server derives a stable operation key. The server stores the first result and returns it again for duplicate attempts.
+
+## When to use it
+
+Use idempotency for payments, webhooks, job processing, uploads, provisioning, and any write operation that clients may retry.
+
+## Tradeoffs / failure modes
+
+Keys need retention windows, collision protection, and consistent request validation. Reusing a key for a different payload should fail.
+
+## Tiny example
+
+`POST /payments` includes `Idempotency-Key: order_123_charge`; retries return the original charge result instead of creating another charge.
+
+## Related guides and systems
+
+See Payment Processing, Webhooks, Job Queues, File Upload Pipeline, GitHub, Slack, and Gmail.

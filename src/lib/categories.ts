@@ -37,3 +37,49 @@ export const guideCategoryColors: Record<GuideCategory, string> = {
   media: 'bg-gcat-media',
   collaboration: 'bg-gcat-collaboration',
 };
+
+export type LessonCategory =
+  | 'foundations'
+  | 'scalability'
+  | 'data-storage'
+  | 'real-time'
+  | 'reliability'
+  | 'security'
+  | 'cloud-infra'
+  | 'observability'
+  | 'ai-ml'
+  | 'architecture-techniques';
+
+export const lessonCategoryLabels: Record<LessonCategory, string> = {
+  foundations: 'Foundations',
+  scalability: 'Scalability',
+  'data-storage': 'Data & Storage',
+  'real-time': 'Real-Time',
+  reliability: 'Reliability',
+  security: 'Security',
+  'cloud-infra': 'Cloud & Infra',
+  observability: 'Observability',
+  'ai-ml': 'AI/ML Infra',
+  'architecture-techniques': 'Architecture Techniques',
+};
+
+export const lessonCategoryColors: Record<LessonCategory, string> = {
+  foundations: 'bg-lcat-foundations',
+  scalability: 'bg-lcat-scalability',
+  'data-storage': 'bg-lcat-data',
+  'real-time': 'bg-lcat-realtime',
+  reliability: 'bg-lcat-reliability',
+  security: 'bg-lcat-security',
+  'cloud-infra': 'bg-lcat-cloud',
+  observability: 'bg-lcat-observability',
+  'ai-ml': 'bg-lcat-ai',
+  'architecture-techniques': 'bg-lcat-techniques',
+};
+
+export type LessonLevel = 'foundational' | 'intermediate' | 'advanced';
+
+export const lessonLevelLabels: Record<LessonLevel, string> = {
+  foundational: 'Foundational',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
+};

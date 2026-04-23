@@ -1,0 +1,39 @@
+---
+title: CRDT
+tagline: Let distributed replicas accept local edits and merge without conflicts.
+category: architecture-techniques
+level: advanced
+timeMinutes: 5
+tags: [CRDT, collaboration, conflict-resolution, real-time]
+relatedGuides: [collaborative-editing]
+relatedSystems: [google-drive]
+prerequisites: [eventual-consistency]
+---
+
+## What it is
+
+A conflict-free replicated data type is a data structure designed so replicas can update independently and merge into a consistent result.
+
+## Why it matters
+
+Collaborative apps, offline-first clients, and multi-region systems need to accept changes without always coordinating through one leader.
+
+## How it works
+
+CRDTs encode operations or state with merge rules that are associative, commutative, and idempotent. That means replicas can receive changes in different orders and still converge.
+
+## When to use it
+
+Use CRDTs for collaborative editing, shared counters, sets, maps, presence-like state, and offline-capable apps where conflicts must resolve automatically.
+
+## Tradeoffs / failure modes
+
+CRDT metadata can grow, text editing CRDTs are subtle, and automatic convergence does not always match human expectations.
+
+## Tiny example
+
+Two users edit a note offline. When both reconnect, their CRDT operations merge without one edit overwriting the other.
+
+## Related guides and systems
+
+See Collaborative Real-Time Editing and Google Drive.

@@ -3,9 +3,11 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Nav from '@/components/Nav.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
 import CopyPromptButton from '@/components/CopyPromptButton.astro';
+import RelatedLessons from '@/components/RelatedLessons.astro';
 import { getCollection, render } from 'astro:content';
 import { guideCategoryLabels, guideCategoryColors } from '@/lib/categories';
 import { generateGuidePromptFromMdx } from '@/lib/prompt-generator';
+import { getLessonsForGuide } from '@/lib/lessons';
 
 export async function getStaticPaths() {
   const guides = await getCollection('guides');
@@ -22,6 +24,8 @@ const colorClass = guideCategoryColors[category];
 
 const allGuides = await getCollection('guides');
 const otherGuides = allGuides.filter((g) => g.id !== entry.id).slice(0, 3);
+const lessons = await getCollection('lessons');
+const relatedLessons = getLessonsForGuide(lessons, entry);
 const buildPrompt = generateGuidePromptFromMdx(entry);
 const seoTitle = `How to Implement ${title} — System Design Guide`;
 const seoDescription = `Learn how to build ${title.toLowerCase()} in your system. ${tagline}. Architectural approaches, components, data models, and real-world examples.`;
@@ -59,6 +63,8 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
 
       <!-- Main content -->
       <article class="flex-1 min-w-0 max-w-4xl">
+        <RelatedLessons lessons={relatedLessons} />
+
         <!-- MDX Content -->
         <div class="guide-content">
           <Content />

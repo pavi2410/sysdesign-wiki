@@ -1,0 +1,39 @@
+---
+title: JWT
+tagline: A signed JSON token that carries claims between systems.
+category: security
+level: foundational
+timeMinutes: 4
+tags: [JWT, auth, tokens, security]
+relatedGuides: [oauth2-social-login, api-versioning, rbac]
+relatedSystems: [github, slack, google-drive]
+prerequisites: [tls]
+---
+
+## What it is
+
+A JSON Web Token is a compact signed token containing claims such as subject, issuer, audience, scopes, and expiration time.
+
+## Why it matters
+
+JWTs let services verify identity or authorization claims without calling a central session store on every request.
+
+## How it works
+
+The issuer signs a header and payload. Recipients verify the signature, validate issuer and audience, check expiration, and then use the claims.
+
+## When to use it
+
+Use JWTs for short-lived access tokens, service-to-service identity, and distributed API authorization where stateless verification is useful.
+
+## Tradeoffs / failure modes
+
+JWTs are hard to revoke before expiration. Long-lived JWTs, weak signing keys, missing audience checks, and storing sensitive data in payloads are common mistakes.
+
+## Tiny example
+
+An API gateway verifies a bearer JWT, extracts `sub` and `scope`, and forwards the authenticated request to a backend.
+
+## Related guides and systems
+
+See OAuth2 & Social Login, API Versioning, RBAC, GitHub, Slack, and Google Drive.

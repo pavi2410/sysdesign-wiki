@@ -1,0 +1,39 @@
+---
+title: Distributed Tracing
+tagline: Follow one request across services, queues, databases, and external calls.
+category: observability
+level: intermediate
+timeMinutes: 4
+tags: [tracing, observability, latency, microservices]
+relatedGuides: [webhooks, job-queues, api-versioning]
+relatedSystems: [netflix, slack, chatgpt, github]
+prerequisites: [observability]
+---
+
+## What it is
+
+Distributed tracing records the path of a request through multiple services as a tree of spans.
+
+## Why it matters
+
+Modern requests often cross gateways, services, caches, queues, and databases. Tracing shows where time is spent and where failures start.
+
+## How it works
+
+A trace ID is created at the edge and propagated through headers or message metadata. Each service creates spans for its work and exports timing, attributes, and errors.
+
+## When to use it
+
+Use tracing for microservices, APIs with latency SLOs, complex fan-out, background workflows, and third-party integrations.
+
+## Tradeoffs / failure modes
+
+Sampling can hide rare issues, missing propagation breaks traces, and high-cardinality attributes can become expensive.
+
+## Tiny example
+
+A slow checkout trace shows 30ms in the API, 80ms in inventory, and 1.8s waiting on a payment provider.
+
+## Related guides and systems
+
+See Webhooks, Job Queues, API Versioning, Netflix, Slack, ChatGPT, and GitHub.

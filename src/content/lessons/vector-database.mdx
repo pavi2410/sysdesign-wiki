@@ -1,0 +1,39 @@
+---
+title: Vector Database
+tagline: Store embeddings and retrieve nearest neighbors at scale.
+category: ai-ml
+level: intermediate
+timeMinutes: 4
+tags: [vector database, embeddings, search, AI, retrieval]
+relatedGuides: [recommendation-engine, full-text-search]
+relatedSystems: [chatgpt, youtube, google-photos]
+prerequisites: [embeddings]
+---
+
+## What it is
+
+A vector database stores embedding vectors and finds the nearest vectors for a query. It usually combines approximate nearest-neighbor indexes with metadata filtering.
+
+## Why it matters
+
+Brute-force vector search becomes too slow at large scale. Vector databases make semantic retrieval fast enough for product features.
+
+## How it works
+
+The system indexes vectors using structures such as HNSW or IVF. Queries embed the input, search nearby vectors, apply filters, and return matching records.
+
+## When to use it
+
+Use a vector database for semantic search, RAG, recommendations, image similarity, duplicate detection, and personalization.
+
+## Tradeoffs / failure modes
+
+Approximate search may miss the exact nearest result. Metadata filters, updates, reindexing, and multi-tenant isolation need careful design.
+
+## Tiny example
+
+An AI assistant embeds a user question, retrieves the closest documentation chunks, and passes them into the model as context.
+
+## Related guides and systems
+
+See Recommendation Engine, Full-Text Search, ChatGPT, YouTube, and Google Photos.

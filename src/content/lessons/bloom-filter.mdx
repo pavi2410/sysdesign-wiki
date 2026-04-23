@@ -1,0 +1,39 @@
+---
+title: Bloom Filter
+tagline: Quickly test whether an item is definitely absent or maybe present.
+category: data-storage
+level: advanced
+timeMinutes: 4
+tags: [Bloom filter, probabilistic, cache, data]
+relatedGuides: [caching-strategies, full-text-search, rate-limiting]
+relatedSystems: [gmail, github, google-maps]
+prerequisites: [cache-aside]
+---
+
+## What it is
+
+A Bloom filter is a compact probabilistic data structure for membership tests. It can say an item is definitely not present or maybe present.
+
+## Why it matters
+
+It saves expensive lookups when most checks are misses. Systems use Bloom filters before hitting databases, caches, indexes, storage, or network services.
+
+## How it works
+
+Multiple hash functions map an item to bit positions. To add an item, set those bits. To check an item, verify all bits are set. If any bit is missing, the item is definitely absent.
+
+## When to use it
+
+Use it for negative cache checks, deduplication hints, database read avoidance, crawler filters, and log or storage membership tests.
+
+## Tradeoffs / failure modes
+
+Bloom filters allow false positives and usually do not support deletion without variants like counting Bloom filters.
+
+## Tiny example
+
+Before querying a cold database partition, a service checks a Bloom filter and skips the query when the key is definitely absent.
+
+## Related guides and systems
+
+See Caching Strategies, Full-Text Search, Rate Limiting, Gmail, GitHub, and Google Maps.

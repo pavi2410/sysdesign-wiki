@@ -1,0 +1,39 @@
+---
+title: Load Balancer
+tagline: Distribute traffic across healthy servers without making clients know where work runs.
+category: foundations
+level: foundational
+timeMinutes: 4
+tags: [load-balancer, routing, availability, edge]
+relatedGuides: [rate-limiting, websocket-infrastructure, custom-domains]
+relatedSystems: [whatsapp, slack, netflix, uber, chatgpt]
+prerequisites: []
+---
+
+## What it is
+
+A load balancer sits in front of many backend instances and chooses which healthy instance should handle each request. Clients talk to one stable address, while the fleet behind it can grow, shrink, fail, and deploy independently.
+
+## Why it matters
+
+Without load balancing, one server can become overloaded while others sit idle. A load balancer also gives you a place to terminate TLS, drain bad instances, apply routing rules, and keep traffic flowing during deploys.
+
+## How it works
+
+Common algorithms include round-robin, least connections, weighted routing, and latency-aware routing. Health checks remove unhealthy targets from rotation, while connection draining lets in-flight work finish before an instance disappears.
+
+## When to use it
+
+Use one when more than one server can serve the same workload. Put it at the edge for public traffic and between internal services when a dependency has multiple replicas.
+
+## Tradeoffs / failure modes
+
+The load balancer becomes critical infrastructure. Misconfigured health checks, sticky sessions, or uneven target weights can cause partial outages that look like random application bugs.
+
+## Tiny example
+
+An API gateway receives `/messages`, the load balancer picks one healthy message service instance, and retries only if the chosen instance is clearly unavailable.
+
+## Related guides and systems
+
+See WebSocket Infrastructure, Rate Limiting, Custom Domains, WhatsApp, Slack, Netflix, Uber, and ChatGPT.

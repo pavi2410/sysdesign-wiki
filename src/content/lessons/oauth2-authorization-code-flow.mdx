@@ -1,0 +1,39 @@
+---
+title: OAuth2 Authorization Code Flow
+tagline: Let users grant access without giving your app their password.
+category: security
+level: intermediate
+timeMinutes: 5
+tags: [OAuth2, auth, security, login]
+relatedGuides: [oauth2-social-login, rbac]
+relatedSystems: [github, gmail, google-drive]
+prerequisites: [tls]
+---
+
+## What it is
+
+The OAuth2 authorization code flow lets an application redirect a user to an identity provider, receive a short-lived code, and exchange it for tokens.
+
+## Why it matters
+
+It allows delegated access and social login without sharing passwords with third-party applications.
+
+## How it works
+
+The app redirects the user to the provider with client ID, redirect URI, scopes, state, and usually PKCE. After consent, the provider redirects back with a code. The app exchanges the code for tokens server-side.
+
+## When to use it
+
+Use it for web apps, mobile apps with PKCE, social login, SaaS integrations, and delegated API access.
+
+## Tradeoffs / failure modes
+
+Redirect URI validation, state verification, token storage, scope design, and account linking must be handled carefully.
+
+## Tiny example
+
+A user clicks "Sign in with GitHub", approves access on GitHub, and your app exchanges the returned code for an access token.
+
+## Related guides and systems
+
+See OAuth2 & Social Login, RBAC, GitHub, Gmail, and Google Drive.

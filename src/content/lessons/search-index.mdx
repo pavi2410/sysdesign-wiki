@@ -1,0 +1,39 @@
+---
+title: Search Index
+tagline: Precompute searchable structures so users can find data quickly.
+category: data-storage
+level: foundational
+timeMinutes: 4
+tags: [search, index, Elasticsearch, data]
+relatedGuides: [full-text-search, feed-timeline, recommendation-engine]
+relatedSystems: [github, slack, gmail, youtube]
+prerequisites: [eventual-consistency]
+---
+
+## What it is
+
+A search index is a data structure optimized for finding documents by terms, fields, ranking signals, filters, or embeddings instead of scanning a primary database.
+
+## Why it matters
+
+Primary databases are usually not enough for fast, relevant full-text search across large datasets. Search indexes trade extra storage and indexing work for low-latency queries.
+
+## How it works
+
+Documents are transformed into tokens and fields, then stored in an inverted index. Updates flow from the source database through events, change streams, or batch indexing jobs.
+
+## When to use it
+
+Use a search index for full-text search, code search, email search, product catalogs, logs, and discovery surfaces.
+
+## Tradeoffs / failure modes
+
+Indexes are usually eventually consistent. Relevance tuning, reindexing, permissions filtering, and large fan-out queries can become complex.
+
+## Tiny example
+
+Slack indexes messages by workspace and channel so users can search years of conversation history quickly.
+
+## Related guides and systems
+
+See Full-Text Search, Feed & Timeline Generation, Recommendation Engine, GitHub, Slack, Gmail, and YouTube.

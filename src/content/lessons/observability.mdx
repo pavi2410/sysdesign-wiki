@@ -1,0 +1,39 @@
+---
+title: Observability
+tagline: Understand what a production system is doing from its external signals.
+category: observability
+level: foundational
+timeMinutes: 4
+tags: [observability, metrics, logs, tracing, reliability]
+relatedGuides: [audit-logging, rate-limiting, webhooks]
+relatedSystems: [netflix, github, slack, chatgpt]
+prerequisites: []
+---
+
+## What it is
+
+Observability is the ability to understand system behavior using signals such as metrics, logs, traces, events, profiles, and alerts.
+
+## Why it matters
+
+You cannot operate what you cannot see. Observability helps engineers detect incidents, debug regressions, understand performance, and validate product behavior.
+
+## How it works
+
+Services emit structured events and measurements with consistent identifiers. Dashboards, alerts, and tracing tools connect those signals across requests and services.
+
+## When to use it
+
+Use observability from the first production release. Add deeper instrumentation around critical user paths, dependencies, queues, background jobs, and SLOs.
+
+## Tradeoffs / failure modes
+
+Too much noisy telemetry costs money and hides real problems. Too little leaves teams guessing during incidents.
+
+## Tiny example
+
+An API request includes a trace ID that appears in gateway logs, service spans, database timing, and error reports.
+
+## Related guides and systems
+
+See Audit Logging, Rate Limiting, Webhooks, Netflix, GitHub, Slack, and ChatGPT.

@@ -1,0 +1,39 @@
+---
+title: Retry with Exponential Backoff
+tagline: Retry transient failures slowly enough that recovery is possible.
+category: reliability
+level: foundational
+timeMinutes: 4
+tags: [retries, backoff, reliability, failures]
+relatedGuides: [webhooks, job-queues, payment-processing, file-upload-pipeline]
+relatedSystems: [github, gmail, slack]
+prerequisites: [idempotency]
+---
+
+## What it is
+
+Exponential backoff retries failed work after increasing delays, often with jitter to avoid synchronized retry storms.
+
+## Why it matters
+
+Many failures are temporary. Retrying immediately can overload the recovering dependency and make the incident worse. Backoff gives systems breathing room.
+
+## How it works
+
+After each failure, wait longer before trying again: 1 second, 2 seconds, 4 seconds, 8 seconds, up to a cap. Jitter adds randomness to spread retries out.
+
+## When to use it
+
+Use it for network calls, webhooks, queues, uploads, payment provider calls, and eventually consistent background work.
+
+## Tradeoffs / failure modes
+
+Retries require idempotency. Too many retries waste capacity; too few reduce reliability. Permanent errors should not be retried.
+
+## Tiny example
+
+A webhook delivery fails with `503`, then retries after 2s, 5s, 12s, and 30s before moving to a dead-letter queue.
+
+## Related guides and systems
+
+See Webhooks, Job Queues, Payment Processing, File Upload Pipeline, GitHub, Gmail, and Slack.

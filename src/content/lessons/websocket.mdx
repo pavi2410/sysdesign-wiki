@@ -1,0 +1,39 @@
+---
+title: WebSocket
+tagline: Keep a bidirectional connection open for low-latency client and server messages.
+category: real-time
+level: foundational
+timeMinutes: 4
+tags: [WebSocket, real-time, messaging, presence]
+relatedGuides: [websocket-infrastructure, presence-online-status, collaborative-editing, server-sent-events]
+relatedSystems: [whatsapp, slack, discord, google-meet, zoom]
+prerequisites: [load-balancer]
+---
+
+## What it is
+
+WebSocket is a protocol that upgrades an HTTP connection into a long-lived bidirectional connection. Both client and server can send messages without opening a new request each time.
+
+## Why it matters
+
+It is the standard choice for chat, presence, multiplayer coordination, collaborative editing, and live dashboards where polling would be too slow or wasteful.
+
+## How it works
+
+The client performs an HTTP upgrade handshake. After that, frames travel over the same TCP connection until either side closes it. Servers track connection ownership and route events to the right socket.
+
+## When to use it
+
+Use WebSocket when clients need frequent server-pushed updates or client messages with low latency.
+
+## Tradeoffs / failure modes
+
+Long-lived connections complicate load balancing, deploys, backpressure, authentication refresh, and regional failover.
+
+## Tiny example
+
+A chat client opens one socket, sends typing indicators, and receives new messages as soon as they are delivered.
+
+## Related guides and systems
+
+See WebSocket Infrastructure, Presence, Collaborative Editing, Server-Sent Events, WhatsApp, Slack, Discord, Google Meet, and Zoom.

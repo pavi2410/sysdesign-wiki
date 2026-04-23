@@ -1,0 +1,40 @@
+---
+import { lessonCategoryColors, lessonCategoryLabels, lessonLevelLabels } from '@/lib/categories';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  lesson: CollectionEntry<'lessons'>;
+  compact?: boolean;
+}
+
+const { lesson, compact = false } = Astro.props;
+const { title, tagline, category, level, timeMinutes, tags } = lesson.data;
+const colorClass = lessonCategoryColors[category];
+---
+
+<a
+  href={`/lessons/${lesson.id}`}
+  class:list={[
+    'group block bg-white border border-border rounded-xl hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300',
+    compact ? 'p-5' : 'p-6',
+  ]}
+>
+  <div class="flex flex-wrap items-center gap-2 mb-3">
+    <span class:list={['text-xs font-medium text-white px-2.5 py-1 rounded-full', colorClass]}>
+      {lessonCategoryLabels[category]}
+    </span>
+    <span class="text-xs font-medium bg-paper-warm text-ink-light border border-border px-2.5 py-1 rounded-full">
+      {lessonLevelLabels[level]}
+    </span>
+    <span class="text-xs text-ink-muted">{timeMinutes} min</span>
+  </div>
+  <h3 class:list={['font-serif font-bold text-ink group-hover:text-accent transition-colors', compact ? 'text-lg' : 'text-xl']}>
+    {title}
+  </h3>
+  <p class="text-sm text-ink-light leading-relaxed mt-2 mb-4">{tagline}</p>
+  <div class="flex flex-wrap gap-1.5">
+    {tags.slice(0, compact ? 3 : 4).map((tag) => (
+      <span class="text-xs bg-tag-bg text-tag-text px-2 py-0.5 rounded-md">{tag}</span>
+    ))}
+  </div>
+</a>

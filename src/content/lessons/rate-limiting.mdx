@@ -1,0 +1,39 @@
+---
+title: Rate Limiting
+tagline: Control request volume so shared systems stay fair, stable, and protected.
+category: reliability
+level: foundational
+timeMinutes: 4
+tags: [rate-limiting, API, Redis, protection]
+relatedGuides: [rate-limiting, api-versioning, oauth2-social-login]
+relatedSystems: [chatgpt, github, slack]
+prerequisites: [api-gateway]
+---
+
+## What it is
+
+Rate limiting restricts how many requests a client, user, IP address, tenant, or API key can make in a time window.
+
+## Why it matters
+
+It protects systems from abuse, retry storms, expensive endpoints, scraping, and accidental overload while keeping usage fair across customers.
+
+## How it works
+
+The limiter identifies a key, checks counters or buckets in a fast store, and either allows the request or returns `429 Too Many Requests`. Common algorithms include token bucket, fixed window, and sliding window.
+
+## When to use it
+
+Use it at API gateways, login endpoints, expensive search, model inference, webhooks, and tenant-scoped SaaS APIs.
+
+## Tradeoffs / failure modes
+
+Limits that are too strict break valid users; limits that are too loose do not protect the system. Distributed counters need atomic operations.
+
+## Tiny example
+
+A free API key can make 100 requests per minute. After that, the gateway rejects requests until tokens refill.
+
+## Related guides and systems
+
+See Rate Limiting & Throttling, API Versioning, OAuth2 & Social Login, ChatGPT, GitHub, and Slack.

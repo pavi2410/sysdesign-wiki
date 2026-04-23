@@ -1,0 +1,39 @@
+---
+title: GPU Inference
+tagline: Run trained models efficiently enough to serve user requests in real time.
+category: ai-ml
+level: advanced
+timeMinutes: 5
+tags: [GPU, inference, LLM, AI, latency]
+relatedGuides: [recommendation-engine]
+relatedSystems: [chatgpt, youtube, gmail, google-photos]
+prerequisites: [backpressure]
+---
+
+## What it is
+
+GPU inference is the production serving path for trained models. Inputs are batched, executed on GPUs, and turned into predictions, rankings, embeddings, or generated tokens.
+
+## Why it matters
+
+GPUs are expensive and scarce. Good inference systems balance latency, throughput, quality, and utilization so model features can run at product scale.
+
+## How it works
+
+Requests enter a scheduler, get batched with compatible work, run through optimized kernels, and return results. LLM serving also manages token streaming and KV cache memory.
+
+## When to use it
+
+Use GPU inference for LLMs, recommendations, vision, speech, ranking, embeddings, and other models too heavy for CPUs.
+
+## Tradeoffs / failure modes
+
+Large batches improve throughput but hurt latency. Small batches feel fast but waste GPU capacity. Memory pressure and queueing can create sharp tail-latency spikes.
+
+## Tiny example
+
+ChatGPT streams tokens from a GPU cluster while a scheduler continuously batches active conversations to keep GPUs busy.
+
+## Related guides and systems
+
+See Recommendation Engine, ChatGPT, YouTube, Gmail, and Google Photos.

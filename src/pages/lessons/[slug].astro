@@ -1,0 +1,215 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Nav from '@/components/Nav.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+import LessonCard from '@/components/LessonCard.astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import {
+  lessonCategoryColors,
+  lessonCategoryLabels,
+  lessonLevelLabels,
+} from '@/lib/categories';
+
+export async function getStaticPaths() {
+  const lessons = await getCollection('lessons');
+  return lessons.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const { title, tagline, category, level, timeMinutes, tags, relatedGuides, relatedSystems, prerequisites } = entry.data;
+const colorClass = lessonCategoryColors[category];
+
+const allLessons = await getCollection('lessons');
+const allGuides = await getCollection('guides');
+const allSystems = await getCollection('systems');
+const lessonById = new Map(allLessons.map((lesson) => [lesson.id, lesson]));
+const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is CollectionEntry<'lessons'> => Boolean(lesson);
+const prerequisiteLessons = prerequisites.map((id) => lessonById.get(id)).filter(isLesson);
+const relatedLessonIds = new Set([...prerequisites]);
+const relatedLessons = allLessons
+  .filter((lesson) => lesson.id !== entry.id && !relatedLessonIds.has(lesson.id))
+  .map((lesson) => ({
+    lesson,
+    score: lesson.data.tags.filter((tag) => tags.includes(tag)).length + (lesson.data.category === category ? 1 : 0),
+  }))
+  .filter((item) => item.score > 0)
+  .sort((a, b) => b.score - a.score || a.lesson.data.title.localeCompare(b.lesson.data.title))
+  .slice(0, 3)
+  .map((item) => item.lesson);
+
+const seenInGuides = allGuides.filter((guide) => relatedGuides.includes(guide.id)).slice(0, 6);
+const seenInSystems = allSystems.filter((system) => relatedSystems.includes(system.id)).slice(0, 6);
+const seoTitle = `${title} — System Design Lesson`;
+const seoDescription = `${tagline} A short builder-focused system design lesson with examples, tradeoffs, and links to real architectures.`;
+---
+
+<BaseLayout title={seoTitle} description={seoDescription} slug={entry.id}>
+  <Nav />
+
+  <main class="pt-16">
+    <section class="bg-paper-warm border-b border-border">
+      <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <a href="/lessons" class="text-sm text-ink-muted hover:text-accent transition-colors">Lessons</a>
+          <span class="text-ink-muted">/</span>
+          <span class:list={['text-xs font-medium text-white px-2.5 py-1 rounded-full', colorClass]}>
+            {lessonCategoryLabels[category]}
+          </span>
+          <span class="text-xs font-medium bg-white text-ink-light border border-border px-2.5 py-1 rounded-full">
+            {lessonLevelLabels[level]}
+          </span>
+          <span class="text-xs text-ink-muted">{timeMinutes} min</span>
+        </div>
+        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{title}</h1>
+        <p class="text-xl text-ink-light max-w-3xl">{tagline}</p>
+        <div class="flex flex-wrap gap-2 mt-5">
+          {tags.map((tag) => (
+            <span class="text-xs bg-tag-bg text-tag-text px-2.5 py-1 rounded-md">{tag}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <div class="max-w-7xl mx-auto px-6 py-12 flex gap-12">
+      <TableOfContents headings={headings} />
+
+      <article class="flex-1 min-w-0 max-w-4xl">
+        {prerequisiteLessons.length > 0 && (
+          <section class="mb-8 p-5 bg-white border border-border rounded-xl">
+            <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-3">Prerequisites</p>
+            <div class="flex flex-wrap gap-2">
+              {prerequisiteLessons.map((lesson) => (
+                <a href={`/lessons/${lesson.id}`} class="text-sm text-ink-light bg-paper-warm border border-border rounded-lg px-3 py-2 hover:text-accent hover:border-accent/40 transition-colors">
+                  {lesson.data.title}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div class="lesson-content">
+          <Content />
+        </div>
+
+        {(seenInGuides.length > 0 || seenInSystems.length > 0) && (
+          <section class="border-t border-border pt-10 mt-10">
+            <h2 class="font-serif text-2xl font-bold text-ink mb-6">Seen in deeper dives</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+              {seenInGuides.map((guide) => (
+                <a href={`/guides/${guide.id}`} class="group block bg-white border border-border rounded-xl p-5 hover:border-accent/40 hover:shadow-md transition-all">
+                  <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Guide</p>
+                  <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">{guide.data.title}</h3>
+                  <p class="text-xs text-ink-muted leading-relaxed">{guide.data.tagline}</p>
+                </a>
+              ))}
+              {seenInSystems.map((system) => (
+                <a href={`/systems/${system.id}`} class="group block bg-white border border-border rounded-xl p-5 hover:border-accent/40 hover:shadow-md transition-all">
+                  <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">System</p>
+                  <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">{system.data.name}</h3>
+                  <p class="text-xs text-ink-muted leading-relaxed">{system.data.tagline}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedLessons.length > 0 && (
+          <section class="border-t border-border pt-10 mt-10">
+            <h2 class="font-serif text-2xl font-bold text-ink mb-6">Related lessons</h2>
+            <div class="grid md:grid-cols-3 gap-4">
+              {relatedLessons.map((lesson) => <LessonCard lesson={lesson} compact />)}
+            </div>
+          </section>
+        )}
+      </article>
+    </div>
+  </main>
+
+  <footer class="border-t border-border bg-paper-warm">
+    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
+      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
+      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+    </div>
+  </footer>
+</BaseLayout>
+
+<style is:global>
+  @reference "../../styles/global.css";
+
+  .lesson-content h2 {
+    @apply font-serif text-2xl font-bold text-ink mb-5 flex items-center gap-3;
+  }
+
+  .lesson-content h2::before {
+    content: '';
+    @apply w-8 h-[2px] bg-accent inline-block;
+  }
+
+  .lesson-content > h2 {
+    @apply mt-12;
+  }
+
+  .lesson-content > h2:first-of-type {
+    @apply mt-0;
+  }
+
+  .lesson-content h3 {
+    @apply font-serif text-xl font-bold text-ink mt-8 mb-3;
+  }
+
+  .lesson-content p {
+    @apply text-ink-light leading-relaxed mb-4;
+  }
+
+  .lesson-content h2 + p {
+    @apply text-ink-light leading-relaxed text-lg;
+  }
+
+  .lesson-content strong {
+    @apply text-ink font-semibold;
+  }
+
+  .lesson-content code {
+    @apply font-mono text-sm text-accent bg-tag-bg px-1.5 py-0.5 rounded;
+  }
+
+  .lesson-content pre {
+    @apply bg-ink text-paper text-sm rounded-xl p-5 overflow-x-auto mb-6;
+  }
+
+  .lesson-content pre code {
+    @apply bg-transparent text-paper p-0;
+  }
+
+  .lesson-content > ul {
+    @apply space-y-1.5 pl-0 list-none mb-4;
+  }
+
+  .lesson-content > ul > li {
+    @apply text-sm text-ink-light pl-4 relative;
+  }
+
+  .lesson-content > ul > li::before {
+    content: '';
+    @apply w-1.5 h-1.5 rounded-full bg-accent absolute left-0 top-2 inline-block;
+  }
+
+  .lesson-content > ol {
+    counter-reset: lesson-counter;
+    @apply pl-0 list-none space-y-2 mb-4;
+  }
+
+  .lesson-content > ol > li {
+    counter-increment: lesson-counter;
+    @apply flex items-start gap-2.5 text-sm text-ink-light;
+  }
+
+  .lesson-content > ol > li::before {
+    content: counter(lesson-counter) '.';
+    @apply font-semibold text-accent shrink-0;
+  }
+</style>

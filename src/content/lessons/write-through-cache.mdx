@@ -1,0 +1,39 @@
+---
+title: Write-Through Cache
+tagline: Keep cache and database updated together so reads can trust the cached value.
+category: data-storage
+level: intermediate
+timeMinutes: 4
+tags: [caching, consistency, Redis, database]
+relatedGuides: [caching-strategies]
+relatedSystems: [google-drive, github, slack]
+prerequisites: [cache-aside]
+---
+
+## What it is
+
+Write-through caching updates the cache and the database as part of the write path. The cache mirrors the source of truth for the data it stores.
+
+## Why it matters
+
+It avoids many stale-read problems from cache-aside because recently written data is immediately present in the cache. This gives readers a simpler mental model.
+
+## How it works
+
+On write, the application or cache layer writes the new value to the cache and persists it to the database before acknowledging success.
+
+## When to use it
+
+Use it for read-heavy data where writes are less frequent and freshness matters, such as account settings, entitlement records, or durable configuration.
+
+## Tradeoffs / failure modes
+
+Writes are slower because two systems are involved. Partial failure handling is tricky: if the database write fails after the cache write, the cache can lie.
+
+## Tiny example
+
+Updating a user's notification preference writes the new value to Redis and the preferences table before returning success.
+
+## Related guides and systems
+
+See Caching Strategies, Google Drive, GitHub, and Slack.

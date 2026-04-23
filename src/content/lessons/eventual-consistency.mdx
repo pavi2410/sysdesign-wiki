@@ -1,0 +1,39 @@
+---
+title: Eventual Consistency
+tagline: Allow replicas to temporarily disagree while guaranteeing they converge later.
+category: data-storage
+level: intermediate
+timeMinutes: 4
+tags: [consistency, replication, distributed-systems, availability]
+relatedGuides: [collaborative-editing, feed-timeline, webhooks, audit-logging]
+relatedSystems: [twitter, instagram, google-drive, telegram]
+prerequisites: [replication]
+---
+
+## What it is
+
+Eventual consistency means writes may not be visible everywhere immediately, but replicas should converge to the same value if no new writes occur.
+
+## Why it matters
+
+Distributed systems often choose availability and low latency over immediate global agreement. Feeds, counters, search indexes, analytics, and replicated stores commonly accept temporary staleness.
+
+## How it works
+
+Writes propagate asynchronously through logs, events, replication streams, or background jobs. Reads from different replicas can return different values until propagation catches up.
+
+## When to use it
+
+Use it when the product can tolerate stale reads or delayed side effects, especially across regions or high-volume derived views.
+
+## Tradeoffs / failure modes
+
+Users can see missing updates, out-of-order events, or stale permissions. The product needs reconciliation, conflict handling, and clear boundaries for what must be strongly consistent.
+
+## Tiny example
+
+A tweet appears on the author's profile instantly but reaches every follower feed over the next few seconds.
+
+## Related guides and systems
+
+See Collaborative Editing, Feed & Timeline Generation, Webhooks, Audit Logging, Twitter, Instagram, Google Drive, and Telegram.

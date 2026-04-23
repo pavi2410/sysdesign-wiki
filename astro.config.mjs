@@ -9,7 +9,7 @@ import mdx from '@astrojs/mdx';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://sysdesign.wiki',
-  trailingSlash: 'never',
+  trailingSlash: 'ignore',
   integrations: [sitemap(), pagefind(), mdx()],
 
   vite: {

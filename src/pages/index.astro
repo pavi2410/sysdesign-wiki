@@ -3,14 +3,20 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Nav from '@/components/Nav.astro';
 import SystemCard from '@/components/SystemCard.astro';
 import GuideCard from '@/components/GuideCard.astro';
+import LessonCard from '@/components/LessonCard.astro';
 import { getCollection } from 'astro:content';
 import { categoryLabels, type Category } from '@/lib/categories';
 
 const systems = await getCollection('systems');
 const guides = await getCollection('guides');
+const lessons = await getCollection('lessons');
 const categories = [...new Set(systems.map((s) => s.data.category))] as Category[];
 const featured = systems.slice(0, 3);
 const featuredGuides = guides.slice(0, 6);
+const featuredLessons = lessons
+  .filter((lesson) => lesson.data.level === 'foundational')
+  .sort((a, b) => a.data.title.localeCompare(b.data.title))
+  .slice(0, 6);
 ---
 
 <BaseLayout
@@ -63,8 +69,8 @@ const featuredGuides = guides.slice(0, 6);
           <p class="text-sm text-ink-muted mt-1">Feature Guides</p>
         </div>
         <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">100+</p>
-          <p class="text-sm text-ink-muted mt-1">Deep Dives</p>
+          <p class="font-serif text-3xl font-bold text-accent">{lessons.length}</p>
+          <p class="text-sm text-ink-muted mt-1">Bite-Sized Lessons</p>
         </div>
         <div class="text-center p-6 bg-white rounded-xl border border-border">
           <p class="font-serif text-3xl font-bold text-accent">200+</p>
@@ -106,6 +112,25 @@ const featuredGuides = guides.slice(0, 6);
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {featuredGuides.map((guide) => (
           <GuideCard guide={guide} />
+        ))}
+      </div>
+    </section>
+
+    <!-- Featured Lessons -->
+    <section class="max-w-5xl mx-auto px-6 py-12">
+      <div class="flex items-end justify-between mb-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Learn</p>
+          <h2 class="font-serif text-3xl font-bold text-ink">Bite-Sized Lessons</h2>
+          <p class="text-sm text-ink-muted mt-2">Short explanations of the concepts behind the architectures.</p>
+        </div>
+        <a href="/lessons" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
+          View all lessons →
+        </a>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredLessons.map((lesson) => (
+          <LessonCard lesson={lesson} />
         ))}
       </div>
     </section>

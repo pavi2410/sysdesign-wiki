@@ -39,6 +39,17 @@
   --color-gcat-security: #991b1b;
   --color-gcat-media: #7c3aed;
   --color-gcat-collaboration: #0369a1;
+
+  --color-lcat-foundations: #475569;
+  --color-lcat-scalability: #0f766e;
+  --color-lcat-data: #b45309;
+  --color-lcat-realtime: #0369a1;
+  --color-lcat-reliability: #166534;
+  --color-lcat-security: #991b1b;
+  --color-lcat-cloud: #4338ca;
+  --color-lcat-observability: #7c2d12;
+  --color-lcat-ai: #6d28d9;
+  --color-lcat-techniques: #be123c;
 }
 
 html {

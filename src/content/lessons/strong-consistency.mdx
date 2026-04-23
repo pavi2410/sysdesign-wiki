@@ -1,0 +1,39 @@
+---
+title: Strong Consistency
+tagline: Make reads reflect the latest committed write for correctness-critical data.
+category: data-storage
+level: intermediate
+timeMinutes: 4
+tags: [consistency, transactions, database, correctness]
+relatedGuides: [payment-processing, rbac, audit-logging]
+relatedSystems: [github, gmail, google-drive]
+prerequisites: [replication]
+---
+
+## What it is
+
+Strong consistency means once a write commits, later reads observe that write. The system presents a single up-to-date view even if data is replicated internally.
+
+## Why it matters
+
+Some decisions cannot safely use stale data: payments, authorization, inventory, account state, ownership, and compliance records often need strong guarantees.
+
+## How it works
+
+Systems use leaders, consensus, transactions, locks, quorum reads/writes, or serializable databases to coordinate access before acknowledging success.
+
+## When to use it
+
+Use it when stale reads could cause financial loss, data leaks, double spending, incorrect permissions, or irreversible user harm.
+
+## Tradeoffs / failure modes
+
+Coordination adds latency and can reduce availability during partitions. Overusing strong consistency makes large systems slower and harder to scale.
+
+## Tiny example
+
+Before letting a user delete a repository, GitHub must read current permissions from an authoritative source rather than a stale cache.
+
+## Related guides and systems
+
+See Payment Processing, RBAC, Audit Logging, GitHub, Gmail, and Google Drive.

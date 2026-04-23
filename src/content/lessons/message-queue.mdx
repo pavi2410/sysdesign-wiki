@@ -1,0 +1,39 @@
+---
+title: Message Queue
+tagline: Buffer work between producers and consumers so systems can absorb spikes and retry safely.
+category: foundations
+level: foundational
+timeMinutes: 4
+tags: [queue, async, jobs, reliability]
+relatedGuides: [job-queues, webhooks, file-upload-pipeline, push-notifications]
+relatedSystems: [whatsapp, instagram, youtube, gmail, github]
+prerequisites: []
+---
+
+## What it is
+
+A message queue stores units of work until consumers are ready to process them. Producers enqueue messages, consumers dequeue and handle them, and the queue provides buffering between the two.
+
+## Why it matters
+
+Queues decouple slow or unreliable work from user-facing requests. They smooth traffic spikes, enable retries, and let workers scale independently from the API.
+
+## How it works
+
+A producer publishes a message with a payload and metadata. A worker claims it, processes it, and acknowledges completion. If the worker fails, the message can become visible again or move to a dead-letter queue.
+
+## When to use it
+
+Use queues for emails, webhooks, media processing, fan-out, notifications, imports, and anything too slow for the request path.
+
+## Tradeoffs / failure modes
+
+Queues introduce eventual consistency, duplicate delivery, ordering questions, and backlogs. Consumers should be idempotent.
+
+## Tiny example
+
+After a video upload, the API enqueues a transcode job and returns immediately while workers create HLS renditions.
+
+## Related guides and systems
+
+See Job Queues, Webhooks, File Upload Pipeline, Push Notifications, WhatsApp, Instagram, YouTube, Gmail, and GitHub.

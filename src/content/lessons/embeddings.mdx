@@ -1,0 +1,39 @@
+---
+title: Embeddings
+tagline: Represent text, images, users, or items as vectors that capture semantic similarity.
+category: ai-ml
+level: intermediate
+timeMinutes: 4
+tags: [embeddings, vectors, search, recommendation, AI]
+relatedGuides: [recommendation-engine, full-text-search]
+relatedSystems: [chatgpt, youtube, google-photos]
+prerequisites: [search-index]
+---
+
+## What it is
+
+An embedding is a numeric vector produced by a model to represent the meaning or features of an item, such as a sentence, product, image, user, or document.
+
+## Why it matters
+
+Embeddings make similarity searchable. They power semantic search, recommendations, clustering, retrieval-augmented generation, deduplication, and personalization.
+
+## How it works
+
+A model maps inputs into a vector space where similar items are near each other. Systems store vectors and compare them using cosine similarity, dot product, or distance metrics.
+
+## When to use it
+
+Use embeddings when keyword matching is too literal or when recommendations should use learned similarity.
+
+## Tradeoffs / failure modes
+
+Embeddings can be stale, biased, expensive to recompute, and hard to explain. Model changes often require reindexing.
+
+## Tiny example
+
+A document question-answering system embeds uploaded files and retrieves the chunks closest to the user's question.
+
+## Related guides and systems
+
+See Recommendation Engine, Full-Text Search, ChatGPT, YouTube, and Google Photos.

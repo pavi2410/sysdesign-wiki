@@ -1,0 +1,39 @@
+---
+title: Sharding
+tagline: Split a dataset across machines so storage and traffic can scale horizontally.
+category: scalability
+level: intermediate
+timeMinutes: 5
+tags: [sharding, database, scalability, partitioning]
+relatedGuides: [multi-tenant-architecture, feed-timeline, full-text-search]
+relatedSystems: [discord, slack, twitter, github, gmail]
+prerequisites: [replication]
+---
+
+## What it is
+
+Sharding partitions data across multiple databases or nodes. Each shard owns a subset of the data, usually based on a key such as user ID, workspace ID, repository ID, or geographic region.
+
+## Why it matters
+
+A single database has limits for storage, write throughput, indexes, and maintenance windows. Sharding lets you add capacity by adding more nodes.
+
+## How it works
+
+A routing layer maps each request to the shard that owns its key. Common strategies include hash-based sharding, range sharding, tenant sharding, and directory-based routing.
+
+## When to use it
+
+Use sharding when vertical scaling and read replicas no longer handle write volume, dataset size, or operational isolation needs.
+
+## Tradeoffs / failure modes
+
+Cross-shard queries, rebalancing, hot shards, global uniqueness, and transactions become harder. Choosing the wrong shard key is expensive to fix.
+
+## Tiny example
+
+Discord can store messages by guild or channel shard so very large communities do not overload one database.
+
+## Related guides and systems
+
+See Multi-Tenant Architecture, Feed & Timeline Generation, Full-Text Search, Discord, Slack, Twitter, GitHub, and Gmail.

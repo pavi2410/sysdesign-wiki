@@ -1,0 +1,39 @@
+---
+title: Operational Transform
+tagline: Transform concurrent edits so collaborative documents preserve user intent.
+category: architecture-techniques
+level: advanced
+timeMinutes: 5
+tags: [OT, collaboration, real-time, documents]
+relatedGuides: [collaborative-editing]
+relatedSystems: [google-drive]
+prerequisites: [websocket]
+---
+
+## What it is
+
+Operational transform is a technique for collaborative editing where concurrent operations are transformed against each other before being applied.
+
+## Why it matters
+
+If two users edit the same document at once, raw operations can target stale positions. OT adjusts those positions so each user's intent survives.
+
+## How it works
+
+Clients send operations such as insert or delete. A server orders them, transforms operations against concurrent changes, and broadcasts the transformed versions back to clients.
+
+## When to use it
+
+Use OT for real-time document editing when you want a central server to coordinate ordering and transformations.
+
+## Tradeoffs / failure modes
+
+Transform functions are hard to get right, especially for rich text and nested document structures. Offline editing is often harder than with CRDTs.
+
+## Tiny example
+
+User A inserts `hello` at position 0 while user B inserts `!` at position 0. OT transforms one operation so both edits appear predictably.
+
+## Related guides and systems
+
+See Collaborative Real-Time Editing and Google Drive.

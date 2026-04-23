@@ -27,6 +27,9 @@ const currentPath = Astro.url.pathname;
       <a href="/guides" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath.startsWith('/guides') ? 'text-accent' : 'text-ink-light']}>
         Guides
       </a>
+      <a href="/lessons" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath.startsWith('/lessons') ? 'text-accent' : 'text-ink-light']}>
+        Lessons
+      </a>
       <a href="/about" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath === '/about' ? 'text-accent' : 'text-ink-light']}>
         About
       </a>

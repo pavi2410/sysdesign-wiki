@@ -1,0 +1,39 @@
+---
+title: Replication
+tagline: Copy data across nodes to improve availability, read scale, and disaster recovery.
+category: data-storage
+level: foundational
+timeMinutes: 4
+tags: [replication, database, availability, consistency]
+relatedGuides: [caching-strategies, multi-tenant-architecture, audit-logging]
+relatedSystems: [telegram, google-drive, gmail, github]
+prerequisites: []
+---
+
+## What it is
+
+Replication keeps copies of data on multiple machines or regions. One node may accept writes and stream changes to followers, or multiple nodes may coordinate writes.
+
+## Why it matters
+
+Copies let systems survive machine failure, serve reads closer to users, run backups, and move traffic during incidents.
+
+## How it works
+
+Changes are written to a log and applied on replicas. Replication can be synchronous, where writes wait for copies, or asynchronous, where replicas catch up after the primary acknowledges.
+
+## When to use it
+
+Use replication for databases, search indexes, object metadata, logs, and any service that needs high availability or read scaling.
+
+## Tradeoffs / failure modes
+
+Replica lag causes stale reads. Failover can lose recent asynchronous writes. Multi-region replication adds conflict and latency questions.
+
+## Tiny example
+
+Gmail can keep email metadata replicated so reads continue even when one storage node fails.
+
+## Related guides and systems
+
+See Caching Strategies, Multi-Tenant Architecture, Audit Logging, Telegram, Google Drive, Gmail, and GitHub.

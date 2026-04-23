@@ -1,0 +1,39 @@
+---
+title: Object Storage
+tagline: Store large immutable blobs behind keys instead of rows and file paths.
+category: data-storage
+level: foundational
+timeMinutes: 4
+tags: [object-storage, files, media, S3]
+relatedGuides: [file-upload-pipeline, video-transcoding, cdn-asset-delivery]
+relatedSystems: [google-drive, google-photos, youtube, netflix, instagram]
+prerequisites: []
+---
+
+## What it is
+
+Object storage stores blobs such as images, videos, documents, backups, and model artifacts. Each object is addressed by a key and stored with metadata.
+
+## Why it matters
+
+Large files do not belong in application databases. Object stores provide durable, cheap, scalable storage with lifecycle rules and integration with CDNs and processing pipelines.
+
+## How it works
+
+Applications upload objects directly or through signed URLs. Metadata lives in a database, while the blob lives in storage. Background jobs scan, transform, or replicate objects.
+
+## When to use it
+
+Use object storage for user uploads, media, logs, exports, backups, static assets, and large generated artifacts.
+
+## Tradeoffs / failure modes
+
+Object stores are not relational databases. Listing can be expensive, overwrites need care, and authorization must protect signed URLs and object keys.
+
+## Tiny example
+
+Google Drive stores file bytes in object storage and keeps permissions, names, folders, and version metadata in separate databases.
+
+## Related guides and systems
+
+See File Upload Pipeline, Video Transcoding, CDN & Asset Delivery, Google Drive, Google Photos, YouTube, Netflix, and Instagram.

@@ -1,0 +1,39 @@
+---
+title: CDN
+tagline: Cache and serve content close to users so origin systems stay fast and protected.
+category: cloud-infra
+level: foundational
+timeMinutes: 4
+tags: [CDN, caching, edge, performance]
+relatedGuides: [cdn-asset-delivery, video-transcoding, custom-domains]
+relatedSystems: [netflix, youtube, instagram, google-photos, zoom]
+prerequisites: [cache-aside]
+---
+
+## What it is
+
+A content delivery network is a global layer of edge servers that cache and serve assets near users. CDNs commonly deliver images, video segments, JavaScript, downloads, and sometimes whole pages.
+
+## Why it matters
+
+Distance adds latency. A CDN moves hot content closer to users and reduces repeated traffic to the origin, improving speed, reliability, and cost.
+
+## How it works
+
+Requests go to an edge location. If the object is cached and fresh, the edge returns it. If not, it fetches from origin, stores the response according to cache headers, and serves future requests locally.
+
+## When to use it
+
+Use a CDN for static assets, media delivery, high-traffic public content, and APIs where edge caching is safe.
+
+## Tradeoffs / failure modes
+
+Stale content, purge delays, cache key mistakes, and origin shielding gaps are the classic problems. Dynamic or personalized responses need careful caching rules.
+
+## Tiny example
+
+Netflix can serve video chunks from nearby Open Connect appliances instead of pulling every stream from a central cloud region.
+
+## Related guides and systems
+
+See CDN & Asset Delivery, Video Transcoding, Custom Domains, Netflix, YouTube, Instagram, Google Photos, and Zoom.

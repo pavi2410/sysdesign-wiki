@@ -1,0 +1,39 @@
+---
+title: Pub/Sub
+tagline: Broadcast events from publishers to many independent subscribers.
+category: real-time
+level: foundational
+timeMinutes: 4
+tags: [pub-sub, events, fan-out, real-time]
+relatedGuides: [websocket-infrastructure, server-sent-events, webhooks, presence-online-status]
+relatedSystems: [slack, discord, twitter, instagram]
+prerequisites: [message-queue]
+---
+
+## What it is
+
+Publish/subscribe is an event distribution pattern where publishers send events to topics and subscribers receive events from topics they care about.
+
+## Why it matters
+
+It decouples event producers from consumers. A single message can update WebSocket clients, invalidate caches, trigger analytics, and notify downstream systems without the producer knowing each one.
+
+## How it works
+
+Events are published to channels, topics, or streams. Subscribers register interest and receive matching events. Some systems retain events for replay; others only deliver live messages.
+
+## When to use it
+
+Use pub/sub for live updates, notifications, cache invalidation, analytics pipelines, and service-to-service event distribution.
+
+## Tradeoffs / failure modes
+
+Delivery guarantees vary. Ordering, replay, slow subscribers, and duplicate events must be understood before building critical workflows on top.
+
+## Tiny example
+
+Slack publishes `message.created` to a channel topic so connected clients, search indexing, and notifications can react independently.
+
+## Related guides and systems
+
+See WebSocket Infrastructure, Server-Sent Events, Webhooks, Presence, Slack, Discord, Twitter, and Instagram.

@@ -1,0 +1,39 @@
+---
+title: TLS
+tagline: Encrypt and authenticate network connections between clients and services.
+category: security
+level: foundational
+timeMinutes: 4
+tags: [TLS, encryption, certificates, security]
+relatedGuides: [custom-domains, oauth2-social-login, e2e-encryption]
+relatedSystems: [gmail, github, google-drive, whatsapp]
+prerequisites: []
+---
+
+## What it is
+
+Transport Layer Security encrypts data in transit and lets clients verify they are talking to the intended server.
+
+## Why it matters
+
+Without TLS, attackers on the network can read or modify traffic. TLS protects logins, APIs, uploads, cookies, tokens, and user data as it crosses the internet.
+
+## How it works
+
+During the handshake, the server presents a certificate, both sides agree on cryptographic parameters, and they derive session keys for encrypted communication.
+
+## When to use it
+
+Use TLS for all public HTTP traffic, internal service traffic when networks are untrusted, webhooks, OAuth redirects, and custom domains.
+
+## Tradeoffs / failure modes
+
+Certificate renewal, hostname validation, mixed content, old protocol versions, and private key handling are common operational issues.
+
+## Tiny example
+
+A custom domain points to your SaaS, which automatically provisions a certificate and serves the tenant's site over HTTPS.
+
+## Related guides and systems
+
+See Custom Domains, OAuth2 & Social Login, End-to-End Encryption, Gmail, GitHub, Google Drive, and WhatsApp.

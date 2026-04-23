@@ -1,0 +1,39 @@
+---
+title: Backpressure
+tagline: Slow producers down when consumers cannot keep up.
+category: reliability
+level: intermediate
+timeMinutes: 4
+tags: [backpressure, queues, streaming, reliability]
+relatedGuides: [job-queues, websocket-infrastructure, server-sent-events, video-transcoding]
+relatedSystems: [chatgpt, discord, youtube, slack]
+prerequisites: [message-queue]
+---
+
+## What it is
+
+Backpressure is a feedback mechanism that prevents producers from overwhelming consumers. Instead of accepting unlimited work, the system slows, buffers, sheds, or rejects work.
+
+## Why it matters
+
+Overload often cascades. Queues grow, memory fills, latency spikes, retries multiply, and healthy services become unhealthy. Backpressure keeps overload bounded.
+
+## How it works
+
+Signals include queue depth, consumer lag, CPU, memory, connection buffers, and downstream errors. Producers respond by reducing rate, batching, pausing reads, or returning a retryable error.
+
+## When to use it
+
+Use it in queues, streaming APIs, WebSocket gateways, media pipelines, and inference schedulers.
+
+## Tradeoffs / failure modes
+
+Too much buffering hides problems and increases latency. Too little buffering rejects work prematurely. The product must decide what to degrade first.
+
+## Tiny example
+
+If a WebSocket client's send buffer grows too large, the gateway stops reading new events for that connection or disconnects it.
+
+## Related guides and systems
+
+See Job Queues, WebSocket Infrastructure, Server-Sent Events, Video Transcoding, ChatGPT, Discord, YouTube, and Slack.

@@ -22,4 +22,30 @@ const guides = defineCollection({
   }),
 });
 
-export const collections = { systems, guides };
+const lessons = defineCollection({
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/lessons' }),
+  schema: z.object({
+    title: z.string(),
+    tagline: z.string(),
+    category: z.enum([
+      'foundations',
+      'scalability',
+      'data-storage',
+      'real-time',
+      'reliability',
+      'security',
+      'cloud-infra',
+      'observability',
+      'ai-ml',
+      'architecture-techniques',
+    ]),
+    level: z.enum(['foundational', 'intermediate', 'advanced']),
+    timeMinutes: z.number(),
+    tags: z.array(z.string()),
+    relatedGuides: z.array(z.string()).default([]),
+    relatedSystems: z.array(z.string()).default([]),
+    prerequisites: z.array(z.string()).default([]),
+  }),
+});
+
+export const collections = { systems, guides, lessons };

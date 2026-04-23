@@ -1,0 +1,39 @@
+---
+title: API Gateway
+tagline: A controlled front door for authentication, routing, rate limits, and API policy.
+category: foundations
+level: foundational
+timeMinutes: 4
+tags: [API, gateway, routing, auth, rate-limiting]
+relatedGuides: [api-versioning, rate-limiting, oauth2-social-login]
+relatedSystems: [chatgpt, slack, github, gmail]
+prerequisites: [load-balancer]
+---
+
+## What it is
+
+An API gateway is the entry point for client requests. It routes requests to backend services and often handles cross-cutting concerns such as authentication, rate limiting, request validation, API versioning, and response shaping.
+
+## Why it matters
+
+It keeps every backend service from reimplementing the same public API rules. Product teams can change internal service boundaries while clients keep calling stable endpoints.
+
+## How it works
+
+The gateway inspects method, path, headers, identity, and sometimes request body. It applies policy, chooses a backend route, forwards the request, and returns the response with standard headers and errors.
+
+## When to use it
+
+Use it for public APIs, mobile backends, multi-service products, and platforms with different customer tiers or API versions.
+
+## Tradeoffs / failure modes
+
+A gateway can become a bottleneck or a dumping ground for business logic. Keep it focused on platform policy, routing, and protocol translation.
+
+## Tiny example
+
+`POST /v1/chat/completions` hits a gateway that authenticates the API key, checks token limits, and routes the request to a model-serving service.
+
+## Related guides and systems
+
+See API Versioning, Rate Limiting, OAuth2 & Social Login, ChatGPT, Slack, GitHub, and Gmail.

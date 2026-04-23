@@ -1,0 +1,180 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Nav from '@/components/Nav.astro';
+import LessonCard from '@/components/LessonCard.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { learningPaths } from '@/lib/lessons';
+import {
+  lessonCategoryLabels,
+  lessonLevelLabels,
+  type LessonCategory,
+  type LessonLevel,
+} from '@/lib/categories';
+
+const lessons = (await getCollection('lessons')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const categories = [...new Set(lessons.map((lesson) => lesson.data.category))] as LessonCategory[];
+const levels = [...new Set(lessons.map((lesson) => lesson.data.level))] as LessonLevel[];
+const lessonsById = new Map(lessons.map((lesson) => [lesson.id, lesson]));
+const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is CollectionEntry<'lessons'> => Boolean(lesson);
+---
+
+<BaseLayout
+  title="Lessons — Bite-Sized System Design Concepts"
+  description="Learn system design concepts, tools, services, and techniques in short builder-focused lessons. Start with foundations, then go deeper into systems and implementation guides."
+>
+  <Nav />
+
+  <main class="pt-16">
+    <section class="bg-paper-warm border-b border-border">
+      <div class="max-w-5xl mx-auto px-6 pt-16 pb-10">
+        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Lessons</p>
+        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-4">Bite-sized system design concepts</h1>
+        <p class="text-lg text-ink-light max-w-3xl">
+          Short builder-focused explanations of the concepts, tools, services, and techniques that show up across real architectures.
+        </p>
+      </div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-6 py-10">
+      <div class="flex items-end justify-between gap-6 mb-6">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Paths</p>
+          <h2 class="font-serif text-3xl font-bold text-ink">Start with a path</h2>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {learningPaths.map((path) => {
+          const pathLessons = path.lessonIds
+            .map((id) => lessonsById.get(id))
+            .filter(isLesson)
+            .slice(0, 4);
+
+          return (
+            <section class="bg-white border border-border rounded-xl p-5">
+              <h3 class="font-serif text-lg font-bold text-ink mb-1">{path.title}</h3>
+              <p class="text-sm text-ink-muted leading-relaxed mb-4">{path.tagline}</p>
+              <div class="flex flex-wrap gap-2">
+                {pathLessons.map((lesson) => (
+                  <a href={`/lessons/${lesson.id}`} class="text-xs bg-tag-bg text-tag-text px-2 py-1 rounded-md hover:text-accent transition-colors">
+                    {lesson.data.title}
+                  </a>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-6 py-6">
+      <div class="mb-6">
+        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Browse</p>
+        <h2 class="font-serif text-3xl font-bold text-ink">All lessons</h2>
+      </div>
+
+      <div class="space-y-4 mb-8">
+        <div class="flex flex-wrap gap-2" id="lesson-category-filters" aria-label="Lesson categories">
+          <button
+            data-filter-type="category"
+            data-filter-value="all"
+            class="lesson-filter-btn active text-sm font-medium px-4 py-2 rounded-lg border border-accent bg-accent text-white transition-all"
+          >
+            All Categories
+          </button>
+          {categories.map((category) => (
+            <button
+              data-filter-type="category"
+              data-filter-value={category}
+              class="lesson-filter-btn text-sm font-medium px-4 py-2 rounded-lg border border-border bg-white text-ink-light hover:border-accent/40 hover:text-accent transition-all"
+            >
+              {lessonCategoryLabels[category]}
+            </button>
+          ))}
+        </div>
+        <div class="flex flex-wrap gap-2" id="lesson-level-filters" aria-label="Lesson levels">
+          <button
+            data-filter-type="level"
+            data-filter-value="all"
+            class="lesson-filter-btn active text-sm font-medium px-4 py-2 rounded-lg border border-accent bg-accent text-white transition-all"
+          >
+            All Levels
+          </button>
+          {levels.map((level) => (
+            <button
+              data-filter-type="level"
+              data-filter-value={level}
+              class="lesson-filter-btn text-sm font-medium px-4 py-2 rounded-lg border border-border bg-white text-ink-light hover:border-accent/40 hover:text-accent transition-all"
+            >
+              {lessonLevelLabels[level]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20" id="lessons-grid">
+        {lessons.map((lesson) => (
+          <div data-category={lesson.data.category} data-level={lesson.data.level} class="lesson-item">
+            <LessonCard lesson={lesson} />
+          </div>
+        ))}
+      </div>
+      <p id="no-results" class="hidden text-center text-ink-muted py-12">No lessons found for these filters.</p>
+    </section>
+  </main>
+
+  <footer class="border-t border-border bg-paper-warm">
+    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
+      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
+      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+    </div>
+  </footer>
+</BaseLayout>
+
+<script>
+  const state = { category: 'all', level: 'all' };
+  const filterButtons = document.querySelectorAll('.lesson-filter-btn');
+  const lessonItems = document.querySelectorAll('.lesson-item');
+  const noResults = document.getElementById('no-results');
+
+  function refreshLessons() {
+    let visibleCount = 0;
+
+    lessonItems.forEach((item) => {
+      const el = item as HTMLElement;
+      const categoryMatches = state.category === 'all' || el.dataset.category === state.category;
+      const levelMatches = state.level === 'all' || el.dataset.level === state.level;
+      const visible = categoryMatches && levelMatches;
+      el.style.display = visible ? '' : 'none';
+      if (visible) visibleCount++;
+    });
+
+    noResults?.classList.toggle('hidden', visibleCount > 0);
+  }
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const type = button.getAttribute('data-filter-type') as 'category' | 'level';
+      const value = button.getAttribute('data-filter-value') ?? 'all';
+      state[type] = value;
+
+      document.querySelectorAll(`.lesson-filter-btn[data-filter-type="${type}"]`).forEach((btn) => {
+        btn.classList.remove('active', 'border-accent', 'bg-accent', 'text-white');
+        btn.classList.add('border-border', 'bg-white', 'text-ink-light');
+      });
+
+      button.classList.add('active', 'border-accent', 'bg-accent', 'text-white');
+      button.classList.remove('border-border', 'bg-white', 'text-ink-light');
+      refreshLessons();
+    });
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const category = params.get('category');
+  const level = params.get('level');
+  if (category) {
+    (document.querySelector(`.lesson-filter-btn[data-filter-type="category"][data-filter-value="${category}"]`) as HTMLElement | null)?.click();
+  }
+  if (level) {
+    (document.querySelector(`.lesson-filter-btn[data-filter-type="level"][data-filter-value="${level}"]`) as HTMLElement | null)?.click();
+  }
+</script>

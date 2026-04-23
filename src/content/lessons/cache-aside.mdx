@@ -1,0 +1,39 @@
+---
+title: Cache-Aside
+tagline: Let the application read through the cache and repopulate missing data on demand.
+category: data-storage
+level: foundational
+timeMinutes: 4
+tags: [caching, Redis, invalidation, performance]
+relatedGuides: [caching-strategies, rate-limiting, recommendation-engine]
+relatedSystems: [instagram, twitter, slack, google-maps]
+prerequisites: []
+---
+
+## What it is
+
+Cache-aside is a caching pattern where the application explicitly checks the cache before reading the database. On a miss, it loads from the database, stores the value in cache, and returns it.
+
+## Why it matters
+
+It is simple, flexible, and works with almost any database or cache. Most systems use it for expensive reads, hot objects, configuration, profiles, counters, and feed hydration.
+
+## How it works
+
+Reads go cache first. Writes update the source of truth and delete or refresh the cache entry. Time-to-live values provide a fallback if invalidation is missed.
+
+## When to use it
+
+Use it when reads are frequent, data can tolerate a small staleness window, and the application can handle cache misses.
+
+## Tradeoffs / failure modes
+
+The first read after invalidation is slow. Popular misses can create a thundering herd unless you add request coalescing, locking, or warming.
+
+## Tiny example
+
+`getUser(42)` checks Redis. If missing, it reads Postgres, writes `user:42` with a TTL, and returns the user.
+
+## Related guides and systems
+
+See Caching Strategies, Rate Limiting, Recommendation Engine, Instagram, Twitter, Slack, and Google Maps.
