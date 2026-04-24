@@ -19,18 +19,18 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
 ---
 
 <BaseLayout
-  title="Lessons — Bite-Sized System Design Concepts"
-  description="Learn system design concepts, tools, services, and techniques in short builder-focused lessons. Start with foundations, then go deeper into systems and implementation guides."
+  title="Concepts - System Design Building Blocks"
+  description="Learn the system design concepts behind practical architecture tradeoffs, from queues and caches to observability, reliability, cloud infrastructure, and AI systems."
 >
   <Nav />
 
   <main class="pt-16">
     <section class="bg-paper-warm border-b border-border">
       <div class="max-w-5xl mx-auto px-6 pt-16 pb-10">
-        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Lessons</p>
-        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-4">Bite-sized system design concepts</h1>
+        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Concepts</p>
+        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-4">System design building blocks</h1>
         <p class="text-lg text-ink-light max-w-3xl">
-          Short builder-focused explanations of the concepts, tools, services, and techniques that show up across real architectures.
+          Short learning notes for the concepts, tools, services, and techniques that shape architecture decisions.
         </p>
       </div>
     </section>
@@ -50,7 +50,7 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
             .slice(0, 4);
 
           return (
-            <section class="bg-white border border-border rounded-xl p-5">
+            <section class="bg-white border border-border rounded-lg p-5">
               <h3 class="font-serif text-lg font-bold text-ink mb-1">{path.title}</h3>
               <p class="text-sm text-ink-muted leading-relaxed mb-4">{path.tagline}</p>
               <div class="flex flex-wrap gap-2">
@@ -69,7 +69,7 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
     <section class="max-w-5xl mx-auto px-6 py-6">
       <div class="mb-6">
         <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Browse</p>
-        <h2 class="font-serif text-3xl font-bold text-ink">All lessons</h2>
+        <h2 class="font-serif text-3xl font-bold text-ink">All concepts</h2>
       </div>
 
       <div class="space-y-4 mb-8">
@@ -118,14 +118,14 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
           </div>
         ))}
       </div>
-      <p id="no-results" class="hidden text-center text-ink-muted py-12">No lessons found for these filters.</p>
+      <p id="no-results" class="hidden text-center text-ink-muted py-12">No concepts found for these filters.</p>
     </section>
   </main>
 
   <footer class="border-t border-border bg-paper-warm">
     <div class="max-w-5xl mx-auto px-6 py-10 text-center">
       <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
     </div>
   </footer>
 </BaseLayout>

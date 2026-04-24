@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-serif: "Playfair Display", "Georgia", serif;
-  --font-body: "Inter", "system-ui", sans-serif;
+  --font-serif: "Fraunces", "Georgia", serif;
+  --font-body: "IBM Plex Sans", "system-ui", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
   --color-ink: #1a1a1a;
@@ -68,7 +68,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-serif);
   font-weight: 700;
   color: var(--color-ink);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 ::selection {

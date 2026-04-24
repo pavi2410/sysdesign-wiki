@@ -5,109 +5,162 @@ import SystemCard from '@/components/SystemCard.astro';
 import GuideCard from '@/components/GuideCard.astro';
 import LessonCard from '@/components/LessonCard.astro';
 import { getCollection } from 'astro:content';
-import { categoryLabels, type Category } from '@/lib/categories';
 
 const systems = await getCollection('systems');
 const guides = await getCollection('guides');
 const lessons = await getCollection('lessons');
-const categories = [...new Set(systems.map((s) => s.data.category))] as Category[];
-const featured = systems.slice(0, 3);
-const featuredGuides = guides.slice(0, 6);
-const featuredLessons = lessons
-  .filter((lesson) => lesson.data.level === 'foundational')
-  .sort((a, b) => a.data.title.localeCompare(b.data.title))
+
+const featuredGuides = guides
+  .filter((guide) => ['webhooks', 'rate-limiting', 'file-upload-pipeline', 'feature-flags', 'audit-logging', 'full-text-search'].includes(guide.id))
   .slice(0, 6);
+const featuredLessons = lessons
+  .filter((lesson) => ['backpressure', 'message-queue', 'cache-aside', 'observability', 'circuit-breaker', 'object-storage'].includes(lesson.id))
+  .slice(0, 6);
+const featuredSystems = systems
+  .filter((system) => ['chatgpt', 'slack', 'google-drive'].includes(system.id))
+  .slice(0, 3);
+
+const learningPaths = [
+  {
+    label: 'Start a 0->1 design',
+    href: '/guides',
+    detail: 'Learn the smallest serious architecture for a product capability before adding scale machinery.',
+  },
+  {
+    label: 'Compare a tradeoff',
+    href: '/lessons',
+    detail: 'Build the mental model behind queues, caches, consistency, backpressure, and reliability.',
+  },
+  {
+    label: 'Study an inspired system',
+    href: '/systems',
+    detail: 'Use case studies as learning models, not as claims about exact production internals.',
+  },
+  {
+    label: 'Explain a decision',
+    href: '/guides',
+    detail: 'Turn concepts into assumptions, cost drivers, failure modes, and review questions.',
+  },
+];
+
+const designForces = [
+  'Scale breakpoints',
+  'Cost drivers',
+  'Cloud constraints',
+  'Failure modes',
+  'Operational burden',
+  'Migration paths',
+];
+
+const decisionPrompts = [
+  ['What can stay simple?', 'Find the boring default that carries the system to the next meaningful breakpoint.'],
+  ['What gets expensive?', 'Name the hidden meter: egress, index size, idle capacity, retries, observability, or GPUs.'],
+  ['What breaks first?', 'Look for the first bottleneck before reaching for the most scalable architecture.'],
+  ['What should be measured?', 'Define the signals that tell a team when reality has outgrown the starting design.'],
+];
 ---
 
 <BaseLayout
-  title="SysDesign Wiki — How to Build WhatsApp, Instagram, Netflix & More"
-  description="Learn how to build popular apps like WhatsApp, Instagram, Netflix, Uber, and Twitter. System design articles with architecture diagrams, data models, and AI-ready prompts."
+  title="SysDesign Wiki - Practical System Design Learning"
+  description="Learn system design through practical architecture patterns, tradeoffs, cost drivers, cloud constraints, failure modes, and 0 to 1 design judgment."
 >
   <Nav />
 
   <main class="pt-16">
-    <!-- Hero -->
-    <section class="relative overflow-hidden">
-      <div class="absolute inset-0 bg-linear-to-b from-paper-warm to-paper"></div>
-      <div class="relative max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
-        <p class="text-sm font-medium uppercase tracking-[0.2em] text-accent mb-6">The Encyclopedia of</p>
-        <h1 class="font-serif text-5xl md:text-7xl font-bold text-ink leading-[1.1] mb-6">
-          System Design<br />
-          <span class="text-accent">&amp; Architecture</span>
-        </h1>
-        <p class="text-lg md:text-xl text-ink-light max-w-2xl mx-auto leading-relaxed mb-10">
-          Deep-dive into the architectures powering the world's most popular applications.
-          From messaging to streaming, explore how systems scale to billions of users.
-        </p>
-        <div class="flex items-center justify-center gap-4">
-          <a
-            href="/systems"
-            class="inline-flex items-center gap-2 bg-accent text-white px-6 py-3 rounded-lg font-medium text-sm hover:bg-accent-hover transition-colors"
-          >
-            Browse Systems
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </a>
-          <a
-            href="/guides"
-            class="inline-flex items-center gap-2 text-ink-light px-6 py-3 rounded-lg font-medium text-sm border border-border hover:border-accent/40 hover:text-accent transition-all"
-          >
-            Feature Guides
-          </a>
+    <section class="relative border-b border-border bg-paper">
+      <div class="absolute inset-x-0 top-0 h-px bg-ink/10"></div>
+      <div class="max-w-7xl mx-auto px-6 pt-20 pb-14">
+        <div class="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-end">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-accent mb-5">
+              Practical learning for engineering judgment
+            </p>
+            <h1 class="font-serif text-5xl md:text-7xl font-bold text-ink leading-[1.03] mb-6">
+              System design without architecture theater.
+            </h1>
+            <p class="text-lg md:text-xl text-ink-light max-w-2xl leading-relaxed mb-8">
+              Build mental models for real engineering tradeoffs: what to start with, what it costs,
+              what breaks first, and what to measure before adding complexity.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <a
+                href="/guides"
+                class="inline-flex items-center gap-2 bg-accent text-white px-5 py-3 rounded-lg font-semibold text-sm hover:bg-accent-hover transition-colors"
+              >
+                Explore Capabilities
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+              <a
+                href="/lessons"
+                class="inline-flex items-center gap-2 text-ink-light px-5 py-3 rounded-lg font-semibold text-sm border border-border hover:border-accent/50 hover:text-accent transition-colors"
+              >
+                Learn Concepts
+              </a>
+            </div>
+          </div>
+
+          <div class="border border-border bg-paper-warm rounded-lg p-5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-4">Learning stance</p>
+            <div class="space-y-4">
+              <div class="border-l-2 border-accent pl-4">
+                <p class="font-semibold text-ink">0->1 first</p>
+                <p class="text-sm text-ink-light leading-relaxed">Reasonable starting designs, not infinite-scale prescriptions.</p>
+              </div>
+              <div class="border-l-2 border-border-dark pl-4">
+                <p class="font-semibold text-ink">Evidence-aware</p>
+                <p class="text-sm text-ink-light leading-relaxed">Case studies are learning models. Assumptions and unknowns stay visible.</p>
+              </div>
+              <div class="border-l-2 border-border-dark pl-4">
+                <p class="font-semibold text-ink">Cloud-realistic</p>
+                <p class="text-sm text-ink-light leading-relaxed">Provider services, limits, pricing meters, and operational burden shape the design.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Stats -->
-    <section class="max-w-5xl mx-auto px-6 py-12">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{systems.length}</p>
-          <p class="text-sm text-ink-muted mt-1">Systems Covered</p>
-        </div>
-        <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{guides.length}</p>
-          <p class="text-sm text-ink-muted mt-1">Feature Guides</p>
-        </div>
-        <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">{lessons.length}</p>
-          <p class="text-sm text-ink-muted mt-1">Bite-Sized Lessons</p>
-        </div>
-        <div class="text-center p-6 bg-white rounded-xl border border-border">
-          <p class="font-serif text-3xl font-bold text-accent">200+</p>
-          <p class="text-sm text-ink-muted mt-1">Components</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Featured -->
-    <section id="featured" class="max-w-5xl mx-auto px-6 py-12">
-      <div class="flex items-end justify-between mb-8">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Featured</p>
-          <h2 class="font-serif text-3xl font-bold text-ink">Popular Systems</h2>
-        </div>
-        <a href="/systems" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
-          View all →
-        </a>
-      </div>
-      <div class="grid md:grid-cols-3 gap-6">
-        {featured.map((system) => (
-          <SystemCard system={system} />
+    <section class="max-w-7xl mx-auto px-6 py-10">
+      <div class="grid md:grid-cols-4 gap-4">
+        {learningPaths.map((path) => (
+          <a href={path.href} class="group border border-border bg-white rounded-lg p-5 hover:border-accent/50 hover:shadow-md transition-all">
+            <p class="font-serif text-xl font-bold text-ink group-hover:text-accent transition-colors mb-2">{path.label}</p>
+            <p class="text-sm text-ink-light leading-relaxed">{path.detail}</p>
+          </a>
         ))}
       </div>
     </section>
 
-    <!-- Featured Guides -->
-    <section class="max-w-5xl mx-auto px-6 py-12">
-      <div class="flex items-end justify-between mb-8">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">New</p>
-          <h2 class="font-serif text-3xl font-bold text-ink">Feature Guides</h2>
-          <p class="text-sm text-ink-muted mt-2">How to build common features — from real-time events to payment processing.</p>
+    <section class="bg-paper-warm border-y border-border">
+      <div class="max-w-7xl mx-auto px-6 py-12">
+        <div class="grid lg:grid-cols-[0.85fr_1.15fr] gap-10">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">What matters</p>
+            <h2 class="font-serif text-3xl md:text-4xl font-bold text-ink mb-4">Learn the forces behind the architecture.</h2>
+            <p class="text-ink-light leading-relaxed">
+              The site is organized around the forces that decide whether a design remains simple,
+              becomes expensive, or needs to evolve.
+            </p>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {designForces.map((force) => (
+              <div class="bg-white border border-border rounded-lg px-4 py-3">
+                <p class="font-semibold text-ink">{force}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <a href="/guides" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
-          View all guides →
-        </a>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 py-12">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Capabilities</p>
+          <h2 class="font-serif text-3xl font-bold text-ink">Start with a product capability</h2>
+          <p class="text-sm text-ink-muted mt-2">Learn the 0->1 shape, failure modes, cost drivers, and evolution signals.</p>
+        </div>
+        <a href="/guides" class="text-sm text-accent font-semibold hover:text-accent-hover transition-colors">View all capabilities</a>
       </div>
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {featuredGuides.map((guide) => (
@@ -116,17 +169,36 @@ const featuredLessons = lessons
       </div>
     </section>
 
-    <!-- Featured Lessons -->
-    <section class="max-w-5xl mx-auto px-6 py-12">
-      <div class="flex items-end justify-between mb-8">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Learn</p>
-          <h2 class="font-serif text-3xl font-bold text-ink">Bite-Sized Lessons</h2>
-          <p class="text-sm text-ink-muted mt-2">Short explanations of the concepts behind the architectures.</p>
+    <section class="bg-ink text-white">
+      <div class="max-w-7xl mx-auto px-6 py-12">
+        <div class="grid lg:grid-cols-[0.75fr_1.25fr] gap-10">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-paper-dark mb-2">Decision habits</p>
+            <h2 class="font-serif text-3xl font-bold text-white mb-4">Questions worth returning to.</h2>
+            <p class="text-paper-dark/80 leading-relaxed">
+              Good system design learning should make engineers ask sharper questions before choosing a tool.
+            </p>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            {decisionPrompts.map(([title, detail]) => (
+              <div class="border border-white/15 rounded-lg p-5">
+                <p class="font-serif text-xl font-bold text-white mb-2">{title}</p>
+                <p class="text-sm text-paper-dark/80 leading-relaxed">{detail}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <a href="/lessons" class="text-sm text-accent font-medium hover:text-accent-hover transition-colors">
-          View all lessons →
-        </a>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 py-12">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Concepts</p>
+          <h2 class="font-serif text-3xl font-bold text-ink">Building blocks behind the tradeoffs</h2>
+          <p class="text-sm text-ink-muted mt-2">Short explanations that connect directly to capabilities and case studies.</p>
+        </div>
+        <a href="/lessons" class="text-sm text-accent font-semibold hover:text-accent-hover transition-colors">View all concepts</a>
       </div>
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {featuredLessons.map((lesson) => (
@@ -135,51 +207,27 @@ const featuredLessons = lessons
       </div>
     </section>
 
-    <!-- Categories -->
-    <section class="max-w-5xl mx-auto px-6 py-12">
-      <div class="mb-8">
-        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Browse by</p>
-        <h2 class="font-serif text-3xl font-bold text-ink">Category</h2>
+    <section class="max-w-7xl mx-auto px-6 py-12 pb-20">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Case studies</p>
+          <h2 class="font-serif text-3xl font-bold text-ink">Inspired systems as learning models</h2>
+          <p class="text-sm text-ink-muted mt-2">Study patterns and constraints without treating inferred diagrams as exact internals.</p>
+        </div>
+        <a href="/systems" class="text-sm text-accent font-semibold hover:text-accent-hover transition-colors">View case studies</a>
       </div>
-      <div class="grid md:grid-cols-3 gap-4">
-        {categories.map((cat) => {
-          const count = systems.filter((s) => s.data.category === cat).length;
-          return (
-            <a
-              href={`/systems?category=${cat}`}
-              class="group flex items-center gap-4 p-5 bg-white border border-border rounded-xl hover:border-accent/40 hover:shadow-md transition-all"
-            >
-              <div class="text-left">
-                <p class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors">
-                  {categoryLabels[cat]}
-                </p>
-                <p class="text-sm text-ink-muted">{count} system{count !== 1 ? 's' : ''}</p>
-              </div>
-            </a>
-          );
-        })}
-      </div>
-    </section>
-
-    <!-- All Systems -->
-    <section class="max-w-5xl mx-auto px-6 py-12 pb-20">
-      <div class="mb-8">
-        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Complete</p>
-        <h2 class="font-serif text-3xl font-bold text-ink">All Systems</h2>
-      </div>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {systems.map((system) => (
+      <div class="grid md:grid-cols-3 gap-6">
+        {featuredSystems.map((system) => (
           <SystemCard system={system} />
         ))}
       </div>
     </section>
   </main>
 
-  <!-- Footer -->
   <footer class="border-t border-border bg-paper-warm">
     <div class="max-w-5xl mx-auto px-6 py-10 text-center">
       <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
     </div>
   </footer>
 </BaseLayout>

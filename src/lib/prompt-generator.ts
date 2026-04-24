@@ -22,11 +22,11 @@ export function generateBuildPromptFromMdx(entry: { data: { name: string; taglin
   const { name, tagline } = entry.data;
   const body = entry.body ?? '';
 
-  return `# Build a ${name}-like System
+  return `# Learn From a ${name}-like System
 
-You are an expert software architect. I want to build a production-grade application inspired by ${name} (${tagline}).
+You are an expert software architect and teacher. I want to learn from a ${name}-inspired system design (${tagline}) without pretending this is the exact private production architecture.
 
-Use the following system design reference to guide the architecture, tech choices, and implementation. Adapt it to my specific needs while preserving the key architectural patterns that make this system work at scale.
+Use the following reference as a learning model. Keep assumptions visible, avoid unsupported scale claims, and explain the engineering forces behind each design choice.
 
 ---
 
@@ -39,13 +39,13 @@ ${body}
 
 Based on the architecture above, please:
 
-1. **Choose a modern tech stack** appropriate for my team size and scale targets. Justify each choice.
-2. **Design the database schema** with proper indexes, partitioning strategy, and replication approach.
-3. **Implement the core services** starting with the most critical path (e.g., message delivery for messaging, feed generation for social).
-4. **Set up the infrastructure** with containerization, CI/CD, monitoring, and observability.
-5. **Plan for scale** — identify the components that will need horizontal scaling first and design them to be stateless where possible.
+1. **State the assumptions** behind the design and call out what is inferred or unknown.
+2. **Explain the 0->1 starting design** a small team could learn from without over-engineering.
+3. **Identify tradeoffs and cost drivers** including storage, egress, compute, queues, indexing, and observability where relevant.
+4. **Name the likely failure modes** and the signals that would reveal them.
+5. **Describe evolution paths** only as conditional breakpoints, not universal prescriptions.
 
-Start by asking me clarifying questions about my specific requirements, team size, budget, and timeline. Then produce a phased implementation plan.
+Start by asking clarifying questions about my learning goal, team context, cloud provider, budget sensitivity, and scale assumptions. Then produce an assumption-bound explanation and decision checklist.
 `;
 }
 
@@ -53,11 +53,11 @@ export function generateGuidePromptFromMdx(entry: { data: { title: string; tagli
   const { title, tagline } = entry.data;
   const body = entry.body ?? '';
 
-  return `# How to Build: ${title}
+  return `# Learn the System Design of: ${title}
 
-You are an expert software architect. I want to implement ${title.toLowerCase()} in my application. (${tagline}).
+You are an expert software architect and teacher. I want to understand ${title.toLowerCase()} as a practical system design capability. (${tagline}).
 
-Use the following architectural guide to inform the design. Adapt it to my specific needs while preserving the key patterns.
+Use the following architectural guide as a learning reference. Avoid one-size-fits-all recommendations. Keep assumptions, costs, and tradeoffs explicit.
 
 ---
 
@@ -69,13 +69,13 @@ ${body}
 
 Based on the architecture above, please:
 
-1. **Recommend an approach** best suited for my scale, team, and constraints. Justify the choice.
-2. **Design the data model** with proper indexes, partitioning, and storage strategy.
-3. **Implement the core logic** with production-ready error handling and edge cases.
-4. **Plan for scale** — identify bottlenecks and design for horizontal scaling.
-5. **Add observability** — logging, metrics, and alerting for this feature.
+1. **State the assumptions** and what would change if the team, scale, or cloud provider changed.
+2. **Explain the 0->1 design** and why it is a reasonable starting point.
+3. **Compare the key tradeoffs** without claiming a universal best answer.
+4. **Identify cost drivers and failure modes** that teams should understand early.
+5. **List the measurements and breakpoints** that would justify evolving the design.
 
-Start by asking me clarifying questions about my specific requirements, existing tech stack, and scale targets. Then produce a phased implementation plan.
+Start by asking clarifying questions about my context. Then produce an assumption-bound learning summary, decision checklist, and measurement plan.
 `;
 }
 
@@ -107,11 +107,11 @@ export function generateBuildPrompt(system: SystemDesign): string {
     )
     .join('\n\n');
 
-  return `# Build a ${system.name}-like System
+  return `# Learn From a ${system.name}-like System
 
-You are an expert software architect. I want to build a production-grade application inspired by ${system.name} (${system.tagline}).
+You are an expert software architect and teacher. I want to learn from a ${system.name}-inspired system design (${system.tagline}) without pretending this is the exact private production architecture.
 
-Use the following system design reference to guide the architecture, tech choices, and implementation. Adapt it to my specific needs while preserving the key architectural patterns that make this system work at scale.
+Use the following reference as a learning model. Keep assumptions visible, avoid unsupported scale claims, and explain the engineering forces behind each design choice.
 
 ---
 
@@ -147,13 +147,13 @@ ${tradeoffs}
 
 Based on the architecture above, please:
 
-1. **Choose a modern tech stack** appropriate for my team size and scale targets. Justify each choice.
-2. **Design the database schema** with proper indexes, partitioning strategy, and replication approach.
-3. **Implement the core services** starting with the most critical path (e.g., message delivery for messaging, feed generation for social).
-4. **Set up the infrastructure** with containerization, CI/CD, monitoring, and observability.
-5. **Plan for scale** — identify the components that will need horizontal scaling first and design them to be stateless where possible.
+1. **State the assumptions** behind the design and call out what is inferred or unknown.
+2. **Explain the 0->1 starting design** a small team could learn from without over-engineering.
+3. **Identify tradeoffs and cost drivers** including storage, egress, compute, queues, indexing, and observability where relevant.
+4. **Name the likely failure modes** and the signals that would reveal them.
+5. **Describe evolution paths** only as conditional breakpoints, not universal prescriptions.
 
-Start by asking me clarifying questions about my specific requirements, team size, budget, and timeline. Then produce a phased implementation plan.
+Start by asking clarifying questions about my learning goal, team context, cloud provider, budget sensitivity, and scale assumptions. Then produce an assumption-bound explanation and decision checklist.
 `;
 }
 
@@ -184,11 +184,11 @@ export function generateGuidePrompt(guide: FeatureGuide): string {
     )
     .join('\n\n');
 
-  return `# How to Build: ${guide.title}
+  return `# Learn the System Design of: ${guide.title}
 
-You are an expert software architect. I want to implement ${guide.title.toLowerCase()} in my application. (${guide.tagline}).
+You are an expert software architect and teacher. I want to understand ${guide.title.toLowerCase()} as a practical system design capability. (${guide.tagline}).
 
-Use the following architectural guide to inform the design. Adapt it to my specific needs while preserving the key patterns.
+Use the following architectural guide as a learning reference. Avoid one-size-fits-all recommendations. Keep assumptions, costs, and tradeoffs explicit.
 
 ---
 
@@ -221,12 +221,12 @@ ${tradeoffs}
 
 Based on the architecture above, please:
 
-1. **Recommend an approach** best suited for my scale, team, and constraints. Justify the choice.
-2. **Design the data model** with proper indexes, partitioning, and storage strategy.
-3. **Implement the core logic** with production-ready error handling and edge cases.
-4. **Plan for scale** — identify bottlenecks and design for horizontal scaling.
-5. **Add observability** — logging, metrics, and alerting for this feature.
+1. **State the assumptions** and what would change if the team, scale, or cloud provider changed.
+2. **Explain the 0->1 design** and why it is a reasonable starting point.
+3. **Compare the key tradeoffs** without claiming a universal best answer.
+4. **Identify cost drivers and failure modes** that teams should understand early.
+5. **List the measurements and breakpoints** that would justify evolving the design.
 
-Start by asking me clarifying questions about my specific requirements, existing tech stack, and scale targets. Then produce a phased implementation plan.
+Start by asking clarifying questions about my context. Then produce an assumption-bound learning summary, decision checklist, and measurement plan.
 `;
 }

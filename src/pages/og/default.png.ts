@@ -15,10 +15,10 @@ async function loadGoogleFont(family: string, weight: number): Promise<ArrayBuff
 }
 
 export const GET: APIRoute = async () => {
-  const [playfairBold, interRegular, interSemibold] = await Promise.all([
-    loadGoogleFont('Playfair Display', 700),
-    loadGoogleFont('Inter', 400),
-    loadGoogleFont('Inter', 600),
+  const [frauncesBold, plexRegular, plexSemibold] = await Promise.all([
+    loadGoogleFont('Fraunces', 700),
+    loadGoogleFont('IBM Plex Sans', 400),
+    loadGoogleFont('IBM Plex Sans', 600),
   ]);
 
   const svg = await satori(
@@ -33,7 +33,7 @@ export const GET: APIRoute = async () => {
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: '#fafaf8',
-          fontFamily: 'Inter',
+          fontFamily: 'IBM Plex Sans',
           position: 'relative',
           overflow: 'hidden',
         },
@@ -132,23 +132,23 @@ export const GET: APIRoute = async () => {
                       letterSpacing: '0.2em',
                       color: '#6b4c3b',
                     },
-                    children: 'The Encyclopedia of',
+                    children: 'Practical Learning for',
                   },
                 },
                 {
                   type: 'h1',
                   props: {
                     style: {
-                      fontFamily: 'Playfair Display',
+                      fontFamily: 'Fraunces',
                       fontSize: '72px',
                       fontWeight: 700,
                       color: '#1a1a1a',
                       lineHeight: 1.1,
                       margin: 0,
                       textAlign: 'center',
-                      letterSpacing: '-0.02em',
+                      letterSpacing: 0,
                     },
-                    children: 'System Design & Architecture',
+                    children: 'System Design Judgment',
                   },
                 },
                 {
@@ -161,7 +161,7 @@ export const GET: APIRoute = async () => {
                       maxWidth: '600px',
                       margin: 0,
                     },
-                    children: 'Deep-dive into the architectures powering the world\u2019s most popular applications.',
+                    children: 'Tradeoffs, cost drivers, cloud constraints, and failure modes for practical architecture learning.',
                   },
                 },
               ],
@@ -174,9 +174,9 @@ export const GET: APIRoute = async () => {
       width: 1200,
       height: 630,
       fonts: [
-        { name: 'Playfair Display', data: playfairBold, weight: 700, style: 'normal' },
-        { name: 'Inter', data: interRegular, weight: 400, style: 'normal' },
-        { name: 'Inter', data: interSemibold, weight: 600, style: 'normal' },
+        { name: 'Fraunces', data: frauncesBold, weight: 700, style: 'normal' },
+        { name: 'IBM Plex Sans', data: plexRegular, weight: 400, style: 'normal' },
+        { name: 'IBM Plex Sans', data: plexSemibold, weight: 600, style: 'normal' },
       ],
     }
   );

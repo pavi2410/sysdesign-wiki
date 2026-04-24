@@ -4,8 +4,8 @@ import Nav from '@/components/Nav.astro';
 ---
 
 <BaseLayout
-  title="About SysDesignWiki — Learn System Design for Real-World Apps"
-  description="SysDesignWiki is an open encyclopedia documenting system design patterns behind popular apps. Learn architecture, copy AI-ready prompts, and build your own scalable systems."
+  title="About SysDesignWiki - Practical System Design Learning"
+  description="SysDesignWiki helps engineers learn architecture judgment through system design concepts, capability guides, cost drivers, cloud constraints, failure modes, and case studies."
 >
   <Nav />
 
@@ -16,56 +16,54 @@ import Nav from '@/components/Nav.astro';
 
       <div class="prose-custom space-y-6 text-ink-light leading-relaxed">
         <p class="text-lg">
-          SysDesignWiki is an open encyclopedia dedicated to documenting the system design and architecture patterns
-          behind the world's most popular applications and services.
+          SysDesignWiki is a practical learning resource for engineers who want to understand how software systems
+          are shaped by tradeoffs, costs, cloud constraints, failure modes, and operational reality.
         </p>
 
         <h2 class="font-serif text-2xl font-bold text-ink pt-4">Why This Exists</h2>
         <p>
-          Understanding how large-scale systems work is one of the most valuable skills in software engineering.
-          Yet this knowledge is scattered across blog posts, conference talks, research papers, and tribal knowledge
-          within companies. This encyclopedia aims to consolidate and present this information in a structured,
-          accessible format.
+          Most system design learning either stays too theoretical or jumps straight into hyperscale architecture
+          theater. This site focuses on the middle ground: the mental models that help engineers reason about
+          practical 0->1 designs, understand what breaks first, and know what to measure before adding complexity.
         </p>
 
-        <h2 class="font-serif text-2xl font-bold text-ink pt-4">What Each Article Covers</h2>
+        <h2 class="font-serif text-2xl font-bold text-ink pt-4">What Each Guide Teaches</h2>
         <ul class="space-y-2 list-none pl-0">
           <li class="flex items-start gap-3">
             <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
-            <span><strong class="text-ink">Scale metrics</strong> — the numbers that define the engineering challenge</span>
+            <span><strong class="text-ink">Starting designs</strong> - the simplest serious version of a capability</span>
           </li>
           <li class="flex items-start gap-3">
             <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
-            <span><strong class="text-ink">Requirements</strong> — functional and non-functional constraints</span>
+            <span><strong class="text-ink">Tradeoffs</strong> - what each choice gives up, not just what it enables</span>
           </li>
           <li class="flex items-start gap-3">
             <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
-            <span><strong class="text-ink">High-level architecture</strong> — visual system diagrams with Mermaid</span>
+            <span><strong class="text-ink">Cost drivers</strong> - the meters and usage patterns that make systems expensive</span>
           </li>
           <li class="flex items-start gap-3">
             <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
-            <span><strong class="text-ink">Component breakdown</strong> — what each service does and why</span>
+            <span><strong class="text-ink">Failure modes</strong> - the common ways designs degrade under real pressure</span>
           </li>
           <li class="flex items-start gap-3">
             <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
-            <span><strong class="text-ink">Data models</strong> — entity relationships and storage strategies</span>
+            <span><strong class="text-ink">Cloud mappings</strong> - how provider services shape otherwise logical architecture</span>
           </li>
           <li class="flex items-start gap-3">
             <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
-            <span><strong class="text-ink">Deep dives</strong> — detailed explorations of key architectural decisions</span>
+            <span><strong class="text-ink">Breakpoints</strong> - the signals that tell a team when the starting design needs to evolve</span>
           </li>
           <li class="flex items-start gap-3">
             <span class="w-1.5 h-1.5 rounded-full bg-accent mt-2.5 shrink-0"></span>
-            <span><strong class="text-ink">Tradeoffs</strong> — the pros and cons of each design choice</span>
+            <span><strong class="text-ink">Evidence and assumptions</strong> - what is known, inferred, simplified, or intentionally out of scope</span>
           </li>
         </ul>
 
-        <h2 class="font-serif text-2xl font-bold text-ink pt-4">Sources & Methodology</h2>
+        <h2 class="font-serif text-2xl font-bold text-ink pt-4">Scope & Methodology</h2>
         <p>
-          Articles are compiled from publicly available information including engineering blogs,
-          conference presentations (QCon, InfoQ, Strange Loop), published research papers,
-          open-source projects, and technical books. Where specific implementation details are
-          not publicly known, we note educated inferences based on available evidence.
+          SysDesignWiki is learning-first. It does not claim to prescribe exact production architectures,
+          exact costs, provider quota guarantees, or the private internals of large companies. Case studies
+          are treated as learning models based on public information and architectural inference.
         </p>
 
         <h2 class="font-serif text-2xl font-bold text-ink pt-4">Technology</h2>
@@ -73,8 +71,6 @@ import Nav from '@/components/Nav.astro';
           This site is built with <strong class="text-ink">Astro</strong> and styled with
           <strong class="text-ink">Tailwind CSS v4</strong>. Architecture diagrams are rendered using
           <strong class="text-ink">Mermaid.js</strong> with a custom theme to match the editorial aesthetic.
-          Typography features <strong class="text-ink">Playfair Display</strong> for headings and
-          <strong class="text-ink">Inter</strong> for body text.
         </p>
       </div>
     </section>
@@ -83,7 +79,7 @@ import Nav from '@/components/Nav.astro';
   <footer class="border-t border-border bg-paper-warm">
     <div class="max-w-5xl mx-auto px-6 py-10 text-center">
       <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
     </div>
   </footer>
 </BaseLayout>

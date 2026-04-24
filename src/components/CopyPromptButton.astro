@@ -5,10 +5,10 @@ interface Props {
   label?: string;
 }
 
-const { prompt, systemName, label = 'Implement' } = Astro.props;
+const { prompt, systemName, label = 'Learn' } = Astro.props;
 ---
 
-<div class="copy-prompt-wrapper my-10 p-6 bg-white border border-border rounded-xl">
+<div class="copy-prompt-wrapper my-10 p-6 bg-white border border-border rounded-lg">
   <div class="flex items-start gap-4">
     <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
       <svg class="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -19,7 +19,8 @@ const { prompt, systemName, label = 'Implement' } = Astro.props;
     <div class="flex-1 min-w-0">
       <h3 class="font-serif text-lg font-bold text-ink mb-1">{label} {systemName}</h3>
       <p class="text-sm text-ink-muted mb-4">
-        Copy a detailed architecture prompt to use with any AI coding assistant. It includes the full system design, data models, components, and tradeoffs — ready to kickstart your own implementation.
+        Copy a learning context prompt for an AI assistant. It keeps assumptions visible and asks for tradeoffs,
+        cost drivers, failure modes, and what to measure before adding complexity.
       </p>
       <div class="flex items-center gap-3">
         <button

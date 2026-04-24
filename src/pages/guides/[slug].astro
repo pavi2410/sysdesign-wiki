@@ -27,8 +27,46 @@ const otherGuides = allGuides.filter((g) => g.id !== entry.id).slice(0, 3);
 const lessons = await getCollection('lessons');
 const relatedLessons = getLessonsForGuide(lessons, entry);
 const buildPrompt = generateGuidePromptFromMdx(entry);
-const seoTitle = `How to Implement ${title} — System Design Guide`;
-const seoDescription = `Learn how to build ${title.toLowerCase()} in your system. ${tagline}. Architectural approaches, components, data models, and real-world examples.`;
+const guideLensByCategory = {
+  'real-time': {
+    defaultModel: 'Start with the simplest delivery path that meets latency needs before introducing durable fanout or global state.',
+    costDrivers: ['open connections', 'fanout work', 'presence updates', 'cross-region traffic'],
+    breakpoints: ['connection count grows faster than app servers', 'message fanout dominates request work', 'presence state becomes stale or expensive'],
+  },
+  platform: {
+    defaultModel: 'Start with clear tenant boundaries, boring data ownership, and reversible choices before optimizing for platform scale.',
+    costDrivers: ['tenant isolation', 'custom configuration', 'background jobs', 'support tooling'],
+    breakpoints: ['large tenants affect small tenants', 'support teams need self-serve controls', 'migration work becomes tenant-specific'],
+  },
+  data: {
+    defaultModel: 'Start with the primary database when quality and volume allow it; add dedicated data infrastructure when query shape demands it.',
+    costDrivers: ['index size', 'write amplification', 'storage growth', 'reindexing and backfills'],
+    breakpoints: ['queries harm transactional workloads', 'freshness targets conflict with indexing cost', 'ranking quality needs a dedicated pipeline'],
+  },
+  reliability: {
+    defaultModel: 'Start with a durable queue, clear ownership, retries, and idempotency before building a larger event platform.',
+    costDrivers: ['retry amplification', 'queue requests', 'worker runtime', 'delivery history and logs'],
+    breakpoints: ['backlog grows during normal traffic', 'manual recovery becomes frequent', 'independent consumers need replay'],
+  },
+  security: {
+    defaultModel: 'Start with explicit trust boundaries, auditable decisions, and managed primitives where correctness matters more than novelty.',
+    costDrivers: ['audit retention', 'encryption and key management', 'policy checks', 'compliance evidence'],
+    breakpoints: ['authorization logic spreads across services', 'audit queries become operationally important', 'customers require stronger controls'],
+  },
+  media: {
+    defaultModel: 'Start with object storage, signed access, lifecycle rules, and async processing before optimizing the media pipeline.',
+    costDrivers: ['storage volume', 'egress', 'transcoding minutes', 'duplicate derivatives'],
+    breakpoints: ['egress dominates the bill', 'processing queues delay user workflows', 'asset variants become hard to manage'],
+  },
+  collaboration: {
+    defaultModel: 'Start with a collaboration model that matches the product promise; do not choose CRDTs or OT before conflict behavior is clear.',
+    costDrivers: ['sync traffic', 'document history', 'presence updates', 'conflict resolution complexity'],
+    breakpoints: ['offline edits become common', 'conflicts create support load', 'large documents slow sync or replay'],
+  },
+};
+const guideLens = guideLensByCategory[category];
+const seoTitle = `${title} - Practical System Design Guide`;
+const seoDescription = `Learn ${title.toLowerCase()} through a practical system design lens: assumptions, tradeoffs, cost drivers, failure modes, and scale breakpoints.`;
 const ogImageUrl = `/og/guides/${entry.id}.png`;
 ---
 
@@ -40,7 +78,7 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
     <section class="bg-paper-warm border-b border-border">
       <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
         <div class="flex items-center gap-3 mb-4">
-          <a href="/guides" class="text-sm text-ink-muted hover:text-accent transition-colors">Guides</a>
+          <a href="/guides" class="text-sm text-ink-muted hover:text-accent transition-colors">Capabilities</a>
           <span class="text-ink-muted">/</span>
           <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full", colorClass]}>
             {guideCategoryLabels[category]}
@@ -63,6 +101,49 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
 
       <!-- Main content -->
       <article class="flex-1 min-w-0 max-w-4xl">
+        <section class="border border-border bg-white rounded-lg p-6 mb-8">
+          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-6">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Learning lens</p>
+              <h2 class="font-serif text-2xl font-bold text-ink mb-2">Start with judgment, not a universal prescription.</h2>
+              <p class="text-sm text-ink-light leading-relaxed max-w-2xl">
+                This page is a learning model for understanding the capability. It does not claim exact
+                production internals, exact costs, or an infinite-scale architecture.
+              </p>
+            </div>
+            <div class="shrink-0 border border-border bg-paper-warm rounded-lg px-4 py-3">
+              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted">Evidence</p>
+              <p class="text-sm font-semibold text-ink mt-1">Conceptual pattern</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-2">0->1 default</p>
+              <p class="text-sm text-ink-light leading-relaxed">{guideLens.defaultModel}</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-2">Cost drivers</p>
+              <div class="flex flex-wrap gap-1.5">
+                {guideLens.costDrivers.map((driver) => (
+                  <span class="text-xs bg-tag-bg text-tag-text px-2 py-1 rounded-md">{driver}</span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-2">Watch for breakpoints</p>
+              <ul class="space-y-1.5">
+                {guideLens.breakpoints.map((breakpoint) => (
+                  <li class="text-sm text-ink-light leading-snug flex gap-2">
+                    <span class="text-accent shrink-0">-</span>
+                    <span>{breakpoint}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
         <RelatedLessons lessons={relatedLessons} />
 
         <!-- MDX Content -->
@@ -71,16 +152,16 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
         </div>
 
         <!-- Copy as Prompt -->
-        <CopyPromptButton prompt={buildPrompt} systemName={title} label="Implement" />
+        <CopyPromptButton prompt={buildPrompt} systemName={title} label="Learn" />
 
         <!-- Related Guides -->
         <section class="border-t border-border pt-10">
-          <h2 class="font-serif text-2xl font-bold text-ink mb-6">Explore More Guides</h2>
+          <h2 class="font-serif text-2xl font-bold text-ink mb-6">Explore More Capabilities</h2>
           <div class="grid md:grid-cols-3 gap-4">
             {otherGuides.map((other) => (
               <a
                 href={`/guides/${other.id}`}
-                class="group block bg-white border border-border rounded-xl p-5 hover:border-accent/40 hover:shadow-md transition-all"
+                class="group block bg-white border border-border rounded-lg p-5 hover:border-accent/40 hover:shadow-md transition-all"
               >
                 <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">
                   {other.data.title}
@@ -97,7 +178,7 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
   <footer class="border-t border-border bg-paper-warm">
     <div class="max-w-5xl mx-auto px-6 py-10 text-center">
       <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
     </div>
   </footer>
 </BaseLayout>

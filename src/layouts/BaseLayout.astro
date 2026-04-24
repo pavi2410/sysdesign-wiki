@@ -12,13 +12,13 @@ const siteName = 'SysDesignWiki';
 const siteUrl = (Astro.site?.toString() ?? 'https://sysdesign.wiki').replace(/\/$/, '');
 const {
   title,
-  description = 'An encyclopedia of system design and architectures for popular apps and services. Learn how WhatsApp, Instagram, Netflix, and more are built.',
+  description = 'Practical system design learning for architecture patterns, tradeoffs, cost drivers, cloud constraints, failure modes, and engineering judgment.',
   ogImage = '/og/default.png',
   slug,
 } = Astro.props;
 
 const canonicalUrl = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', siteUrl).toString();
-const fullTitle = title.includes('—') ? title : `${title} — ${siteName}`;
+const fullTitle = title.includes('-') ? title : `${title} - ${siteName}`;
 ---
 
 <html lang="en">
@@ -34,7 +34,7 @@ const fullTitle = title.includes('—') ? title : `${title} — ${siteName}`;
     <link rel="canonical" href={canonicalUrl} />
     <meta name="robots" content="index, follow" />
     <meta name="author" content={siteName} />
-    <meta name="keywords" content="system design, software architecture, distributed systems, how to build, scalable systems, WhatsApp architecture, Instagram system design, Netflix architecture" />
+    <meta name="keywords" content="system design, software architecture, distributed systems, architecture tradeoffs, cloud architecture, cost drivers, scalability, reliability engineering" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="article" />
@@ -57,7 +57,7 @@ const fullTitle = title.includes('—') ? title : `${title} — ${siteName}`;
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600..800&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify({
@@ -65,7 +65,7 @@ const fullTitle = title.includes('—') ? title : `${title} — ${siteName}`;
       "@type": "WebSite",
       "name": siteName,
       "url": siteUrl,
-      "description": "An encyclopedia of system design and architectures for popular apps and services.",
+      "description": "Practical system design learning for architecture tradeoffs, cost drivers, cloud constraints, and engineering judgment.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": `${siteUrl}/systems?q={search_term_string}`,

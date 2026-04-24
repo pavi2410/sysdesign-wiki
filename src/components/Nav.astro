@@ -21,14 +21,14 @@ const currentPath = Astro.url.pathname;
       <a href="/" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath === '/' ? 'text-accent' : 'text-ink-light']}>
         Home
       </a>
-      <a href="/systems" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath.startsWith('/systems') ? 'text-accent' : 'text-ink-light']}>
-        Systems
-      </a>
       <a href="/guides" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath.startsWith('/guides') ? 'text-accent' : 'text-ink-light']}>
-        Guides
+        Capabilities
       </a>
       <a href="/lessons" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath.startsWith('/lessons') ? 'text-accent' : 'text-ink-light']}>
-        Lessons
+        Concepts
+      </a>
+      <a href="/systems" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath.startsWith('/systems') ? 'text-accent' : 'text-ink-light']}>
+        Case Studies
       </a>
       <a href="/about" class:list={["text-sm font-medium transition-colors hover:text-accent", currentPath === '/about' ? 'text-accent' : 'text-ink-light']}>
         About
@@ -39,6 +39,59 @@ const currentPath = Astro.url.pathname;
       <div id="nav-search" class="relative hidden md:block">
         <Search id="search" className="pagefind-ui" uiOptions={{ showImages: false, showSubResults: true, resetStyles: false }} />
       </div>
+      <button
+        type="button"
+        class="mobile-menu-toggle md:hidden inline-flex w-10 h-10 items-center justify-center rounded-lg border border-border bg-paper-warm text-ink-light hover:text-accent hover:border-accent/40 transition-colors"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        aria-label="Open navigation"
+      >
+        <svg class="w-5 h-5 menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16"></path>
+          <path d="M4 12h16"></path>
+          <path d="M4 18h16"></path>
+        </svg>
+        <svg class="w-5 h-5 close-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="mobile-nav" class="mobile-menu hidden md:hidden border-t border-border bg-paper">
+    <div class="max-w-7xl mx-auto px-6 py-4 grid gap-2">
+      <a href="/" class:list={["text-sm font-medium px-3 py-2 rounded-lg transition-colors", currentPath === '/' ? 'bg-tag-bg text-accent' : 'text-ink-light hover:bg-paper-warm hover:text-accent']}>
+        Home
+      </a>
+      <a href="/guides" class:list={["text-sm font-medium px-3 py-2 rounded-lg transition-colors", currentPath.startsWith('/guides') ? 'bg-tag-bg text-accent' : 'text-ink-light hover:bg-paper-warm hover:text-accent']}>
+        Capabilities
+      </a>
+      <a href="/lessons" class:list={["text-sm font-medium px-3 py-2 rounded-lg transition-colors", currentPath.startsWith('/lessons') ? 'bg-tag-bg text-accent' : 'text-ink-light hover:bg-paper-warm hover:text-accent']}>
+        Concepts
+      </a>
+      <a href="/systems" class:list={["text-sm font-medium px-3 py-2 rounded-lg transition-colors", currentPath.startsWith('/systems') ? 'bg-tag-bg text-accent' : 'text-ink-light hover:bg-paper-warm hover:text-accent']}>
+        Case Studies
+      </a>
+      <a href="/about" class:list={["text-sm font-medium px-3 py-2 rounded-lg transition-colors", currentPath === '/about' ? 'bg-tag-bg text-accent' : 'text-ink-light hover:bg-paper-warm hover:text-accent']}>
+        About
+      </a>
     </div>
   </div>
 </nav>
+
+<script>
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  const menu = document.getElementById('mobile-nav');
+  const menuIcon = toggle?.querySelector('.menu-icon');
+  const closeIcon = toggle?.querySelector('.close-icon');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+    toggle.setAttribute('aria-label', isOpen ? 'Open navigation' : 'Close navigation');
+    menu?.classList.toggle('hidden', isOpen);
+    menuIcon?.classList.toggle('hidden', !isOpen);
+    closeIcon?.classList.toggle('hidden', isOpen);
+  });
+</script>

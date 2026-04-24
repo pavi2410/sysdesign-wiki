@@ -43,8 +43,8 @@ const relatedLessons = allLessons
 
 const seenInGuides = allGuides.filter((guide) => relatedGuides.includes(guide.id)).slice(0, 6);
 const seenInSystems = allSystems.filter((system) => relatedSystems.includes(system.id)).slice(0, 6);
-const seoTitle = `${title} — System Design Lesson`;
-const seoDescription = `${tagline} A short builder-focused system design lesson with examples, tradeoffs, and links to real architectures.`;
+const seoTitle = `${title} - System Design Concept`;
+const seoDescription = `${tagline} A short system design concept note with examples, tradeoffs, and links to capability guides and case studies.`;
 ---
 
 <BaseLayout title={seoTitle} description={seoDescription} slug={entry.id}>
@@ -54,7 +54,7 @@ const seoDescription = `${tagline} A short builder-focused system design lesson 
     <section class="bg-paper-warm border-b border-border">
       <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
         <div class="flex flex-wrap items-center gap-3 mb-4">
-          <a href="/lessons" class="text-sm text-ink-muted hover:text-accent transition-colors">Lessons</a>
+          <a href="/lessons" class="text-sm text-ink-muted hover:text-accent transition-colors">Concepts</a>
           <span class="text-ink-muted">/</span>
           <span class:list={['text-xs font-medium text-white px-2.5 py-1 rounded-full', colorClass]}>
             {lessonCategoryLabels[category]}
@@ -79,7 +79,7 @@ const seoDescription = `${tagline} A short builder-focused system design lesson 
 
       <article class="flex-1 min-w-0 max-w-4xl">
         {prerequisiteLessons.length > 0 && (
-          <section class="mb-8 p-5 bg-white border border-border rounded-xl">
+          <section class="mb-8 p-5 bg-white border border-border rounded-lg">
             <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-3">Prerequisites</p>
             <div class="flex flex-wrap gap-2">
               {prerequisiteLessons.map((lesson) => (
@@ -100,15 +100,15 @@ const seoDescription = `${tagline} A short builder-focused system design lesson 
             <h2 class="font-serif text-2xl font-bold text-ink mb-6">Seen in deeper dives</h2>
             <div class="grid md:grid-cols-2 gap-4">
               {seenInGuides.map((guide) => (
-                <a href={`/guides/${guide.id}`} class="group block bg-white border border-border rounded-xl p-5 hover:border-accent/40 hover:shadow-md transition-all">
-                  <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Guide</p>
+                <a href={`/guides/${guide.id}`} class="group block bg-white border border-border rounded-lg p-5 hover:border-accent/40 hover:shadow-md transition-all">
+                  <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Capability</p>
                   <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">{guide.data.title}</h3>
                   <p class="text-xs text-ink-muted leading-relaxed">{guide.data.tagline}</p>
                 </a>
               ))}
               {seenInSystems.map((system) => (
-                <a href={`/systems/${system.id}`} class="group block bg-white border border-border rounded-xl p-5 hover:border-accent/40 hover:shadow-md transition-all">
-                  <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">System</p>
+                <a href={`/systems/${system.id}`} class="group block bg-white border border-border rounded-lg p-5 hover:border-accent/40 hover:shadow-md transition-all">
+                  <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Case Study</p>
                   <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">{system.data.name}</h3>
                   <p class="text-xs text-ink-muted leading-relaxed">{system.data.tagline}</p>
                 </a>
@@ -119,7 +119,7 @@ const seoDescription = `${tagline} A short builder-focused system design lesson 
 
         {relatedLessons.length > 0 && (
           <section class="border-t border-border pt-10 mt-10">
-            <h2 class="font-serif text-2xl font-bold text-ink mb-6">Related lessons</h2>
+            <h2 class="font-serif text-2xl font-bold text-ink mb-6">Related concepts</h2>
             <div class="grid md:grid-cols-3 gap-4">
               {relatedLessons.map((lesson) => <LessonCard lesson={lesson} compact />)}
             </div>
@@ -132,7 +132,7 @@ const seoDescription = `${tagline} A short builder-focused system design lesson 
   <footer class="border-t border-border bg-paper-warm">
     <div class="max-w-5xl mx-auto px-6 py-10 text-center">
       <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">An open encyclopedia of system design and architecture patterns.</p>
+      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
     </div>
   </footer>
 </BaseLayout>
@@ -178,7 +178,7 @@ const seoDescription = `${tagline} A short builder-focused system design lesson 
   }
 
   .lesson-content pre {
-    @apply bg-ink text-paper text-sm rounded-xl p-5 overflow-x-auto mb-6;
+    @apply bg-ink text-paper text-sm rounded-lg p-5 overflow-x-auto mb-6;
   }
 
   .lesson-content pre code {
