@@ -1,0 +1,21 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  tagline: string;
+  eyebrow?: string;
+}
+
+const { href, title, tagline, eyebrow } = Astro.props;
+---
+
+<a
+  href={href}
+  class="group block bg-white border border-border rounded-lg p-5 hover:border-accent/40 hover:shadow-md transition-all"
+>
+  {eyebrow && (
+    <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">{eyebrow}</p>
+  )}
+  <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">{title}</h3>
+  <p class="text-xs text-ink-muted leading-relaxed">{tagline}</p>
+</a>

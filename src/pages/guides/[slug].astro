@@ -1,9 +1,12 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Nav from '@/components/Nav.astro';
+import Footer from '@/components/Footer.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
 import CopyPromptButton from '@/components/CopyPromptButton.astro';
 import RelatedLessons from '@/components/RelatedLessons.astro';
+import ContentHero from '@/components/ContentHero.astro';
+import RelatedCard from '@/components/RelatedCard.astro';
 import { getCollection, render } from 'astro:content';
 import { guideCategoryLabels, guideCategoryColors } from '@/lib/categories';
 import { generateGuidePromptFromMdx } from '@/lib/prompt-generator';
@@ -75,24 +78,15 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
 
   <main class="pt-16">
     <!-- Hero -->
-    <section class="bg-paper-warm border-b border-border">
-      <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
-        <div class="flex items-center gap-3 mb-4">
-          <a href="/guides" class="text-sm text-ink-muted hover:text-accent transition-colors">Capabilities</a>
-          <span class="text-ink-muted">/</span>
-          <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full", colorClass]}>
-            {guideCategoryLabels[category]}
-          </span>
-        </div>
-        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{title}</h1>
-        <p class="text-xl text-ink-light max-w-3xl">{tagline}</p>
-        <div class="flex flex-wrap gap-2 mt-5">
-          {tags.map((tag) => (
-            <span class="text-xs bg-tag-bg text-tag-text px-2.5 py-1 rounded-md">{tag}</span>
-          ))}
-        </div>
-      </div>
-    </section>
+    <ContentHero
+      breadcrumb="Capabilities"
+      breadcrumbHref="/guides"
+      categoryLabel={guideCategoryLabels[category]}
+      categoryColorClass={colorClass}
+      title={title}
+      tagline={tagline}
+      tags={tags}
+    />
 
     <!-- Content -->
     <div class="max-w-7xl mx-auto px-6 py-12 flex gap-12">
@@ -147,7 +141,7 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
         <RelatedLessons lessons={relatedLessons} />
 
         <!-- MDX Content -->
-        <div class="guide-content">
+        <div class="prose-content">
           <Content />
         </div>
 
@@ -159,15 +153,7 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
           <h2 class="font-serif text-2xl font-bold text-ink mb-6">Explore More Capabilities</h2>
           <div class="grid md:grid-cols-3 gap-4">
             {otherGuides.map((other) => (
-              <a
-                href={`/guides/${other.id}`}
-                class="group block bg-white border border-border rounded-lg p-5 hover:border-accent/40 hover:shadow-md transition-all"
-              >
-                <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">
-                  {other.data.title}
-                </h3>
-                <p class="text-xs text-ink-muted">{other.data.tagline}</p>
-              </a>
+              <RelatedCard href={`/guides/${other.id}`} title={other.data.title} tagline={other.data.tagline} />
             ))}
           </div>
         </section>
@@ -175,84 +161,13 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
     </div>
   </main>
 
-  <footer class="border-t border-border bg-paper-warm">
-    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
-      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
-    </div>
-  </footer>
+  <Footer />
 </BaseLayout>
 
 <style is:global>
   @reference "../../styles/global.css";
 
-  .guide-content h2 {
-    @apply font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3;
-  }
-
-  .guide-content h2::before {
-    content: '';
-    @apply w-8 h-[2px] bg-accent inline-block;
-  }
-
-  .guide-content > h2 {
-    @apply mt-14;
-  }
-
-  .guide-content > h2:first-of-type {
-    @apply mt-0;
-  }
-
-  .guide-content p {
-    @apply text-ink-light leading-relaxed mb-4;
-  }
-
-  .guide-content h2 + p {
-    @apply text-ink-light leading-relaxed text-lg;
-  }
-
-  .guide-content strong {
-    @apply text-ink font-semibold;
-  }
-
-  .guide-content > ol {
-    counter-reset: ol-counter;
-    @apply pl-0 list-none space-y-1.5 mb-4;
-  }
-
-  .guide-content > ol > li {
-    counter-increment: ol-counter;
-    @apply flex items-start gap-2.5 text-sm text-ink-light;
-  }
-
-  .guide-content > ol > li::before {
-    content: counter(ol-counter) '.';
-    @apply font-semibold text-accent shrink-0 mt-0;
-  }
-
-  .guide-content > ul {
-    @apply space-y-1.5 pl-0 list-none mb-4;
-  }
-
-  .guide-content > ul > li {
-    @apply text-sm text-ink-light pl-4 relative;
-  }
-
-  .guide-content > ul > li::before {
-    content: '';
-    @apply w-1.5 h-1.5 rounded-full bg-accent absolute left-0 top-2 inline-block;
-  }
-
-  .guide-content > figure,
-  .guide-content > .grid,
-  .guide-content > .space-y-4,
-  .guide-content > .space-y-6,
-  .guide-content > .component-list,
-  .guide-content > .approach-list {
+  .prose-content > .approach-list {
     @apply mb-6;
-  }
-
-  .guide-content > div.bg-white {
-    @apply mb-4;
   }
 </style>

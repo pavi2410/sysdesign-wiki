@@ -16,6 +16,20 @@ export const categoryColors: Record<Category, string> = {
   ai: 'bg-cat-ai', productivity: 'bg-cat-productivity',
 };
 
+export const categoryHexColors: Record<Category, string> = {
+  messaging: '#2d6a4f',
+  social: '#7b2d8b',
+  streaming: '#c2185b',
+  transport: '#1565c0',
+  search: '#e65100',
+  commerce: '#4e342e',
+  infra: '#37474f',
+  video: '#0277bd',
+  devtools: '#2e7d32',
+  ai: '#6a1b9a',
+  productivity: '#ef6c00',
+};
+
 export type GuideCategory = 'real-time' | 'platform' | 'data' | 'reliability' | 'security' | 'media' | 'collaboration';
 
 export const guideCategoryLabels: Record<GuideCategory, string> = {
@@ -36,6 +50,16 @@ export const guideCategoryColors: Record<GuideCategory, string> = {
   security: 'bg-gcat-security',
   media: 'bg-gcat-media',
   collaboration: 'bg-gcat-collaboration',
+};
+
+export const guideCategoryHexColors: Record<GuideCategory, string> = {
+  'real-time': '#0d7377',
+  platform: '#5b21b6',
+  data: '#b45309',
+  reliability: '#064e3b',
+  security: '#991b1b',
+  media: '#7c3aed',
+  collaboration: '#0369a1',
 };
 
 export type LessonCategory =

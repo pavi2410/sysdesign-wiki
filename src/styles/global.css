@@ -183,3 +183,73 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-ink-muted);
   padding: 0.5rem 0;
 }
+
+/* Shared prose styles for lesson/guide/system content */
+.prose-content h2 {
+  @apply font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3;
+}
+
+.prose-content h2::before {
+  content: '';
+  @apply w-8 h-[2px] bg-accent inline-block;
+}
+
+.prose-content > h2 {
+  @apply mt-14;
+}
+
+.prose-content > h2:first-of-type {
+  @apply mt-0;
+}
+
+.prose-content p {
+  @apply text-ink-light leading-relaxed mb-4;
+}
+
+.prose-content h2 + p {
+  @apply text-ink-light leading-relaxed text-lg;
+}
+
+.prose-content strong {
+  @apply text-ink font-semibold;
+}
+
+.prose-content > ol {
+  counter-reset: prose-counter;
+  @apply pl-0 list-none space-y-1.5 mb-4;
+}
+
+.prose-content > ol > li {
+  counter-increment: prose-counter;
+  @apply flex items-start gap-2.5 text-sm text-ink-light;
+}
+
+.prose-content > ol > li::before {
+  content: counter(prose-counter) '.';
+  @apply font-semibold text-accent shrink-0 mt-0;
+}
+
+.prose-content > ul {
+  @apply space-y-1.5 pl-0 list-none mb-4;
+}
+
+.prose-content > ul > li {
+  @apply text-sm text-ink-light pl-4 relative;
+}
+
+.prose-content > ul > li::before {
+  content: '';
+  @apply w-1.5 h-1.5 rounded-full bg-accent absolute left-0 top-2 inline-block;
+}
+
+.prose-content > figure,
+.prose-content > .grid,
+.prose-content > .space-y-4,
+.prose-content > .space-y-6,
+.prose-content > .component-list {
+  @apply mb-6;
+}
+
+.prose-content > div.bg-white {
+  @apply mb-4;
+}

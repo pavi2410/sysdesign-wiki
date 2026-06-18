@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Nav from '@/components/Nav.astro';
+import Footer from '@/components/Footer.astro';
 import SystemCard from '@/components/SystemCard.astro';
 import { getCollection } from 'astro:content';
 import { categoryLabels, type Category } from '@/lib/categories';
@@ -58,12 +59,7 @@ const categories = [...new Set(systems.map((s) => s.data.category))] as Category
     </section>
   </main>
 
-  <footer class="border-t border-border bg-paper-warm">
-    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
-      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
-    </div>
-  </footer>
+  <Footer />
 </BaseLayout>
 
 <script>

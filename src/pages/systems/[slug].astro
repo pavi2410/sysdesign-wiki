@@ -1,9 +1,12 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Nav from '@/components/Nav.astro';
+import Footer from '@/components/Footer.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
 import CopyPromptButton from '@/components/CopyPromptButton.astro';
 import RelatedLessons from '@/components/RelatedLessons.astro';
+import ContentHero from '@/components/ContentHero.astro';
+import RelatedCard from '@/components/RelatedCard.astro';
 import { getCollection, render } from 'astro:content';
 import { categoryLabels, categoryColors } from '@/lib/categories';
 import { generateBuildPromptFromMdx } from '@/lib/prompt-generator';
@@ -42,24 +45,15 @@ const ogImageUrl = `/og/systems/${entry.id}.png`;
 
   <main class="pt-16" style={brandStyle}>
     <!-- Hero -->
-    <section class="bg-paper-warm border-b border-border">
-      <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
-        <div class="flex items-center gap-3 mb-4">
-          <a href="/systems" class="text-sm text-ink-muted hover:text-accent transition-colors">Case Studies</a>
-          <span class="text-ink-muted">/</span>
-          <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full", colorClass]}>
-            {categoryLabels[category]}
-          </span>
-        </div>
-        <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{name}</h1>
-        <p class="text-xl text-ink-light max-w-3xl">{tagline}</p>
-        <div class="flex flex-wrap gap-2 mt-5">
-          {tags.map((tag) => (
-            <span class="text-xs bg-tag-bg text-tag-text px-2.5 py-1 rounded-md">{tag}</span>
-          ))}
-        </div>
-      </div>
-    </section>
+    <ContentHero
+      breadcrumb="Case Studies"
+      breadcrumbHref="/systems"
+      categoryLabel={categoryLabels[category]}
+      categoryColorClass={colorClass}
+      title={name}
+      tagline={tagline}
+      tags={tags}
+    />
 
     <!-- Content -->
     <div class="max-w-7xl mx-auto px-6 py-12 flex gap-12">
@@ -88,7 +82,7 @@ const ogImageUrl = `/og/systems/${entry.id}.png`;
         <RelatedLessons lessons={relatedLessons} />
 
         <!-- MDX Content -->
-        <div class="system-content">
+        <div class="prose-content">
           <Content />
         </div>
 
@@ -100,15 +94,7 @@ const ogImageUrl = `/og/systems/${entry.id}.png`;
           <h2 class="font-serif text-2xl font-bold text-ink mb-6">Explore More Case Studies</h2>
           <div class="grid md:grid-cols-3 gap-4">
             {otherSystems.map((other) => (
-              <a
-                href={`/systems/${other.id}`}
-                class="group block bg-white border border-border rounded-lg p-5 hover:border-accent/40 hover:shadow-md transition-all"
-              >
-                <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">
-                  {other.data.name}
-                </h3>
-                <p class="text-xs text-ink-muted">{other.data.tagline}</p>
-              </a>
+              <RelatedCard href={`/systems/${other.id}`} title={other.data.name} tagline={other.data.tagline} />
             ))}
           </div>
         </section>
@@ -116,83 +102,5 @@ const ogImageUrl = `/og/systems/${entry.id}.png`;
     </div>
   </main>
 
-  <footer class="border-t border-border bg-paper-warm">
-    <div class="max-w-5xl mx-auto px-6 py-10 text-center">
-      <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-      <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
-    </div>
-  </footer>
+  <Footer />
 </BaseLayout>
-
-<style is:global>
-  @reference "../../styles/global.css";
-
-  .system-content h2 {
-    @apply font-serif text-2xl font-bold text-ink mb-6 flex items-center gap-3;
-  }
-
-  .system-content h2::before {
-    content: '';
-    @apply w-8 h-[2px] bg-accent inline-block;
-  }
-
-  .system-content > h2 {
-    @apply mt-14;
-  }
-
-  .system-content > h2:first-of-type {
-    @apply mt-0;
-  }
-
-  .system-content p {
-    @apply text-ink-light leading-relaxed mb-4;
-  }
-
-  .system-content h2 + p {
-    @apply text-ink-light leading-relaxed text-lg;
-  }
-
-  .system-content strong {
-    @apply text-ink font-semibold;
-  }
-
-  .system-content > ol {
-    counter-reset: ol-counter;
-    @apply pl-0 list-none space-y-1.5 mb-4;
-  }
-
-  .system-content > ol > li {
-    counter-increment: ol-counter;
-    @apply flex items-start gap-2.5 text-sm text-ink-light;
-  }
-
-  .system-content > ol > li::before {
-    content: counter(ol-counter) '.';
-    @apply font-semibold text-accent shrink-0 mt-0;
-  }
-
-  .system-content > ul {
-    @apply space-y-1.5 pl-0 list-none mb-4;
-  }
-
-  .system-content > ul > li {
-    @apply text-sm text-ink-light pl-4 relative;
-  }
-
-  .system-content > ul > li::before {
-    content: '';
-    @apply w-1.5 h-1.5 rounded-full bg-accent absolute left-0 top-2 inline-block;
-  }
-
-  .system-content > figure,
-  .system-content > .grid,
-  .system-content > .space-y-4,
-  .system-content > .space-y-6,
-  .system-content > .component-list {
-    @apply mb-6;
-  }
-
-  .system-content > div.bg-white {
-    @apply mb-4;
-  }
-</style>

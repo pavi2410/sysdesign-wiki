@@ -1,8 +1,7 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
-import { satori } from '@cf-wasm/satori/workerd';
-import { Resvg } from '@cf-wasm/resvg/workerd';
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { categoryLabels } from '@/lib/categories';
+import { categoryLabels, categoryHexColors } from '@/lib/categories';
+import { satori, loadOgFonts, renderSvgToPng } from '@/lib/og';
 
 export const prerender = true;
 
@@ -14,36 +13,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
   }));
 };
 
-async function loadGoogleFont(family: string, weight: number): Promise<ArrayBuffer> {
-  const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=swap`;
-  const cssRes = await fetch(url);
-  const css = await cssRes.text();
-  const match = css.match(/src:\s*url\((.+?)\)/);
-  if (!match) throw new Error(`Font URL not found for ${family}:${weight}`);
-  const fontRes = await fetch(match[1]);
-  return fontRes.arrayBuffer();
-}
-
 export const GET: APIRoute = async ({ props }) => {
   const { system } = props as { system: CollectionEntry<'systems'> };
 
-  const [frauncesBold, plexRegular, plexSemibold] = await Promise.all([
-    loadGoogleFont('Fraunces', 700),
-    loadGoogleFont('IBM Plex Sans', 400),
-    loadGoogleFont('IBM Plex Sans', 600),
-  ]);
+  const fonts = await loadOgFonts();
 
-  const categoryColor: Record<string, string> = {
-    messaging: '#2d6a4f',
-    social: '#7b2d8b',
-    streaming: '#c2185b',
-    transport: '#1565c0',
-    search: '#e65100',
-    commerce: '#4e342e',
-    infra: '#37474f',
-  };
-
-  const color = categoryColor[system.data.category] ?? '#6b4c3b';
+  const color = categoryHexColors[system.data.category] ?? '#6b4c3b';
   const tagList = system.data.tags.slice(0, 5);
 
   const svg = await satori(
@@ -271,24 +246,9 @@ export const GET: APIRoute = async ({ props }) => {
     {
       width: 1200,
       height: 630,
-      fonts: [
-        { name: 'Fraunces', data: frauncesBold, weight: 700, style: 'normal' },
-        { name: 'IBM Plex Sans', data: plexRegular, weight: 400, style: 'normal' },
-        { name: 'IBM Plex Sans', data: plexSemibold, weight: 600, style: 'normal' },
-      ],
+      fonts,
     }
   );
 
-  const resvg = await Resvg.async(svg, {
-    fitTo: { mode: 'width', value: 1200 },
-  });
-  const pngData = resvg.render();
-  const pngBuffer = pngData.asPng();
-
-  return new Response(new Uint8Array(pngBuffer), {
-    headers: {
-      'Content-Type': 'image/png',
-      'Cache-Control': 'public, max-age=31536000, immutable',
-    },
-  });
+  return renderSvgToPng(svg);
 };

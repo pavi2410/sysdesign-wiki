@@ -1,0 +1,33 @@
+---
+interface Props {
+  breadcrumb: string;
+  breadcrumbHref: string;
+  categoryLabel: string;
+  categoryColorClass: string;
+  title: string;
+  tagline: string;
+  tags: string[];
+}
+
+const { breadcrumb, breadcrumbHref, categoryLabel, categoryColorClass, title, tagline, tags } = Astro.props;
+---
+
+<section class="bg-paper-warm border-b border-border">
+  <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+      <a href={breadcrumbHref} class="text-sm text-ink-muted hover:text-accent transition-colors">{breadcrumb}</a>
+      <span class="text-ink-muted">/</span>
+      <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full", categoryColorClass]}>
+        {categoryLabel}
+      </span>
+      <slot />
+    </div>
+    <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-3">{title}</h1>
+    <p class="text-xl text-ink-light max-w-3xl">{tagline}</p>
+    <div class="flex flex-wrap gap-2 mt-5">
+      {tags.map((tag) => (
+        <span class="text-xs bg-tag-bg text-tag-text px-2.5 py-1 rounded-md">{tag}</span>
+      ))}
+    </div>
+  </div>
+</section>
