@@ -9,6 +9,7 @@ relatedGuides: [oauth2-social-login, rbac]
 relatedSystems: [github, gmail, google-drive]
 prerequisites: [tls]
 ---
+import { Mermaid } from '@/components/mdx';
 
 ## What it is
 
@@ -21,6 +22,22 @@ It allows delegated access and social login without sharing passwords with third
 ## How it works
 
 The app redirects the user to the provider with client ID, redirect URI, scopes, state, and usually PKCE. After consent, the provider redirects back with a code. The app exchanges the code for tokens server-side.
+
+<Mermaid chart={`sequenceDiagram
+    participant U as User
+    participant A as Your App
+    participant P as Identity Provider
+
+    U->>A: Click "Sign in with GitHub"
+    A->>U: Redirect to provider
+    U->>P: Authorize app + approve scopes
+    P->>U: Redirect back with code
+    U->>A: Callback URL with code
+    A->>P: Exchange code for tokens
+    P->>A: Access token + refresh token
+    A->>U: Logged in, session established`} caption="OAuth2 authorization code flow: the redirect dance" />
+
+The **code** is short-lived and exchanged server-side, so the access token never passes through the browser. **PKCE** adds a code challenge so even public clients (mobile apps, SPAs) are protected against code interception.
 
 ## When to use it
 

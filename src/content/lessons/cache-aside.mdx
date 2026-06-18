@@ -9,6 +9,7 @@ relatedGuides: [caching-strategies, rate-limiting, recommendation-engine]
 relatedSystems: [instagram, twitter, slack, google-maps, airbnb]
 prerequisites: []
 ---
+import { Mermaid } from '@/components/mdx';
 
 ## What it is
 
@@ -21,6 +22,16 @@ It is simple, flexible, and works with almost any database or cache. Most system
 ## How it works
 
 Reads go cache first. Writes update the source of truth and delete or refresh the cache entry. Time-to-live values provide a fallback if invalidation is missed.
+
+<Mermaid chart={`graph TB
+    APP["Application"] -->|"1. get(key)"| CACHE[("Redis Cache")]
+    CACHE -->|"2. miss"| APP
+    APP -->|"3. query"| DB[("PostgreSQL")]
+    DB -->|"4. row"| APP
+    APP -->|"5. set(key, val, TTL)"| CACHE
+    APP -->|"6. return val"| CLIENT[Client]`} caption="Cache-aside read flow on a cache miss" />
+
+On a cache hit, steps 2 through 5 are skipped entirely — the cache returns the value directly.
 
 ## When to use it
 
@@ -36,4 +47,4 @@ The first read after invalidation is slow. Popular misses can create a thunderin
 
 ## Related guides and systems
 
-See Caching Strategies, Rate Limiting, Recommendation Engine, Instagram, Twitter, Slack, and Google Maps.
+See Caching Strategies, Rate Limiting, Recommendation Engine, Instagram, Twitter, Slack, Google Maps, and Airbnb.

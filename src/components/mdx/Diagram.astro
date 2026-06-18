@@ -1,0 +1,19 @@
+---
+interface Props {
+  svg?: string;
+  caption?: string;
+}
+
+const { svg, caption } = Astro.props;
+---
+
+<figure class="my-8">
+  <div class="bg-paper-warm border border-border rounded-lg p-6 overflow-x-auto">
+    {svg ? <div set:html={svg} /> : <slot />}
+  </div>
+  {caption && (
+    <figcaption class="mt-3 text-center text-sm text-ink-muted italic font-serif">
+      {caption}
+    </figcaption>
+  )}
+</figure>

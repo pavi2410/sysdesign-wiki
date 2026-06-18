@@ -9,6 +9,7 @@ relatedGuides: [multi-tenant-architecture, feed-timeline, full-text-search]
 relatedSystems: [discord, slack, twitter, github, gmail, airbnb]
 prerequisites: [replication]
 ---
+import { Mermaid } from '@/components/mdx';
 
 ## What it is
 
@@ -21,6 +22,17 @@ A single database has limits for storage, write throughput, indexes, and mainten
 ## How it works
 
 A routing layer maps each request to the shard that owns its key. Common strategies include hash-based sharding, range sharding, tenant sharding, and directory-based routing.
+
+<Mermaid chart={`graph TB
+    CLIENT[Client Request] --> ROUTER["Router / Shard Locator"]
+    ROUTER -->|"hash(user_id) % 3 = 0"| SHARD0[("Shard 0
+    users 0, 3, 6, 9...")]
+    ROUTER -->|"hash(user_id) % 3 = 1"| SHARD1[("Shard 1
+    users 1, 4, 7, 10...")]
+    ROUTER -->|"hash(user_id) % 3 = 2"| SHARD2[("Shard 2
+    users 2, 5, 8, 11...")]`} caption="Hash-based sharding: the router computes which shard owns each key" />
+
+**Hash sharding** distributes evenly but makes range queries expensive. **Range sharding** keeps related data together but risks hot spots. **Directory sharding** uses a lookup table for flexible mapping at the cost of an extra hop.
 
 ## When to use it
 
@@ -36,4 +48,4 @@ Discord can store messages by guild or channel shard so very large communities d
 
 ## Related guides and systems
 
-See Multi-Tenant Architecture, Feed & Timeline Generation, Full-Text Search, Discord, Slack, Twitter, GitHub, and Gmail.
+See Multi-Tenant Architecture, Feed & Timeline Generation, Full-Text Search, Discord, Slack, Twitter, GitHub, Gmail, and Airbnb.

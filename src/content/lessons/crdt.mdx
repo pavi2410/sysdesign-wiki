@@ -9,6 +9,8 @@ relatedGuides: [collaborative-editing]
 relatedSystems: [google-drive]
 prerequisites: [eventual-consistency]
 ---
+import { Diagram } from '@/components/mdx';
+import crdtSvg from '@/assets/diagrams/crdt.svg?raw';
 
 ## What it is
 
@@ -21,6 +23,10 @@ Collaborative apps, offline-first clients, and multi-region systems need to acce
 ## How it works
 
 CRDTs encode operations or state with merge rules that are associative, commutative, and idempotent. That means replicas can receive changes in different orders and still converge.
+
+<Diagram svg={crdtSvg} caption="Two replicas diverge with independent edits, then converge to the same state on merge" />
+
+The merge rules guarantee convergence: operations can arrive in any order, be duplicated, or be replayed, and every replica ends up in the same state.
 
 ## When to use it
 

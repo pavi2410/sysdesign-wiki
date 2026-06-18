@@ -6,9 +6,11 @@ level: advanced
 timeMinutes: 4
 tags: [Bloom filter, probabilistic, cache, data]
 relatedGuides: [caching-strategies, full-text-search, rate-limiting]
-relatedSystems: [gmail, github, google-maps]
+relatedSystems: [gmail, github, google-maps, airbnb]
 prerequisites: [cache-aside]
 ---
+import { Mermaid, Diagram } from '@/components/mdx';
+import bloomFilterSvg from '@/assets/diagrams/bloom-filter.svg?raw';
 
 ## What it is
 
@@ -22,13 +24,28 @@ It saves expensive lookups when most checks are misses. Systems use Bloom filter
 
 Multiple hash functions map an item to bit positions. To add an item, set those bits. To check an item, verify all bits are set. If any bit is missing, the item is definitely absent.
 
+<Diagram svg={bloomFilterSvg} caption="Adding an item: three hash functions set three bits in the array" />
+
+**Checking membership** reads the same bit positions. If all are set, the item is *maybe* present (false positives possible). If any bit is 0, the item is *definitely* absent.
+
+<Mermaid chart={`graph TB
+    START["Check item: 'user_99'"] --> HASH["Hash to positions 2, 5, 9"]
+    HASH --> CHECK["Read bits 2, 5, 9"]
+    CHECK --> ALLSET{"All bits = 1?"}
+    ALLSET -->|Yes| MAYBE["Maybe present
+    False positive possible"]
+    ALLSET -->|No| DEFINITELY["Definitely absent
+    No false negatives"]
+    MAYBE --> EXPENSIVE["Proceed to full lookup"]
+    DEFINITELY --> SKIP["Skip expensive lookup"]`} caption="Membership check: a single 0 bit means the item was never added" />
+
 ## When to use it
 
 Use it for negative cache checks, deduplication hints, database read avoidance, crawler filters, and log or storage membership tests.
 
 ## Tradeoffs / failure modes
 
-Bloom filters allow false positives and usually do not support deletion without variants like counting Bloom filters.
+Bloom filters allow false positives and usually do not support deletion without variants like counting Bloom filters. The false-positive rate depends on the number of hash functions, bit array size, and number of items inserted.
 
 ## Tiny example
 
@@ -36,4 +53,4 @@ Before querying a cold database partition, a service checks a Bloom filter and s
 
 ## Related guides and systems
 
-See Caching Strategies, Full-Text Search, Rate Limiting, Gmail, GitHub, and Google Maps.
+See Caching Strategies, Full-Text Search, Rate Limiting, Gmail, GitHub, Google Maps, and Airbnb.

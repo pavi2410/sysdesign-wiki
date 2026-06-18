@@ -9,6 +9,7 @@ relatedGuides: [webhooks, rate-limiting, caching-strategies]
 relatedSystems: [netflix, slack, github]
 prerequisites: [retry-exponential-backoff]
 ---
+import { Mermaid } from '@/components/mdx';
 
 ## What it is
 
@@ -21,6 +22,17 @@ If a dependency is down, blindly retrying can make the outage worse. Circuit bre
 ## How it works
 
 The breaker starts closed. After enough failures, it opens and immediately rejects or falls back. After a cooldown, it becomes half-open and allows limited test requests.
+
+<Mermaid chart={`stateDiagram-v2
+    [*] --> Closed
+    Closed --> Open : failures >= threshold
+    Open --> HalfOpen : cooldown elapsed
+    HalfOpen --> Closed : test request succeeds
+    HalfOpen --> Open : test request fails`} caption="Circuit breaker state machine: closed, open, half-open" />
+
+**Closed** — requests flow through normally. Failures are counted against a threshold.
+**Open** — requests are rejected immediately or routed to a fallback. No calls reach the dependency.
+**Half-open** — a limited number of test requests are allowed through. Success closes the circuit; failure reopens it.
 
 ## When to use it
 

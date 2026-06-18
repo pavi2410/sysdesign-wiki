@@ -1,0 +1,37 @@
+<svg viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <rect x="200" y="20" width="200" height="44" rx="6" fill="#f5f3ef" stroke="#c8c4bc" stroke-width="1.5"/>
+  <text x="300" y="47" text-anchor="middle" font-size="14" fill="#1a1a1a" font-weight="600">Initial: "Hello"</text>
+
+  <path d="M 260 64 L 130 110" fill="none" stroke="#6b4c3b" stroke-width="1.5" marker-end="url(#crdt-arrow)"/>
+  <path d="M 340 64 L 470 110" fill="none" stroke="#6b4c3b" stroke-width="1.5" marker-end="url(#crdt-arrow)"/>
+
+  <text x="130" y="100" text-anchor="middle" font-size="12" fill="#8a8a8a" font-weight="600">REPLICA A</text>
+  <rect x="40" y="110" width="180" height="40" rx="6" fill="#fff8e1" stroke="#c8c4bc" stroke-width="1"/>
+  <text x="130" y="136" text-anchor="middle" font-size="13" fill="#4a4a4a">insert(" World", pos 5)</text>
+
+  <rect x="40" y="160" width="180" height="40" rx="6" fill="#f5f3ef" stroke="#6b4c3b" stroke-width="1.5"/>
+  <text x="130" y="186" text-anchor="middle" font-size="14" fill="#1a1a1a" font-weight="600">"Hello World"</text>
+
+  <text x="470" y="100" text-anchor="middle" font-size="12" fill="#8a8a8a" font-weight="600">REPLICA B</text>
+  <rect x="380" y="110" width="180" height="40" rx="6" fill="#fff8e1" stroke="#c8c4bc" stroke-width="1"/>
+  <text x="470" y="136" text-anchor="middle" font-size="13" fill="#4a4a4a">insert("!", pos 5)</text>
+
+  <rect x="380" y="160" width="180" height="40" rx="6" fill="#f5f3ef" stroke="#6b4c3b" stroke-width="1.5"/>
+  <text x="470" y="186" text-anchor="middle" font-size="14" fill="#1a1a1a" font-weight="600">"Hello!"</text>
+
+  <path d="M 130 200 L 260 250" fill="none" stroke="#6b4c3b" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#crdt-arrow)"/>
+  <path d="M 470 200 L 340 250" fill="none" stroke="#6b4c3b" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#crdt-arrow)"/>
+
+  <text x="300" y="240" text-anchor="middle" font-size="12" fill="#6b4c3b" font-weight="600">merge (commutative + idempotent)</text>
+
+  <rect x="150" y="250" width="300" height="48" rx="6" fill="#6b4c3b" stroke="#6b4c3b" stroke-width="1.5"/>
+  <text x="300" y="280" text-anchor="middle" font-size="15" fill="white" font-weight="600">Converged: "Hello! World"</text>
+
+  <text x="300" y="325" text-anchor="middle" font-size="12" fill="#8a8a8a">Both replicas reach the same result regardless of operation order</text>
+
+  <defs>
+    <marker id="crdt-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#6b4c3b"/>
+    </marker>
+  </defs>
+</svg>

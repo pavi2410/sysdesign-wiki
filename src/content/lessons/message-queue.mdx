@@ -9,6 +9,7 @@ relatedGuides: [job-queues, webhooks, file-upload-pipeline, push-notifications]
 relatedSystems: [whatsapp, instagram, youtube, gmail, github]
 prerequisites: []
 ---
+import { Mermaid } from '@/components/mdx';
 
 ## What it is
 
@@ -21,6 +22,16 @@ Queues decouple slow or unreliable work from user-facing requests. They smooth t
 ## How it works
 
 A producer publishes a message with a payload and metadata. A worker claims it, processes it, and acknowledges completion. If the worker fails, the message can become visible again or move to a dead-letter queue.
+
+<Mermaid chart={`graph LR
+    PROD["Producer"] -->|"enqueue"| QUEUE[("Message Queue")]
+    QUEUE -->|"claim"| WORKER["Consumer / Worker"]
+    WORKER -->|"ack"| QUEUE
+    WORKER -->|"success"| DONE["Processed"]
+    WORKER -->|"fail (max retries)"| DLQ[("Dead-Letter Queue")]
+    QUEUE -->|"re-deliver on timeout"| WORKER`} caption="Queue lifecycle: enqueue, claim, ack, or dead-letter after retries" />
+
+The queue keeps a message invisible to other workers while one is processing it. If the worker crashes or times out without acknowledging, the message becomes visible again for redelivery. Messages that exceed a retry limit move to a dead-letter queue for inspection.
 
 ## When to use it
 

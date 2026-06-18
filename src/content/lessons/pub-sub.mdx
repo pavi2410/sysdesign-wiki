@@ -9,6 +9,7 @@ relatedGuides: [websocket-infrastructure, server-sent-events, webhooks, presence
 relatedSystems: [slack, discord, twitter, instagram]
 prerequisites: [message-queue]
 ---
+import { Mermaid } from '@/components/mdx';
 
 ## What it is
 
@@ -21,6 +22,21 @@ It decouples event producers from consumers. A single message can update WebSock
 ## How it works
 
 Events are published to channels, topics, or streams. Subscribers register interest and receive matching events. Some systems retain events for replay; others only deliver live messages.
+
+<Mermaid chart={`graph TB
+    PUB["Publisher
+    message.created"] --> TOPIC(("Topic:
+    messages"))
+    TOPIC --> SUB1["WebSocket Gateway
+    push to clients"]
+    TOPIC --> SUB2["Search Indexer
+    update index"]
+    TOPIC --> SUB3["Notification Service
+    send push"]
+    TOPIC --> SUB4["Analytics Pipeline
+    aggregate metrics"]`} caption="Pub/sub fan-out: one event delivered to independent subscribers" />
+
+Each subscriber processes the event independently and at its own pace. A slow subscriber does not block the others, though it may fall behind if the system does not buffer or retain events.
 
 ## When to use it
 

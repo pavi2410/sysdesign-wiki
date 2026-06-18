@@ -1,4 +1,5 @@
 export { default as Mermaid } from './Mermaid.astro';
+export { default as Diagram } from './Diagram.astro';
 export { default as Scale } from './Scale.astro';
 export { default as ComponentList } from './ComponentList.astro';
 export { default as ComponentCard } from './ComponentCard.astro';
