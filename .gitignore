@@ -24,3 +24,6 @@ pnpm-debug.log*
 .idea/
 
 .wrangler/
+
+# command code local config
+.commandcode/
