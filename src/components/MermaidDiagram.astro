@@ -10,7 +10,7 @@ const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
 
 <figure class="my-8">
   <div
-    class="mermaid-container bg-paper-warm border border-border rounded-lg p-6 overflow-x-auto"
+    class="mermaid-container bg-paper-warm border border-border rounded-[2px] p-6 overflow-x-auto"
     id={id}
     data-chart={chart}
   >
@@ -35,21 +35,21 @@ const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
     startOnLoad: false,
     theme: 'base',
     themeVariables: {
-      primaryColor: '#f5f3ef',
-      primaryTextColor: '#1a1a1a',
-      primaryBorderColor: '#c8c4bc',
-      lineColor: '#6b4c3b',
-      secondaryColor: '#eae7e1',
-      tertiaryColor: '#fff8e1',
+      primaryColor: '#f4f4f5',
+      primaryTextColor: '#18181b',
+      primaryBorderColor: '#d4d4d8',
+      lineColor: '#2563eb',
+      secondaryColor: '#e4e4e7',
+      tertiaryColor: '#dbeafe',
       fontFamily: '"IBM Plex Sans", system-ui, sans-serif',
       fontSize: '13px',
-      nodeBorder: '#6b4c3b',
-      mainBkg: '#f5f3ef',
-      clusterBkg: '#fafaf8',
-      clusterBorder: '#e0ddd7',
-      titleColor: '#1a1a1a',
-      edgeLabelBackground: '#fafaf8',
-      nodeTextColor: '#1a1a1a',
+      nodeBorder: '#2563eb',
+      mainBkg: '#f4f4f5',
+      clusterBkg: '#fafafa',
+      clusterBorder: '#e4e4e7',
+      titleColor: '#18181b',
+      edgeLabelBackground: '#fafafa',
+      nodeTextColor: '#18181b',
     },
     flowchart: {
       htmlLabels: true,

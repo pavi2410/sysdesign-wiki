@@ -10,10 +10,10 @@ const { lessons } = Astro.props;
 ---
 
 {lessons.length > 0 && (
-  <section class="mb-10 p-5 bg-paper-warm border border-border rounded-lg">
+  <section class="mb-10 p-5 bg-paper-warm border border-border rounded-[2px]">
     <div class="flex items-start justify-between gap-4 mb-4">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-1">Learn first</p>
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-1">Learn first</p>
         <h2 class="font-serif text-xl font-bold text-ink">Concepts behind this architecture</h2>
       </div>
       <a href="/lessons" class="hidden sm:inline-flex text-sm font-medium text-accent hover:text-accent-hover transition-colors">

@@ -8,7 +8,7 @@ const { svg, caption } = Astro.props;
 ---
 
 <figure class="my-8">
-  <div class="bg-paper-warm border border-border rounded-lg p-6 overflow-x-auto">
+  <div class="bg-paper-warm border border-border rounded-[2px] p-6 overflow-x-auto">
     {svg ? <div set:html={svg} /> : <slot />}
   </div>
   {caption && (

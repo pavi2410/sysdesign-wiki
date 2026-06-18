@@ -6,6 +6,7 @@ import SystemCard from '@/components/SystemCard.astro';
 import GuideCard from '@/components/GuideCard.astro';
 import LessonCard from '@/components/LessonCard.astro';
 import { getCollection } from 'astro:content';
+import { guideCategoryColors, guideCategoryLabels } from '@/lib/categories';
 
 const systems = await getCollection('systems');
 const guides = await getCollection('guides');
@@ -84,50 +85,51 @@ const decisionPrompts = [
             <div class="flex flex-wrap items-center gap-3">
               <a
                 href="/guides"
-                class="inline-flex items-center gap-2 bg-accent text-white px-5 py-3 rounded-lg font-semibold text-sm hover:bg-accent-hover transition-colors"
+                class="neuo-btn inline-flex items-center gap-2 bg-accent text-white px-5 py-3 rounded-[2px] font-semibold text-sm hover:bg-accent-hover transition-colors"
               >
                 Explore Capabilities
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
               <a
                 href="/lessons"
-                class="inline-flex items-center gap-2 text-ink-light px-5 py-3 rounded-lg font-semibold text-sm border border-border hover:border-accent/50 hover:text-accent transition-colors"
+                class="neuo-btn-ghost inline-flex items-center gap-2 text-ink-light px-5 py-3 rounded-[2px] font-semibold text-sm border border-border hover:border-accent hover:text-accent transition-colors"
               >
                 Learn Concepts
               </a>
             </div>
           </div>
 
-          <div class="relative border border-border bg-paper-warm/80 backdrop-blur-sm rounded-lg p-6">
-            <div class="absolute -top-2 left-6 bg-paper px-2">
+          <div class="relative border border-border bg-paper-warm rounded-[2px]">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-border">
               <span class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-accent">Theater vs. Judgment</span>
+              <span class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted">03</span>
             </div>
-            <div class="space-y-5 mt-1">
-              <div class="flex items-start gap-3">
+            <div class="px-5 py-4 divide-y divide-border">
+              <div class="flex items-start gap-3 pb-4">
                 <span class="font-mono text-xs text-ink-muted mt-0.5 shrink-0">01</span>
                 <div>
-                  <p class="text-sm text-ink-light line-through decoration-ink-muted/40 decoration-1">Draw the canonical hyperscale diagram</p>
+                  <p class="text-sm text-ink-muted line-through decoration-ink-muted/40 decoration-1">Draw the canonical hyperscale diagram</p>
                   <p class="text-sm text-ink font-medium mt-0.5">Find the boring design that carries you to the next breakpoint</p>
                 </div>
               </div>
-              <div class="flex items-start gap-3">
+              <div class="flex items-start gap-3 py-4">
                 <span class="font-mono text-xs text-ink-muted mt-0.5 shrink-0">02</span>
                 <div>
-                  <p class="text-sm text-ink-light line-through decoration-ink-muted/40 decoration-1">Memorize component names for interviews</p>
+                  <p class="text-sm text-ink-muted line-through decoration-ink-muted/40 decoration-1">Memorize component names for interviews</p>
                   <p class="text-sm text-ink font-medium mt-0.5">Name the cost driver, failure mode, and migration signal</p>
                 </div>
               </div>
-              <div class="flex items-start gap-3">
+              <div class="flex items-start gap-3 pt-4">
                 <span class="font-mono text-xs text-ink-muted mt-0.5 shrink-0">03</span>
                 <div>
-                  <p class="text-sm text-ink-light line-through decoration-ink-muted/40 decoration-1">Start from someone else's production system</p>
+                  <p class="text-sm text-ink-muted line-through decoration-ink-muted/40 decoration-1">Start from someone else's production system</p>
                   <p class="text-sm text-ink font-medium mt-0.5">Start from the constraint and reason toward the shape</p>
                 </div>
               </div>
             </div>
-            <div class="mt-5 pt-4 border-t border-border/60">
+            <div class="px-5 py-3 border-t border-border">
               <p class="font-mono text-[0.65rem] uppercase tracking-widest text-ink-muted">Learning stance</p>
-              <div class="flex gap-4 mt-2">
+              <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
                 <span class="text-xs text-ink-light">0&rarr;1 first</span>
                 <span class="text-xs text-ink-muted">&middot;</span>
                 <span class="text-xs text-ink-light">Evidence-aware</span>
@@ -141,10 +143,14 @@ const decisionPrompts = [
     </section>
 
     <section class="max-w-7xl mx-auto px-6 py-10">
-      <div class="grid md:grid-cols-4 gap-4">
-        {learningPaths.map((path) => (
-          <a href={path.href} class="group border border-border bg-white rounded-lg p-5 hover:border-accent/50 hover:shadow-md transition-all">
-            <p class="font-serif text-xl font-bold text-ink group-hover:text-accent transition-colors mb-2">{path.label}</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-[2px] overflow-hidden">
+        {learningPaths.map((path, i) => (
+          <a href={path.href} class="group bg-paper hover:bg-paper-warm transition-colors p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="font-mono text-xs text-accent">{String(i + 1).padStart(2, '0')}</span>
+              <span class="h-px flex-1 bg-border group-hover:bg-accent/40 transition-colors"></span>
+            </div>
+            <p class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-2">{path.label}</p>
             <p class="text-sm text-ink-light leading-relaxed">{path.detail}</p>
           </a>
         ))}
@@ -164,8 +170,8 @@ const decisionPrompts = [
           </div>
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {designForces.map((force, i) => (
-              <div class="arch-rule bg-white border border-border rounded-lg px-4 py-3 text-ink text-sm">
-                <span class="font-mono text-[0.65rem] text-accent/50 mr-2">{String(i + 1).padStart(2, '0')}</span>
+              <div class="arch-rule bg-paper border border-border rounded-[2px] px-4 py-3 text-ink text-sm">
+                <span class="font-mono text-[0.65rem] text-accent/60 mr-2">{String(i + 1).padStart(2, '0')}</span>
                 {force}
               </div>
             ))}
@@ -177,33 +183,45 @@ const decisionPrompts = [
     <section class="max-w-7xl mx-auto px-6 py-12">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Capabilities</p>
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Capabilities</p>
           <h2 class="font-serif text-3xl font-bold text-ink">Start with a product capability</h2>
           <p class="text-sm text-ink-muted mt-2">Learn the 0->1 shape, failure modes, cost drivers, and evolution signals.</p>
         </div>
         <a href="/guides" class="text-sm text-accent font-semibold hover:text-accent-hover transition-colors">View all capabilities</a>
       </div>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {featuredGuides.map((guide) => (
-          <GuideCard guide={guide} />
-        ))}
+      <div class="grid md:grid-cols-2 gap-px bg-border border border-border rounded-[2px] overflow-hidden">
+        {featuredGuides.map((guide) => {
+          const colorClass = guideCategoryColors[guide.data.category];
+          return (
+            <a href={`/guides/${guide.id}`} class="group bg-paper hover:bg-paper-warm transition-colors p-5">
+              <div class="flex items-center gap-2 mb-2">
+                <span class:list={["w-1.5 h-1.5 rounded-full shrink-0", colorClass]}></span>
+                <span class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted">
+                  {guideCategoryLabels[guide.data.category]}
+                </span>
+              </div>
+              <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors">{guide.data.title}</h3>
+              <p class="text-sm text-ink-light leading-relaxed mt-1">{guide.data.tagline}</p>
+            </a>
+          );
+        })}
       </div>
     </section>
 
     <section class="relative bg-ink text-white overflow-hidden">
-      <div class="absolute inset-0 bg-grid pointer-events-none opacity-[0.04]" style="background-image: linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.5) 1px, transparent 1px);" aria-hidden="true"></div>
+      <div class="absolute inset-0 bg-grid pointer-events-none opacity-[0.05]" style="background-image: linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.5) 1px, transparent 1px);" aria-hidden="true"></div>
       <div class="relative max-w-7xl mx-auto px-6 py-12">
         <div class="grid lg:grid-cols-[0.75fr_1.25fr] gap-10">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-widest text-paper-dark mb-2">Decision habits</p>
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent-light mb-2">Decision habits</p>
             <h2 class="font-serif text-3xl font-bold text-white mb-4">Questions worth returning to.</h2>
             <p class="text-paper-dark/80 leading-relaxed">
               Good system design learning should make engineers ask sharper questions before choosing a tool.
             </p>
           </div>
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid md:grid-cols-2 gap-px bg-white/10 border border-white/10 rounded-[2px] overflow-hidden">
             {decisionPrompts.map(([title, detail]) => (
-              <div class="border border-white/15 rounded-lg p-5">
+              <div class="bg-ink p-5">
                 <p class="font-serif text-xl font-bold text-white mb-2">{title}</p>
                 <p class="text-sm text-paper-dark/80 leading-relaxed">{detail}</p>
               </div>
@@ -216,7 +234,7 @@ const decisionPrompts = [
     <section class="max-w-7xl mx-auto px-6 py-12">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Concepts</p>
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Concepts</p>
           <h2 class="font-serif text-3xl font-bold text-ink">Building blocks behind the tradeoffs</h2>
           <p class="text-sm text-ink-muted mt-2">Short explanations that connect directly to capabilities and case studies.</p>
         </div>
@@ -232,7 +250,7 @@ const decisionPrompts = [
     <section class="max-w-7xl mx-auto px-6 py-12 pb-20">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Case studies</p>
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Case studies</p>
           <h2 class="font-serif text-3xl font-bold text-ink">Inspired systems as learning models</h2>
           <p class="text-sm text-ink-muted mt-2">Study patterns and constraints without treating inferred diagrams as exact internals.</p>
         </div>

@@ -72,11 +72,11 @@ const seoDescription = `${tagline} A short system design concept note with examp
 
       <article class="flex-1 min-w-0 max-w-4xl">
         {prerequisiteLessons.length > 0 && (
-          <section class="mb-8 p-5 bg-white border border-border rounded-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-3">Prerequisites</p>
+          <section class="neuo-inset mb-8 p-5 bg-paper border border-border rounded-[2px]">
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-3">Prerequisites</p>
             <div class="flex flex-wrap gap-2">
               {prerequisiteLessons.map((lesson) => (
-                <a href={`/lessons/${lesson.id}`} class="text-sm text-ink-light bg-paper-warm border border-border rounded-lg px-3 py-2 hover:text-accent hover:border-accent/40 transition-colors">
+                <a href={`/lessons/${lesson.id}`} class="text-sm text-ink-light bg-paper-warm border border-border rounded-[2px] px-3 py-2 hover:text-accent hover:border-accent transition-colors">
                   {lesson.data.title}
                 </a>
               ))}

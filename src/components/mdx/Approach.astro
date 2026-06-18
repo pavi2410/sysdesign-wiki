@@ -8,9 +8,9 @@ interface Props {
 const { name, pros, cons } = Astro.props;
 ---
 
-<div class="bg-white border border-border rounded-lg p-6 approach-card" style="counter-increment: approach-counter;">
+<div class="bg-paper border border-border rounded-[2px] p-6 approach-card" style="counter-increment: approach-counter;">
   <div class="flex items-start gap-4 mb-4">
-    <span class="approach-number font-mono text-xs text-accent bg-paper-warm w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 font-bold"></span>
+    <span class="approach-number font-mono text-xs text-accent bg-paper-warm w-7 h-7 rounded-[2px] flex items-center justify-center shrink-0 mt-0.5 font-bold"></span>
     <div>
       <h3 class="font-serif text-lg font-bold text-ink mb-1">{name}</h3>
       <div class="text-sm text-ink-light leading-relaxed">
@@ -20,7 +20,7 @@ const { name, pros, cons } = Astro.props;
   </div>
   <div class="grid md:grid-cols-2 gap-4 pl-11">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-green-700 mb-2">Pros</p>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-green-700 mb-2">Pros</p>
       <ul class="space-y-1.5">
         {pros.map((pro) => (
           <li class="flex items-start gap-2 text-sm text-ink-light">
@@ -31,7 +31,7 @@ const { name, pros, cons } = Astro.props;
       </ul>
     </div>
     <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-red-700 mb-2">Cons</p>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-red-700 mb-2">Cons</p>
       <ul class="space-y-1.5">
         {cons.map((con) => (
           <li class="flex items-start gap-2 text-sm text-ink-light">

@@ -18,7 +18,7 @@ const categories = [...new Set(guides.map((g) => g.data.category))] as GuideCate
 
   <main class="pt-16">
     <section class="max-w-5xl mx-auto px-6 pt-16 pb-8">
-      <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Capabilities</p>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Capabilities</p>
       <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-4">Learn product capabilities</h1>
       <p class="text-lg text-ink-light max-w-2xl">
         Practical learning guides for common product capabilities. Each guide focuses on starting designs,
@@ -28,17 +28,17 @@ const categories = [...new Set(guides.map((g) => g.data.category))] as GuideCate
 
     <!-- Filter tabs -->
     <section class="max-w-5xl mx-auto px-6 py-6">
-      <div class="flex flex-wrap gap-2" id="guide-category-filters">
+      <div class="flex flex-wrap gap-x-6 gap-y-1 border-b border-border" id="guide-category-filters">
         <button
           data-category="all"
-          class="guide-category-btn active text-sm font-medium px-4 py-2 rounded-lg border border-accent bg-accent text-white transition-all"
+          class="guide-category-btn active text-sm font-medium pb-2 border-b-2 -mb-px border-accent text-accent transition-colors"
         >
           All Capabilities
         </button>
         {categories.map((cat) => (
           <button
             data-category={cat}
-            class="guide-category-btn text-sm font-medium px-4 py-2 rounded-lg border border-border bg-white text-ink hover:border-accent/40 hover:text-accent transition-all"
+            class="guide-category-btn text-sm font-medium pb-2 border-b-2 -mb-px border-transparent text-ink-light hover:text-ink transition-colors"
           >
             {guideCategoryLabels[cat]}
           </button>
@@ -72,11 +72,11 @@ const categories = [...new Set(guides.map((g) => g.data.category))] as GuideCate
       const category = btn.getAttribute('data-category');
 
       buttons.forEach((b) => {
-        b.classList.remove('active', 'border-accent', 'bg-accent', 'text-white');
-        b.classList.add('border-border', 'bg-white', 'text-ink');
+        b.classList.remove('active', 'border-accent', 'text-accent');
+        b.classList.add('border-transparent', 'text-ink-light');
       });
-      btn.classList.add('active', 'border-accent', 'bg-accent', 'text-white');
-      btn.classList.remove('border-border', 'bg-white', 'text-ink');
+      btn.classList.add('active', 'border-accent', 'text-accent');
+      btn.classList.remove('border-transparent', 'text-ink-light');
 
       let visibleCount = 0;
       items.forEach((item) => {

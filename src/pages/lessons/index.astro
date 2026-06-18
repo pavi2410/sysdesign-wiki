@@ -28,7 +28,7 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
   <main class="pt-16">
     <section class="bg-paper-warm border-b border-border">
       <div class="max-w-5xl mx-auto px-6 pt-16 pb-10">
-        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Concepts</p>
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Concepts</p>
         <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-4">System design building blocks</h1>
         <p class="text-lg text-ink-light max-w-3xl">
           Short learning notes for the concepts, tools, services, and techniques that shape architecture decisions.
@@ -39,7 +39,7 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
     <section class="max-w-5xl mx-auto px-6 py-10">
       <div class="flex items-end justify-between gap-6 mb-6">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Paths</p>
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Paths</p>
           <h2 class="font-serif text-3xl font-bold text-ink">Start with a path</h2>
         </div>
       </div>
@@ -51,12 +51,12 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
             .slice(0, 4);
 
           return (
-            <section class="bg-white border border-border rounded-lg p-5">
+            <section class="bg-paper border border-border rounded-[2px] p-5">
               <h3 class="font-serif text-lg font-bold text-ink mb-1">{path.title}</h3>
               <p class="text-sm text-ink-muted leading-relaxed mb-4">{path.tagline}</p>
               <div class="flex flex-wrap gap-2">
                 {pathLessons.map((lesson) => (
-                  <a href={`/lessons/${lesson.id}`} class="text-xs bg-tag-bg text-tag-text px-2 py-1 rounded-md hover:text-accent transition-colors">
+                  <a href={`/lessons/${lesson.id}`} class="font-mono text-[0.7rem] text-tag-text border border-border px-2 py-1 rounded-[2px] hover:text-accent hover:border-accent transition-colors">
                     {lesson.data.title}
                   </a>
                 ))}
@@ -69,16 +69,16 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
 
     <section class="max-w-5xl mx-auto px-6 py-6">
       <div class="mb-6">
-        <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Browse</p>
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Browse</p>
         <h2 class="font-serif text-3xl font-bold text-ink">All concepts</h2>
       </div>
 
       <div class="space-y-4 mb-8">
-        <div class="flex flex-wrap gap-2" id="lesson-category-filters" aria-label="Lesson categories">
+        <div class="flex flex-wrap gap-x-6 gap-y-1 border-b border-border" id="lesson-category-filters" aria-label="Lesson categories">
           <button
             data-filter-type="category"
             data-filter-value="all"
-            class="lesson-filter-btn active text-sm font-medium px-4 py-2 rounded-lg border border-accent bg-accent text-white transition-all"
+            class="lesson-filter-btn active text-sm font-medium pb-2 border-b-2 -mb-px border-accent text-accent transition-colors"
           >
             All Categories
           </button>
@@ -86,17 +86,17 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
             <button
               data-filter-type="category"
               data-filter-value={category}
-              class="lesson-filter-btn text-sm font-medium px-4 py-2 rounded-lg border border-border bg-white text-ink-light hover:border-accent/40 hover:text-accent transition-all"
+              class="lesson-filter-btn text-sm font-medium pb-2 border-b-2 -mb-px border-transparent text-ink-light hover:text-ink transition-colors"
             >
               {lessonCategoryLabels[category]}
             </button>
           ))}
         </div>
-        <div class="flex flex-wrap gap-2" id="lesson-level-filters" aria-label="Lesson levels">
+        <div class="flex flex-wrap gap-x-6 gap-y-1 border-b border-border" id="lesson-level-filters" aria-label="Lesson levels">
           <button
             data-filter-type="level"
             data-filter-value="all"
-            class="lesson-filter-btn active text-sm font-medium px-4 py-2 rounded-lg border border-accent bg-accent text-white transition-all"
+            class="lesson-filter-btn active text-sm font-medium pb-2 border-b-2 -mb-px border-accent text-accent transition-colors"
           >
             All Levels
           </button>
@@ -104,7 +104,7 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
             <button
               data-filter-type="level"
               data-filter-value={level}
-              class="lesson-filter-btn text-sm font-medium px-4 py-2 rounded-lg border border-border bg-white text-ink-light hover:border-accent/40 hover:text-accent transition-all"
+              class="lesson-filter-btn text-sm font-medium pb-2 border-b-2 -mb-px border-transparent text-ink-light hover:text-ink transition-colors"
             >
               {lessonLevelLabels[level]}
             </button>
@@ -154,12 +154,12 @@ const isLesson = (lesson: CollectionEntry<'lessons'> | undefined): lesson is Col
       state[type] = value;
 
       document.querySelectorAll(`.lesson-filter-btn[data-filter-type="${type}"]`).forEach((btn) => {
-        btn.classList.remove('active', 'border-accent', 'bg-accent', 'text-white');
-        btn.classList.add('border-border', 'bg-white', 'text-ink-light');
+        btn.classList.remove('active', 'border-accent', 'text-accent');
+        btn.classList.add('border-transparent', 'text-ink-light');
       });
 
-      button.classList.add('active', 'border-accent', 'bg-accent', 'text-white');
-      button.classList.remove('border-border', 'bg-white', 'text-ink-light');
+      button.classList.add('active', 'border-accent', 'text-accent');
+      button.classList.remove('border-transparent', 'text-ink-light');
       refreshLessons();
     });
   });

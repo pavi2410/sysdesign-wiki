@@ -8,9 +8,9 @@ const { items } = Astro.props;
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
   {Object.entries(items).map(([key, value]) => (
-    <div class="bg-paper-warm border border-border rounded-lg p-4 text-center">
+    <div class="bg-paper-warm border border-border rounded-[2px] p-4 text-center">
       <p class="font-serif text-xl font-bold text-accent">{value}</p>
-      <p class="text-xs text-ink-muted mt-1">{key}</p>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ink-muted mt-1">{key}</p>
     </div>
   ))}
 </div>

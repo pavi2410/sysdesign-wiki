@@ -18,7 +18,7 @@ const categories = [...new Set(systems.map((s) => s.data.category))] as Category
 
   <main class="pt-16">
     <section class="max-w-5xl mx-auto px-6 pt-16 pb-8">
-      <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Case Studies</p>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Case Studies</p>
       <h1 class="font-serif text-4xl md:text-5xl font-bold text-ink mb-4">Systems as learning models</h1>
       <p class="text-lg text-ink-light max-w-2xl">
         Browse system-inspired learning models organized by category. These pages teach patterns and constraints,
@@ -28,17 +28,17 @@ const categories = [...new Set(systems.map((s) => s.data.category))] as Category
 
     <!-- Filter tabs -->
     <section class="max-w-5xl mx-auto px-6 py-6">
-      <div class="flex flex-wrap gap-2" id="category-filters">
+      <div class="flex flex-wrap gap-x-6 gap-y-1 border-b border-border" id="category-filters">
         <button
           data-category="all"
-          class="category-btn active text-sm font-medium px-4 py-2 rounded-lg border border-accent bg-accent text-white transition-all"
+          class="category-btn active text-sm font-medium pb-2 border-b-2 -mb-px border-accent text-accent transition-colors"
         >
           All Case Studies
         </button>
         {categories.map((cat) => (
           <button
             data-category={cat}
-            class="category-btn text-sm font-medium px-4 py-2 rounded-lg border border-border bg-white text-ink-light hover:border-accent/40 hover:text-accent transition-all"
+            class="category-btn text-sm font-medium pb-2 border-b-2 -mb-px border-transparent text-ink-light hover:text-ink transition-colors"
           >
             {categoryLabels[cat]}
           </button>
@@ -72,11 +72,11 @@ const categories = [...new Set(systems.map((s) => s.data.category))] as Category
       const category = btn.getAttribute('data-category');
 
       buttons.forEach((b) => {
-        b.classList.remove('active', 'border-accent', 'bg-accent', 'text-white');
-        b.classList.add('border-border', 'bg-white', 'text-ink-light');
+        b.classList.remove('active', 'border-accent', 'text-accent');
+        b.classList.add('border-transparent', 'text-ink-light');
       });
-      btn.classList.add('active', 'border-accent', 'bg-accent', 'text-white');
-      btn.classList.remove('border-border', 'bg-white', 'text-ink-light');
+      btn.classList.add('active', 'border-accent', 'text-accent');
+      btn.classList.remove('border-transparent', 'text-ink-light');
 
       let visibleCount = 0;
       items.forEach((item) => {

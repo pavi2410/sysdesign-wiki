@@ -5,20 +5,20 @@
   --font-body: "IBM Plex Sans", "system-ui", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
-  --color-ink: #1a1a1a;
-  --color-ink-light: #4a4a4a;
-  --color-ink-muted: #8a8a8a;
-  --color-paper: #fafaf8;
-  --color-paper-warm: #f5f3ef;
-  --color-paper-dark: #eae7e1;
-  --color-accent: #6b4c3b;
-  --color-accent-light: #8b6c5b;
-  --color-accent-hover: #5a3b2a;
-  --color-border: #e0ddd7;
-  --color-border-dark: #c8c4bc;
-  --color-highlight: #fff8e1;
-  --color-tag-bg: #f0ece6;
-  --color-tag-text: #6b5b4b;
+  --color-ink: #18181b;
+  --color-ink-light: #52525b;
+  --color-ink-muted: #a1a1aa;
+  --color-paper: #fafafa;
+  --color-paper-warm: #f4f4f5;
+  --color-paper-dark: #e4e4e7;
+  --color-accent: #2563eb;
+  --color-accent-light: #60a5fa;
+  --color-accent-hover: #1d4ed8;
+  --color-border: #e4e4e7;
+  --color-border-dark: #d4d4d8;
+  --color-highlight: #dbeafe;
+  --color-tag-bg: #f4f4f5;
+  --color-tag-text: #52525b;
 
   --color-cat-messaging: #2d6a4f;
   --color-cat-social: #7b2d8b;
@@ -64,11 +64,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-serif);
   font-weight: 700;
   color: var(--color-ink);
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
 }
 
 ::selection {
@@ -78,6 +83,7 @@ h1, h2, h3, h4, h5, h6 {
 
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -93,6 +99,86 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--color-ink-muted);
 }
 
+/* ── Neo-skeuomorphic depth ────────────────────────────── */
+
+/* Raised surface — cards lift off the page */
+.neuo-raised {
+  box-shadow:
+    4px 4px 9px rgba(24, 24, 27, 0.07),
+    -3px -3px 7px rgba(255, 255, 255, 0.85);
+  transition: box-shadow 0.18s ease;
+}
+.neuo-raised:hover {
+  box-shadow:
+    6px 6px 14px rgba(24, 24, 27, 0.1),
+    -4px -4px 10px rgba(255, 255, 255, 0.92);
+}
+
+/* Inset surface — panels pressed into the page */
+.neuo-inset {
+  box-shadow:
+    inset 2px 2px 5px rgba(24, 24, 27, 0.07),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.78);
+}
+
+/* Primary button — colored lift with press feedback */
+.neuo-btn {
+  box-shadow:
+    2px 3px 8px rgba(37, 99, 235, 0.4),
+    -1px -1px 3px rgba(255, 255, 255, 0.08);
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+.neuo-btn:hover {
+  box-shadow:
+    3px 4px 11px rgba(37, 99, 235, 0.5),
+    -1px -1px 4px rgba(255, 255, 255, 0.1);
+}
+.neuo-btn:active {
+  box-shadow:
+    inset 1px 2px 5px rgba(0, 0, 0, 0.22),
+    inset -1px -1px 3px rgba(96, 165, 250, 0.12);
+  transform: translateY(1px);
+}
+
+/* Ghost button — neutral lift */
+.neuo-btn-ghost {
+  box-shadow:
+    2px 2px 6px rgba(24, 24, 27, 0.07),
+    -2px -2px 5px rgba(255, 255, 255, 0.82);
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+.neuo-btn-ghost:hover {
+  box-shadow:
+    3px 3px 8px rgba(24, 24, 27, 0.09),
+    -2px -2px 6px rgba(255, 255, 255, 0.88);
+}
+.neuo-btn-ghost:active {
+  box-shadow:
+    inset 1px 1px 4px rgba(24, 24, 27, 0.09),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.72);
+  transform: translateY(1px);
+}
+
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Pagefind UI overrides */
 #nav-search {
   --pagefind-ui-scale: 0.7;
@@ -102,7 +188,7 @@ h1, h2, h3, h4, h5, h6 {
   --pagefind-ui-border: var(--color-border);
   --pagefind-ui-tag: var(--color-tag-bg);
   --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: 8px;
+  --pagefind-ui-border-radius: 2px;
   --pagefind-ui-font: var(--font-body);
 }
 
@@ -145,8 +231,8 @@ h1, h2, h3, h4, h5, h6 {
   overflow-y: auto;
   background: var(--color-paper);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  box-shadow: 0 12px 40px -8px rgba(24, 24, 27, 0.15);
   margin-top: 0.5rem;
   padding: 0.75rem;
   z-index: 100;
@@ -171,7 +257,7 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--color-highlight);
   color: var(--color-ink);
   padding: 0.05em 0.2em;
-  border-radius: 2px;
+  border-radius: 1px;
 }
 
 #nav-search .pagefind-ui__search-clear {
@@ -190,7 +276,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .prose-content h2::before {
-  content: '';
+  content: "";
   @apply w-8 h-[2px] bg-accent inline-block;
 }
 
@@ -225,8 +311,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .prose-content > ol > li::before {
-  content: counter(prose-counter) '.';
-  @apply font-semibold text-accent shrink-0 mt-0;
+  content: counter(prose-counter) ".";
+  @apply font-mono font-semibold text-accent shrink-0 mt-0;
 }
 
 .prose-content > ul {
@@ -238,7 +324,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .prose-content > ul > li::before {
-  content: '';
+  content: "";
   @apply w-1.5 h-1.5 rounded-full bg-accent absolute left-0 top-2 inline-block;
 }
 
@@ -255,20 +341,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .prose-content pre {
-  @apply border border-border rounded-lg p-4 mb-6 overflow-x-auto;
+  @apply border border-border-dark rounded-[2px] p-4 mb-6 overflow-x-auto;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   line-height: 1.7;
-  color: var(--color-ink-light);
-}
-
-.prose-content pre.astro-code {
-  background-color: var(--color-paper-warm) !important;
-  color: var(--color-ink) !important;
-}
-
-.prose-content pre.astro-code code {
-  color: var(--color-ink) !important;
 }
 
 .prose-content pre code {
@@ -278,14 +354,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .prose-content :not(pre) > code {
-  @apply bg-paper-dark text-ink rounded px-1.5 py-0.5 text-[0.85em];
+  @apply bg-paper-dark text-ink rounded-[2px] px-1.5 py-0.5 text-[0.85em];
   font-family: var(--font-mono);
 }
 
 .bg-grid {
   background-image:
-    linear-gradient(to right, rgba(107, 76, 59, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(107, 76, 59, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(37, 99, 235, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
@@ -294,7 +370,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .arch-rule::before {
-  content: '';
+  content: "";
   @apply w-6 h-px bg-accent inline-block;
 }
 

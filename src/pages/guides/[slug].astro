@@ -95,37 +95,37 @@ const ogImageUrl = `/og/guides/${entry.id}.png`;
 
       <!-- Main content -->
       <article class="flex-1 min-w-0 max-w-4xl">
-        <section class="border border-border bg-white rounded-lg p-6 mb-8">
+        <section class="neuo-inset border border-border bg-paper rounded-[2px] p-6 mb-8">
           <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-6">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">Learning lens</p>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Learning lens</p>
               <h2 class="font-serif text-2xl font-bold text-ink mb-2">Start with judgment, not a universal prescription.</h2>
               <p class="text-sm text-ink-light leading-relaxed max-w-2xl">
                 This page is a learning model for understanding the capability. It does not claim exact
                 production internals, exact costs, or an infinite-scale architecture.
               </p>
             </div>
-            <div class="shrink-0 border border-border bg-paper-warm rounded-lg px-4 py-3">
-              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted">Evidence</p>
+            <div class="shrink-0 border border-border bg-paper-warm rounded-[2px] px-4 py-3">
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted">Evidence</p>
               <p class="text-sm font-semibold text-ink mt-1">Conceptual pattern</p>
             </div>
           </div>
 
           <div class="grid md:grid-cols-3 gap-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-2">0->1 default</p>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted mb-2">0->1 default</p>
               <p class="text-sm text-ink-light leading-relaxed">{guideLens.defaultModel}</p>
             </div>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-2">Cost drivers</p>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted mb-2">Cost drivers</p>
               <div class="flex flex-wrap gap-1.5">
                 {guideLens.costDrivers.map((driver) => (
-                  <span class="text-xs bg-tag-bg text-tag-text px-2 py-1 rounded-md">{driver}</span>
+                  <span class="font-mono text-[0.7rem] text-tag-text border border-border px-1.5 py-0.5 rounded-[2px]">{driver}</span>
                 ))}
               </div>
             </div>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-2">Watch for breakpoints</p>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted mb-2">Watch for breakpoints</p>
               <ul class="space-y-1.5">
                 {guideLens.breakpoints.map((breakpoint) => (
                   <li class="text-sm text-ink-light leading-snug flex gap-2">

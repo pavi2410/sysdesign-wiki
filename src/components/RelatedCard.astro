@@ -11,10 +11,10 @@ const { href, title, tagline, eyebrow } = Astro.props;
 
 <a
   href={href}
-  class="group block bg-white border border-border rounded-lg p-5 hover:border-accent/40 hover:shadow-md transition-all"
+  class="neuo-raised group block bg-paper border border-border rounded-[2px] p-5 hover:border-accent hover:bg-paper-warm transition-colors duration-200"
 >
   {eyebrow && (
-    <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">{eyebrow}</p>
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">{eyebrow}</p>
   )}
   <h3 class="font-serif text-lg font-bold text-ink group-hover:text-accent transition-colors mb-1">{title}</h3>
   <p class="text-xs text-ink-muted leading-relaxed">{tagline}</p>

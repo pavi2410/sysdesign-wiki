@@ -8,9 +8,9 @@ interface Props {
 const { prompt, systemName, label = 'Learn' } = Astro.props;
 ---
 
-<div class="copy-prompt-wrapper my-10 p-6 bg-white border border-border rounded-lg">
+<div class="copy-prompt-wrapper my-10 p-6 bg-paper border border-border rounded-[2px]">
   <div class="flex items-start gap-4">
-    <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+    <div class="w-10 h-10 rounded-[2px] bg-accent/10 flex items-center justify-center shrink-0">
       <svg class="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
         <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
@@ -24,7 +24,7 @@ const { prompt, systemName, label = 'Learn' } = Astro.props;
       </p>
       <div class="flex items-center gap-3">
         <button
-          class="copy-prompt-btn inline-flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-accent-hover transition-all active:scale-[0.98]"
+          class="neuo-btn copy-prompt-btn inline-flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-[2px] text-sm font-medium hover:bg-accent-hover transition-colors"
           data-prompt={prompt}
         >
           <svg class="w-4 h-4 copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -37,7 +37,7 @@ const { prompt, systemName, label = 'Learn' } = Astro.props;
           <span class="btn-text">Copy as Prompt</span>
         </button>
         <button
-          class="preview-prompt-btn inline-flex items-center gap-2 text-ink-light px-4 py-2.5 rounded-lg text-sm font-medium border border-border hover:border-accent/40 hover:text-accent transition-all"
+          class="neuo-btn-ghost preview-prompt-btn inline-flex items-center gap-2 text-ink-light px-4 py-2.5 rounded-[2px] text-sm font-medium border border-border hover:border-accent hover:text-accent transition-colors"
           data-prompt={prompt}
         >
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -53,10 +53,10 @@ const { prompt, systemName, label = 'Learn' } = Astro.props;
   <!-- Prompt preview (hidden by default) -->
   <div class="prompt-preview hidden mt-6 border-t border-border pt-5">
     <div class="flex items-center justify-between mb-3">
-      <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted">Prompt Preview</p>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted">Prompt Preview</p>
       <button class="close-preview text-xs text-ink-muted hover:text-accent transition-colors">Close</button>
     </div>
-    <pre class="text-xs text-ink-light bg-paper-warm border border-border rounded-lg p-4 max-h-80 overflow-y-auto whitespace-pre-wrap font-mono leading-relaxed">{prompt.slice(0, 2000)}{'...\n\n[Full prompt copied to clipboard]'}</pre>
+    <pre class="text-xs text-ink-light bg-ink rounded-[2px] p-4 max-h-80 overflow-y-auto whitespace-pre-wrap font-mono leading-relaxed" style="color:#cdd3dd">{prompt.slice(0, 2000)}{'...\n\n[Full prompt copied to clipboard]'}</pre>
   </div>
 </div>
 

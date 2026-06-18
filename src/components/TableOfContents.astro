@@ -7,12 +7,12 @@ const { headings } = Astro.props;
 ---
 
 <aside class="hidden xl:block sticky top-24 w-56 shrink-0 self-start">
-  <p class="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-4">On this page</p>
-  <nav class="flex flex-col gap-1">
+  <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted mb-4">On this page</p>
+  <nav class="flex flex-col gap-0 border-l border-border">
     {headings.filter((h) => h.depth === 2).map((h) => (
       <a
         href={`#${h.slug}`}
-        class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1"
+        class="toc-link text-sm text-ink-muted hover:text-accent transition-colors py-1.5 pl-4 -ml-px border-l border-transparent"
       >
         {h.text}
       </a>
@@ -26,14 +26,14 @@ const { headings } = Astro.props;
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           document.querySelectorAll('.toc-link').forEach((link) => {
-            link.classList.remove('text-accent', 'font-medium');
-            link.classList.add('text-ink-muted');
+            link.classList.remove('text-accent', 'font-medium', 'border-accent');
+            link.classList.add('text-ink-muted', 'border-transparent');
           });
-          
+
           const activeLink = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
           if (activeLink) {
-            activeLink.classList.remove('text-ink-muted');
-            activeLink.classList.add('text-accent', 'font-medium');
+            activeLink.classList.remove('text-ink-muted', 'border-transparent');
+            activeLink.classList.add('text-accent', 'font-medium', 'border-accent');
           }
         }
       });

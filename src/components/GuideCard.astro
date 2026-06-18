@@ -13,20 +13,21 @@ const colorClass = guideCategoryColors[category];
 
 <a
   href={`/guides/${guide.id}`}
-  class="group block bg-white border border-border rounded-lg p-6 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300"
+  class="neuo-raised group block bg-paper border border-border rounded-[2px] p-6 hover:border-accent hover:bg-paper-warm transition-colors duration-200"
 >
-  <div class="flex flex-wrap items-center gap-2 mb-3">
-    <h3 class="font-serif text-xl font-bold text-ink group-hover:text-accent transition-colors">
-      {title}
-    </h3>
-    <span class:list={["text-xs font-medium text-white px-2.5 py-1 rounded-full whitespace-nowrap", colorClass]}>
+  <div class="flex items-center gap-2 mb-3">
+    <span class:list={["w-1.5 h-1.5 rounded-full shrink-0", colorClass]}></span>
+    <span class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted">
       {guideCategoryLabels[category]}
     </span>
   </div>
+  <h3 class="font-serif text-xl font-bold text-ink group-hover:text-accent transition-colors mb-2">
+    {title}
+  </h3>
   <p class="text-sm text-ink-light leading-relaxed mb-4">{tagline}</p>
   <div class="flex flex-wrap gap-1.5">
     {tags.slice(0, 4).map((tag) => (
-      <span class="text-xs bg-tag-bg text-tag-text px-2 py-0.5 rounded-md">{tag}</span>
+      <span class="font-mono text-[0.7rem] text-tag-text border border-border px-1.5 py-0.5 rounded-[2px]">{tag}</span>
     ))}
   </div>
 </a>
