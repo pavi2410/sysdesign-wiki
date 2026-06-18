@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-serif: "Fraunces", "Georgia", serif;
+  --font-serif: "Source Serif 4", "Georgia", serif;
   --font-body: "IBM Plex Sans", "system-ui", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
