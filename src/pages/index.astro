@@ -68,16 +68,14 @@ const decisionPrompts = [
   <Nav />
 
   <main class="pt-16">
-    <section class="relative border-b border-border bg-paper">
-      <div class="absolute inset-x-0 top-0 h-px bg-ink/10"></div>
-      <div class="max-w-7xl mx-auto px-6 pt-20 pb-14">
-        <div class="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-end">
+    <section class="relative border-b border-border bg-paper overflow-hidden">
+      <div class="absolute inset-0 bg-grid pointer-events-none" aria-hidden="true"></div>
+      <div class="relative max-w-7xl mx-auto px-6 pt-20 pb-14">
+        <div class="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-end">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-accent mb-5">
-              Practical learning for engineering judgment
-            </p>
+            <p class="arch-rule text-accent mb-5">Practical learning for engineering judgment</p>
             <h1 class="font-serif text-5xl md:text-7xl font-bold text-ink leading-[1.03] mb-6">
-              System design without architecture theater.
+              System design without<br class="hidden md:block" /> architecture theater.
             </h1>
             <p class="text-lg md:text-xl text-ink-light max-w-2xl leading-relaxed mb-8">
               Build mental models for real engineering tradeoffs: what to start with, what it costs,
@@ -100,20 +98,41 @@ const decisionPrompts = [
             </div>
           </div>
 
-          <div class="border border-border bg-paper-warm rounded-lg p-5">
-            <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-4">Learning stance</p>
-            <div class="space-y-4">
-              <div class="border-l-2 border-accent pl-4">
-                <p class="font-semibold text-ink">0->1 first</p>
-                <p class="text-sm text-ink-light leading-relaxed">Reasonable starting designs, not infinite-scale prescriptions.</p>
+          <div class="relative border border-border bg-paper-warm/80 backdrop-blur-sm rounded-lg p-6">
+            <div class="absolute -top-2 left-6 bg-paper px-2">
+              <span class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-accent">Theater vs. Judgment</span>
+            </div>
+            <div class="space-y-5 mt-1">
+              <div class="flex items-start gap-3">
+                <span class="font-mono text-xs text-ink-muted mt-0.5 shrink-0">01</span>
+                <div>
+                  <p class="text-sm text-ink-light line-through decoration-ink-muted/40 decoration-1">Draw the canonical hyperscale diagram</p>
+                  <p class="text-sm text-ink font-medium mt-0.5">Find the boring design that carries you to the next breakpoint</p>
+                </div>
               </div>
-              <div class="border-l-2 border-border-dark pl-4">
-                <p class="font-semibold text-ink">Evidence-aware</p>
-                <p class="text-sm text-ink-light leading-relaxed">Case studies are learning models. Assumptions and unknowns stay visible.</p>
+              <div class="flex items-start gap-3">
+                <span class="font-mono text-xs text-ink-muted mt-0.5 shrink-0">02</span>
+                <div>
+                  <p class="text-sm text-ink-light line-through decoration-ink-muted/40 decoration-1">Memorize component names for interviews</p>
+                  <p class="text-sm text-ink font-medium mt-0.5">Name the cost driver, failure mode, and migration signal</p>
+                </div>
               </div>
-              <div class="border-l-2 border-border-dark pl-4">
-                <p class="font-semibold text-ink">Cloud-realistic</p>
-                <p class="text-sm text-ink-light leading-relaxed">Provider services, limits, pricing meters, and operational burden shape the design.</p>
+              <div class="flex items-start gap-3">
+                <span class="font-mono text-xs text-ink-muted mt-0.5 shrink-0">03</span>
+                <div>
+                  <p class="text-sm text-ink-light line-through decoration-ink-muted/40 decoration-1">Start from someone else's production system</p>
+                  <p class="text-sm text-ink font-medium mt-0.5">Start from the constraint and reason toward the shape</p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-5 pt-4 border-t border-border/60">
+              <p class="font-mono text-[0.65rem] uppercase tracking-widest text-ink-muted">Learning stance</p>
+              <div class="flex gap-4 mt-2">
+                <span class="text-xs text-ink-light">0&rarr;1 first</span>
+                <span class="text-xs text-ink-muted">&middot;</span>
+                <span class="text-xs text-ink-light">Evidence-aware</span>
+                <span class="text-xs text-ink-muted">&middot;</span>
+                <span class="text-xs text-ink-light">Cloud-realistic</span>
               </div>
             </div>
           </div>
@@ -136,17 +155,18 @@ const decisionPrompts = [
       <div class="max-w-7xl mx-auto px-6 py-12">
         <div class="grid lg:grid-cols-[0.85fr_1.15fr] gap-10">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-widest text-accent mb-2">What matters</p>
+            <p class="arch-rule text-accent mb-2">What matters</p>
             <h2 class="font-serif text-3xl md:text-4xl font-bold text-ink mb-4">Learn the forces behind the architecture.</h2>
             <p class="text-ink-light leading-relaxed">
               The site is organized around the forces that decide whether a design remains simple,
               becomes expensive, or needs to evolve.
             </p>
           </div>
-          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {designForces.map((force) => (
-              <div class="bg-white border border-border rounded-lg px-4 py-3">
-                <p class="font-semibold text-ink">{force}</p>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {designForces.map((force, i) => (
+              <div class="arch-rule bg-white border border-border rounded-lg px-4 py-3 text-ink text-sm">
+                <span class="font-mono text-[0.65rem] text-accent/50 mr-2">{String(i + 1).padStart(2, '0')}</span>
+                {force}
               </div>
             ))}
           </div>
@@ -170,8 +190,9 @@ const decisionPrompts = [
       </div>
     </section>
 
-    <section class="bg-ink text-white">
-      <div class="max-w-7xl mx-auto px-6 py-12">
+    <section class="relative bg-ink text-white overflow-hidden">
+      <div class="absolute inset-0 bg-grid pointer-events-none opacity-[0.04]" style="background-image: linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.5) 1px, transparent 1px);" aria-hidden="true"></div>
+      <div class="relative max-w-7xl mx-auto px-6 py-12">
         <div class="grid lg:grid-cols-[0.75fr_1.25fr] gap-10">
           <div>
             <p class="text-xs font-semibold uppercase tracking-widest text-paper-dark mb-2">Decision habits</p>

@@ -12,7 +12,8 @@ interface Props {
 const { breadcrumb, breadcrumbHref, categoryLabel, categoryColorClass, title, tagline, tags } = Astro.props;
 ---
 
-<section class="bg-paper-warm border-b border-border">
+<section class="bg-paper-warm border-b border-border relative">
+  <div class="absolute inset-x-0 top-0 h-px bg-accent/20"></div>
   <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
     <div class="flex flex-wrap items-center gap-3 mb-4">
       <a href={breadcrumbHref} class="text-sm text-ink-muted hover:text-accent transition-colors">{breadcrumb}</a>

@@ -2,8 +2,47 @@
 ---
 
 <footer class="border-t border-border bg-paper-warm">
-  <div class="max-w-5xl mx-auto px-6 py-10 text-center">
-    <p class="font-serif text-lg font-bold text-ink mb-2">SysDesign<span class="text-accent">Wiki</span></p>
-    <p class="text-sm text-ink-muted">Practical system design learning for tradeoffs, costs, and engineering judgment.</p>
+  <div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="grid md:grid-cols-[1.2fr_1fr_1fr] gap-10">
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 rounded bg-accent flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <span class="font-serif text-lg font-bold text-ink">
+            SysDesign<span class="text-accent">Wiki</span>
+          </span>
+        </div>
+        <p class="text-sm text-ink-muted leading-relaxed max-w-xs">
+          Practical system design learning for tradeoffs, cost drivers, cloud constraints, failure modes, and engineering judgment.
+        </p>
+      </div>
+      <div>
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-accent mb-4">Sections</p>
+        <nav class="flex flex-col gap-2">
+          <a href="/guides" class="text-sm text-ink-light hover:text-accent transition-colors">Capabilities</a>
+          <a href="/lessons" class="text-sm text-ink-light hover:text-accent transition-colors">Concepts</a>
+          <a href="/systems" class="text-sm text-ink-light hover:text-accent transition-colors">Case Studies</a>
+          <a href="/about" class="text-sm text-ink-light hover:text-accent transition-colors">About</a>
+        </nav>
+      </div>
+      <div>
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-accent mb-4">Learning stance</p>
+        <nav class="flex flex-col gap-2">
+          <span class="text-sm text-ink-light">0&rarr;1 first</span>
+          <span class="text-sm text-ink-light">Evidence-aware</span>
+          <span class="text-sm text-ink-light">Cloud-realistic</span>
+        </nav>
+      </div>
+    </div>
+    <div class="mt-10 pt-6 border-t border-border/60 flex flex-wrap items-center justify-between gap-4">
+      <p class="text-xs text-ink-muted">
+        Learning models, not production prescriptions. Assumptions stay visible.
+      </p>
+      <p class="text-xs text-ink-muted">&copy; {new Date().getFullYear()} SysDesign Wiki. MIT License.</p>
+    </div>
   </div>
 </footer>

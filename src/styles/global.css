@@ -281,3 +281,23 @@ h1, h2, h3, h4, h5, h6 {
   @apply bg-paper-dark text-ink rounded px-1.5 py-0.5 text-[0.85em];
   font-family: var(--font-mono);
 }
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(107, 76, 59, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(107, 76, 59, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.arch-rule {
+  @apply flex items-center gap-3 text-xs font-mono font-medium uppercase tracking-[0.2em];
+}
+
+.arch-rule::before {
+  content: '';
+  @apply w-6 h-px bg-accent inline-block;
+}
+
+.prose-content h2::before {
+  width: 2rem;
+}
