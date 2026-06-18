@@ -8,6 +8,7 @@ import { getCollection, render } from 'astro:content';
 import { categoryLabels, categoryColors } from '@/lib/categories';
 import { generateBuildPromptFromMdx } from '@/lib/prompt-generator';
 import { getLessonsForSystem } from '@/lib/lessons';
+import { systemBrandColors } from '@/lib/brand-colors';
 
 export async function getStaticPaths() {
   const systems = await getCollection('systems');
@@ -21,6 +22,10 @@ const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
 const { name, tagline, category, tags } = entry.data;
 const colorClass = categoryColors[category];
+const brandColors = systemBrandColors[entry.id];
+const brandStyle = brandColors
+  ? `--color-accent: ${brandColors.accent}; --color-accent-hover: ${brandColors.accentHover};`
+  : undefined;
 
 const allSystems = await getCollection('systems');
 const otherSystems = allSystems.filter((s) => s.id !== entry.id).slice(0, 3);
@@ -35,7 +40,7 @@ const ogImageUrl = `/og/systems/${entry.id}.png`;
 <BaseLayout title={seoTitle} description={seoDescription} ogImage={ogImageUrl} slug={entry.id}>
   <Nav />
 
-  <main class="pt-16">
+  <main class="pt-16" style={brandStyle}>
     <!-- Hero -->
     <section class="bg-paper-warm border-b border-border">
       <div class="max-w-5xl mx-auto px-6 pt-12 pb-10">
