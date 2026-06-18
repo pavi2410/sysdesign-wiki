@@ -19,3 +19,29 @@ const { headings } = Astro.props;
     ))}
   </nav>
 </aside>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          document.querySelectorAll('.toc-link').forEach((link) => {
+            link.classList.remove('text-accent', 'font-medium');
+            link.classList.add('text-ink-muted');
+          });
+          
+          const activeLink = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+          if (activeLink) {
+            activeLink.classList.remove('text-ink-muted');
+            activeLink.classList.add('text-accent', 'font-medium');
+          }
+        }
+      });
+    },
+    { rootMargin: '-100px 0px -80% 0px' }
+  );
+
+  document.querySelectorAll('h2[id]').forEach((heading) => {
+    observer.observe(heading);
+  });
+</script>
