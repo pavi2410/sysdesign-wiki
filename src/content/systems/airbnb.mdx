@@ -1,0 +1,273 @@
+---
+name: Airbnb
+tagline: A two-sided marketplace for search, booking, payments, and trust
+category: commerce
+tags: [marketplace, search, booking, payments, availability, reviews, caching, geospatial]
+---
+import { Mermaid, Scale, ComponentList, ComponentCard, Requirements, Tradeoff } from '@/components/mdx';
+
+## Overview
+
+Airbnb connects guests looking for short-term stays with hosts offering their spaces. Behind a deceptively simple search box sits a two-sided marketplace that must solve four hard problems at once: geospatial and filtered search over millions of listings, concurrent availability to prevent double-booking, split payments with escrow-style holds, and a trust system built on two-way reviews.
+
+Each side of the marketplace — supply (hosts and listings) and demand (guests) — has different scaling pressures, and the system's hardest edges are where they meet: the booking transaction. A search can be eventually consistent and cached aggressively, but a booking must be strictly consistent, because selling the same night twice is the one mistake a marketplace cannot tolerate.
+
+## Scale
+
+<Scale items={{
+  "Active listings": "7M+",
+  "Bookings per night": "~1M+",
+  "Countries served": "220+",
+  "Guest arrivals (cumulative)": "1.5B+",
+}} />
+
+## Requirements
+
+<Requirements
+  functional={[
+    'Search listings by location, dates, guest count, and filters',
+    'Real-time availability calendar with no double-booking',
+    'Booking lifecycle: request, confirm, pay, check-in, check-out',
+    'Split payments: platform fee, host payout, taxes',
+    'Two-way reviews with delayed reveal',
+    'Guest-host messaging before and during a stay',
+    'Dynamic pricing suggestions for hosts',
+  ]}
+  nonFunctional={[
+    'No double-booking under concurrent requests for the same dates',
+    'Search latency within a few hundred milliseconds',
+    'Payment idempotency and reconciliation',
+    'High availability for booking and payment paths',
+    'Multi-currency and multi-region tax handling',
+  ]}
+/>
+
+## High-Level Architecture
+
+<Mermaid chart={`graph TB
+    subgraph Clients
+        G[Guest App/Web]
+        H[Host App/Web]
+    end
+    subgraph Edge
+        AG[API Gateway]
+        CDN[CDN / Image CDN]
+    end
+    subgraph Core["Core Platform"]
+        SEARCH[Search Service]
+        BOOK[Booking Service]
+        AVAIL[Availability Service]
+        PAY[Payment Service]
+        REV[Review Service]
+        PRICE[Pricing Service]
+        MSG[Messaging Service]
+    end
+    subgraph Data["Data Infrastructure"]
+        PG[(PostgreSQL)]
+        ES[(Search Index)]
+        RD[(Redis)]
+        S3[(Object Storage)]
+        KF[(Kafka)]
+    end
+    G & H --> CDN
+    G & H --> AG
+    AG --> SEARCH & BOOK & PAY & REV & MSG
+    SEARCH --> ES & RD
+    BOOK --> AVAIL & PAY & PRICE
+    AVAIL --> PG & RD
+    PAY --> PG
+    REV --> PG
+    MSG --> PG
+    BOOK --> KF`} caption="Airbnb — High-level system architecture" />
+
+## Key Components
+
+<ComponentList>
+<ComponentCard name="Search Service">
+Handles geospatial and filtered queries over listings. Reads from a denormalized search index (Elasticsearch-style) optimized for location bounding boxes, date ranges, and facet filters. Listing detail pages are cached aggressively because reads vastly outnumber writes.
+</ComponentCard>
+<ComponentCard name="Availability Service">
+The source of truth for which nights are bookable. Exposes atomic "reserve these nights" operations backed by row-level locking or optimistic concurrency on calendar-day rows. This is the component that prevents double-booking.
+</ComponentCard>
+<ComponentCard name="Booking Service">
+Owns the reservation state machine (pending, confirmed, paid, canceled, completed). Orchestrates the transaction across availability, payment, and pricing. Emits booking events to Kafka for downstream consumers.
+</ComponentCard>
+<ComponentCard name="Payment Service">
+Charges the guest, holds funds in escrow, and schedules the host payout after check-in. Every charge is keyed by an idempotency token so retries from flaky clients never double-charge. Handles split payouts, platform fees, and taxes.
+</ComponentCard>
+<ComponentCard name="Review Service">
+Collects two-way reviews (guest reviews host, host reviews guest) with a delayed reveal: neither review is visible until both are submitted or a window expires. This prevents retaliation bias.
+</ComponentCard>
+<ComponentCard name="Pricing Service">
+Computes nightly prices and suggests dynamic ("Smart") pricing based on demand, seasonality, local events, and listing quality. Runs mostly as a read for search results and a write for host-facing suggestions.
+</ComponentCard>
+</ComponentList>
+
+## Data Model
+
+<Mermaid chart={`erDiagram
+    USER {
+        bigint user_id PK
+        string name
+        string email
+        enum role
+        float rating
+    }
+    LISTING {
+        bigint listing_id PK
+        bigint host_id FK
+        string title
+        float lat
+        float lng
+        int max_guests
+        int nightly_price
+    }
+    BOOKING {
+        bigint booking_id PK
+        bigint listing_id FK
+        bigint guest_id FK
+        date check_in
+        date check_out
+        enum status
+        decimal total_amount
+    }
+    CALENDAR_DAY {
+        bigint listing_id FK
+        date day
+        enum status
+        decimal price
+    }
+    PAYMENT {
+        bigint payment_id PK
+        bigint booking_id FK
+        decimal amount
+        enum status
+        string idempotency_key
+    }
+    REVIEW {
+        bigint review_id PK
+        bigint booking_id FK
+        bigint author_id FK
+        enum direction
+        int rating
+        string body
+    }
+    USER ||--o{ LISTING : owns
+    USER ||--o{ BOOKING : makes
+    LISTING ||--o{ BOOKING : has
+    LISTING ||--o{ CALENDAR_DAY : has
+    BOOKING ||--|| PAYMENT : has
+    BOOKING ||--o{ REVIEW : generates`} caption="Airbnb — Entity relationship diagram" />
+
+## Search & Discovery
+
+Search is the marketplace's front door, and it is read-heavy: millions of guests browse for every one that books.
+
+**The 0->1 default:**
+A single PostgreSQL table with `lat`/`lng` columns, filtered by a bounding box and guest count, is enough to launch. It is simple, transactional, and good enough for a few thousand listings.
+
+**The breakpoint:**
+Once the listing catalog grows past tens of thousands and filters get richer (amenities, price ranges, instant-book), the database scan-and-filter pattern becomes too slow. The system evolves to a dedicated inverted search index that denormalizes each listing into a searchable document with geospatial fields and facets.
+
+<Mermaid chart={`graph TB
+    subgraph Write["Listing Updates"
+        direction LR
+        HOST[Host edits listing]
+        DB[(PostgreSQL)]
+    end
+    subgraph Index["Search Index"
+        direction LR
+        SYNC[Change Data Capture]
+        ES[(Search Index)]
+    end
+    subgraph Read["Guest Search"
+        direction LR
+        Q[Query: location + dates + filters]
+        CACHE[(Redis cache)]
+    end
+    HOST --> DB
+    DB --> SYNC --> ES
+    Q --> CACHE
+    CACHE -->|miss| ES
+    ES -->|ranked listings| Q`} caption="Search write path (eventually consistent) vs read path (cached)" />
+
+**Cost drivers:**
+- Index freshness lag: a new listing may take seconds to minutes to appear, which is acceptable for search but not for booking.
+- Egress and compute from re-ranking millions of candidates per query.
+- Cache invalidation when a host edits a listing or a night gets booked.
+
+## Booking & Availability Concurrency
+
+This is the system's strict-consistency core. Two guests requesting the same listing for overlapping dates must never both succeed.
+
+**The 0->1 default:**
+A `calendar_day` row per listing per night with a `status` column. Booking a stay runs inside a transaction that locks the relevant rows and flips them from `available` to `reserved`. Row-level locking is correct and simple.
+
+**The breakpoint:**
+Lock contention appears when popular listings or high-traffic dates (holidays, events) attract many simultaneous requests. Contention turns into latency and deadlocks. The system evolves to **optimistic concurrency**: read the calendar versions, attempt a conditional update, and retry on conflict. For high-demand listings, a short-lived **reservation hold** in Redis reserves the nights for a few minutes while payment completes, so the database lock is held only briefly.
+
+<Mermaid chart={`graph TB
+    A[Guest requests dates] --> B[Read calendar days + version]
+    B --> C{All nights available?}
+    C -->|no| FAIL[Reject - unavailable]
+    C -->|yes| D[Place Redis hold - TTL minutes]
+    D --> E[Charge payment]
+    E --> F{Payment OK?}
+    F -->|no| REL[Release hold]
+    F -->|yes| G[Atomic conditional update
+    WHERE status = available
+    AND version = expected]
+    G --> H{Rows updated?}
+    H -->|no - conflict| RETRY[Retry / reject]
+    H -->|yes| OK[Confirm booking]`} caption="Booking flow with optimistic concurrency and a reservation hold" />
+
+**Why this matters:**
+The hold decouples the slow, failure-prone payment step from the fast availability check. The database only commits the final state change, and the conditional `WHERE` clause makes double-booking impossible without holding a long lock.
+
+## Payments & Split Payouts
+
+Payments in a marketplace are harder than in a normal store because money flows to a third party (the host), and the platform takes a cut.
+
+**The flow:**
+1. Guest is charged the full amount at booking confirmation.
+2. Funds are held in escrow — the host is not paid yet.
+3. After check-in (or a defined window), the host payout is scheduled.
+4. The platform fee and taxes are split off; the remainder is sent to the host's payout method.
+
+**Idempotency is non-negotiable.** Every charge carries an idempotency key (often derived from the booking ID and attempt number). A retry from a dropped connection or a webhook redelivery must return the original result, not create a second charge. This is the same pattern that makes retries safe across the reliability lessons.
+
+**Cost drivers & breakpoints:**
+- Payment processor fees per transaction — significant at marketplace scale.
+- Payout failures and retries requiring reconciliation jobs.
+- Multi-currency conversion and region-specific tax rules, which push the payment service toward a rules engine rather than hardcoded logic.
+
+## Reviews & Trust
+
+Trust is the marketplace's moat, and reviews are its currency. Airbnb uses **two-way reviews with delayed reveal**:
+
+- After a stay, both the guest and the host can leave a review.
+- Neither review is published until both have submitted, or a 14-day window closes.
+- This prevents the second reviewer from retaliating based on what the first wrote.
+
+**Consistency model:**
+Reviews are eventually consistent. They are written to the primary database, published by a scheduled job when the reveal condition is met, and propagated to listing pages and search ranking signals. A review being briefly delayed is acceptable; a booking being double-sold is not. This split — strict consistency for transactions, eventual consistency for everything else — is the central architectural decision of the whole system.
+
+## Architectural Tradeoffs
+
+<Tradeoff
+  decision="Strict consistency for bookings, eventual consistency for search and reviews"
+  pros={['Double-booking is impossible at the data layer', 'Search and review paths scale independently', 'Read-heavy paths can be cached and denormalized freely']}
+  cons={['Two systems to keep in sync (database and search index)', 'Index freshness lag can confuse users', 'More operational surface area']}
+/>
+
+<Tradeoff
+  decision="Reservation hold in Redis before payment"
+  pros={['Decouples slow payment from the availability lock', 'Reduces database lock contention on hot listings', 'Failed payments do not leave nights reserved']}
+  cons={['Adds a distributed state component to the booking path', 'Hold expiry and cleanup logic is extra complexity', 'Edge cases if Redis and the database disagree']}
+/>
+
+<Tradeoff
+  decision="Escrow-style hold with delayed host payout"
+  pros={['Protects guests: funds released only after check-in', 'Enables cancellations and refunds before payout', 'Aligns platform incentives with a completed stay']}
+  cons={['Cash flow complexity and payout reconciliation', 'More failure modes (payout method errors, fraud)', 'Regulatory and tax handling across regions']}
+/>
