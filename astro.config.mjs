@@ -12,6 +12,12 @@ export default defineConfig({
   trailingSlash: 'ignore',
   integrations: [sitemap(), pagefind(), mdx()],
 
+  markdown: {
+    shikiConfig: {
+      theme: 'github-light',
+    },
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },

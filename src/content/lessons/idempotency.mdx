@@ -22,6 +22,31 @@ Distributed systems retry after timeouts, network failures, and worker crashes. 
 
 Clients send an idempotency key or the server derives a stable operation key. The server stores the first result and returns it again for duplicate attempts.
 
+```text
+function handle_request(request):
+    key = request.headers["Idempotency-Key"]
+
+    # check if we already processed this key
+    cached = store.get(key)
+    if cached is not None:
+        if cached.status == "in_progress":
+            return 409 Conflict      # concurrent duplicate
+        return cached.response       # return original result
+
+    # mark as in-progress to block concurrent retries
+    store.set(key, {status: "in_progress"}, ttl=24h)
+
+    try:
+        result = process_business_logic(request)
+        store.set(key, {status: "done", response: result}, ttl=24h)
+        return result
+    except error:
+        store.delete(key)             # allow retry on failure
+        raise
+```
+
+The `in_progress` state prevents two concurrent retries from both executing the side effect. The TTL ensures the store does not grow forever.
+
 ## When to use it
 
 Use idempotency for payments, webhooks, job processing, uploads, provisioning, and any write operation that clients may retry.

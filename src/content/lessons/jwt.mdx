@@ -22,6 +22,34 @@ JWTs let services verify identity or authorization claims without calling a cent
 
 The issuer signs a header and payload. Recipients verify the signature, validate issuer and audience, check expiration, and then use the claims.
 
+```text
+function verify(token, expected_issuer, expected_audience, public_key):
+    header, payload, signature = split(token, ".")
+
+    # 1. verify signature (prevents tampering)
+    expected_sig = sign(header + "." + payload, public_key)
+    if not constant_time_eq(signature, expected_sig):
+        raise InvalidSignature
+
+    claims = decode_json(payload)
+
+    # 2. validate time bounds
+    if claims.exp < now():
+        raise TokenExpired
+    if claims.nbf > now():
+        raise TokenNotYetValid
+
+    # 3. validate issuer and audience (prevents token reuse across apps)
+    if claims.iss != expected_issuer:
+        raise InvalidIssuer
+    if expected_audience not in claims.aud:
+        raise InvalidAudience
+
+    return claims   # trusted: sub, scope, roles, etc.
+```
+
+Signature verification proves the token was not modified. The claim checks prevent a token issued for one application from being replayed against another.
+
 ## When to use it
 
 Use JWTs for short-lived access tokens, service-to-service identity, and distributed API authorization where stateless verification is useful.

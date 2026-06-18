@@ -22,6 +22,24 @@ Many failures are temporary. Retrying immediately can overload the recovering de
 
 After each failure, wait longer before trying again: 1 second, 2 seconds, 4 seconds, 8 seconds, up to a cap. Jitter adds randomness to spread retries out.
 
+```text
+# config: base=1s, cap=30s, max_attempts=5
+
+function call_with_retry(operation):
+    for attempt in 1..max_attempts:
+        try:
+            return operation()
+        except transient_error:
+            if attempt == max_attempts:
+                raise                # give up, move to DLQ
+
+            delay = min(cap, base * 2^(attempt - 1))
+            jitter = random(0, delay / 2)   # "full jitter"
+            sleep(delay + jitter)
+```
+
+Without jitter, many clients retry at the exact same intervals, creating synchronized spikes. Jitter spreads them out so the recovering system sees a smooth ramp instead of a thundering herd.
+
 ## When to use it
 
 Use it for network calls, webhooks, queues, uploads, payment provider calls, and eventually consistent background work.

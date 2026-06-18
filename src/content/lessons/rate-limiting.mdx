@@ -22,6 +22,33 @@ It protects systems from abuse, retry storms, expensive endpoints, scraping, and
 
 The limiter identifies a key, checks counters or buckets in a fast store, and either allows the request or returns `429 Too Many Requests`. Common algorithms include token bucket, fixed window, and sliding window.
 
+**Token bucket** refills tokens at a fixed rate and consumes one per request. When the bucket is empty, requests are rejected until a token is available:
+
+```text
+# state: tokens (float), last_refill (timestamp)
+# config: capacity=100, refill_rate=1/sec
+
+function allow_request(key):
+    bucket = get_bucket(key)              # from Redis/memory
+    now = current_time()
+    elapsed = now - bucket.last_refill
+
+    # refill tokens for time passed, capped at capacity
+    bucket.tokens = min(capacity,
+                        bucket.tokens + elapsed * refill_rate)
+    bucket.last_refill = now
+
+    if bucket.tokens >= 1:
+        bucket.tokens -= 1
+        save_bucket(key, bucket)
+        return ALLOW
+    else:
+        save_bucket(key, bucket)
+        return REJECT  # HTTP 429
+```
+
+The refill step makes token bucket forgiving of short bursts — a client can briefly exceed the average rate if it accumulated tokens during idle time.
+
 ## When to use it
 
 Use it at API gateways, login endpoints, expensive search, model inference, webhooks, and tenant-scoped SaaS APIs.

@@ -22,6 +22,30 @@ If two users edit the same document at once, raw operations can target stale pos
 
 Clients send operations such as insert or delete. A server orders them, transforms operations against concurrent changes, and broadcasts the transformed versions back to clients.
 
+The core is the transform function. When two operations were based on the same document state, the server adjusts the second one so it applies correctly to the document *after* the first one was applied:
+
+```text
+# Transform insert(A) against insert(B) that was applied first.
+# If B inserted text before A's position, shift A's position right.
+
+function transform_insert_insert(opA, opB):
+    if opA.position > opB.position:
+        return Insert(opA.position + len(opB.text), opA.text)
+    elif opA.position == opB.position:
+        # tie-break by client ID for determinism
+        if opA.client_id > opB.client_id:
+            return Insert(opA.position + len(opB.text), opA.text)
+    return opA   # A is before B, no shift needed
+
+# User A inserts "hello" at pos 0
+# User B inserts "!" at pos 0 (concurrent)
+# Server applies A first, then transforms B:
+#   transform_insert_insert(Insert(0,"!"), Insert(0,"hello"))
+#   → Insert(5, "!")   →  document becomes "hello!"
+```
+
+The same idea extends to delete operations and combinations of insert/delete. The hard part is ensuring transform functions are correct for every pair — a single edge case can corrupt the document.
+
 ## When to use it
 
 Use OT for real-time document editing when you want a central server to coordinate ordering and transformations.

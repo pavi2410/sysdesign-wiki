@@ -23,6 +23,38 @@ If a dependency is down, blindly retrying can make the outage worse. Circuit bre
 
 The breaker starts closed. After enough failures, it opens and immediately rejects or falls back. After a cooldown, it becomes half-open and allows limited test requests.
 
+```text
+# state: status (closed|open|half_open), failures, last_failure_time
+# config: threshold=5, cooldown=30s
+
+function on_request(request):
+    if status == "open":
+        if now() - last_failure_time > cooldown:
+            status = "half_open"          # try one request
+        else:
+            return fallback(request)      # fail fast
+
+    try:
+        result = call_dependency(request)
+        on_success()
+        return result
+    except error:
+        on_failure()
+        return fallback(request)
+
+function on_success():
+    failures = 0
+    status = "closed"
+
+function on_failure():
+    failures += 1
+    last_failure_time = now()
+    if failures >= threshold:
+        status = "open"
+```
+
+The half-open state is the recovery probe: one request goes through. If it succeeds, the circuit closes. If it fails, the circuit reopens and the cooldown restarts.
+
 <Mermaid chart={`stateDiagram-v2
     [*] --> Closed
     Closed --> Open : failures >= threshold

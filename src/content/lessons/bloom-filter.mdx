@@ -24,6 +24,25 @@ It saves expensive lookups when most checks are misses. Systems use Bloom filter
 
 Multiple hash functions map an item to bit positions. To add an item, set those bits. To check an item, verify all bits are set. If any bit is missing, the item is definitely absent.
 
+```text
+# state: bits[m]  (all initialized to 0)
+# config: k hash functions, m bits
+
+function add(item):
+    for i in 1..k:
+        pos = hash_i(item) % m
+        bits[pos] = 1
+
+function might_contain(item):
+    for i in 1..k:
+        pos = hash_i(item) % m
+        if bits[pos] == 0:
+            return False          # definitely absent
+    return True                   # maybe present (false positive possible)
+```
+
+`add` only sets bits — it never clears them, which is why deletion is not supported. `might_contain` can only return false negatives-free: a `False` is always correct, a `True` might be wrong.
+
 <Diagram svg={bloomFilterSvg} caption="Adding an item: three hash functions set three bits in the array" />
 
 **Checking membership** reads the same bit positions. If all are set, the item is *maybe* present (false positives possible). If any bit is 0, the item is *definitely* absent.

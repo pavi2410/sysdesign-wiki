@@ -22,6 +22,29 @@ Without load balancing, one server can become overloaded while others sit idle. 
 
 Common algorithms include round-robin, least connections, weighted routing, and latency-aware routing. Health checks remove unhealthy targets from rotation, while connection draining lets in-flight work finish before an instance disappears.
 
+```text
+# Round-robin: cycle through targets in order
+function round_robin(targets):
+    idx = (idx + 1) % len(targets)
+    return targets[idx]
+
+# Least-connections: pick the target with fewest active requests
+function least_connections(targets):
+    return min(targets, key=lambda t: t.active_connections)
+
+# Weighted round-robin: distribute proportionally to capacity
+function weighted(targets):
+    # target with weight 5 gets ~5x the traffic of weight 1
+    total = sum(t.weight for t in targets)
+    r = random(0, total)
+    for t in targets:
+        r -= t.weight
+        if r <= 0:
+            return t
+```
+
+Round-robin is simplest but ignores load. Least-connections adapts to slow requests. Weighted routing lets you give more traffic to bigger instances. All three skip targets that fail health checks.
+
 ## When to use it
 
 Use one when more than one server can serve the same workload. Put it at the edge for public traffic and between internal services when a dependency has multiple replicas.

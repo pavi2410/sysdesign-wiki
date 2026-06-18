@@ -253,3 +253,31 @@ h1, h2, h3, h4, h5, h6 {
 .prose-content > div.bg-white {
   @apply mb-4;
 }
+
+.prose-content pre {
+  @apply border border-border rounded-lg p-4 mb-6 overflow-x-auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--color-ink-light);
+}
+
+.prose-content pre.astro-code {
+  background-color: var(--color-paper-warm) !important;
+  color: var(--color-ink) !important;
+}
+
+.prose-content pre.astro-code code {
+  color: var(--color-ink) !important;
+}
+
+.prose-content pre code {
+  @apply bg-transparent p-0;
+  font-family: var(--font-mono);
+  color: inherit;
+}
+
+.prose-content :not(pre) > code {
+  @apply bg-paper-dark text-ink rounded px-1.5 py-0.5 text-[0.85em];
+  font-family: var(--font-mono);
+}
