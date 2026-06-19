@@ -14,8 +14,9 @@ const colorClass = lessonCategoryColors[category];
 
 <a
   href={`/lessons/${lesson.id}`}
+  data-content-id={`lessons/${lesson.id}`}
   class:list={[
-    'neuo-raised group block bg-paper border border-border rounded-[2px] hover:border-accent hover:bg-paper-warm transition-colors duration-200',
+    'neuo-raised relative group block bg-paper border border-border rounded-[2px] hover:border-accent hover:bg-paper-warm transition-colors duration-200',
     compact ? 'p-5' : 'p-6',
   ]}
 >

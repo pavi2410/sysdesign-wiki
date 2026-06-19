@@ -36,6 +36,21 @@ const currentPath = Astro.url.pathname;
     </div>
 
     <div class="flex items-center gap-3">
+      <!-- Reading list button -->
+      <a
+        href="/reading-list"
+        class="relative inline-flex items-center justify-center w-9 h-9 rounded-[2px] border border-border bg-paper-warm text-ink-light hover:text-accent hover:border-accent/40 transition-colors"
+        aria-label="Reading list"
+        title="Reading list"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span
+          id="reading-list-count"
+          class="hidden absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full bg-accent text-white font-mono text-[0.6rem] font-bold flex items-center justify-center leading-none"
+        >0</span>
+      </a>
       <div id="nav-search" class="relative hidden md:block">
         <Search id="search" className="pagefind-ui" uiOptions={{ showImages: false, showSubResults: true, resetStyles: false }} />
       </div>

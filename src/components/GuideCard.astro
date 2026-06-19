@@ -13,7 +13,8 @@ const colorClass = guideCategoryColors[category];
 
 <a
   href={`/guides/${guide.id}`}
-  class="neuo-raised group block bg-paper border border-border rounded-[2px] p-6 hover:border-accent hover:bg-paper-warm transition-colors duration-200"
+  class="neuo-raised relative group block bg-paper border border-border rounded-[2px] p-6 hover:border-accent hover:bg-paper-warm transition-colors duration-200"
+  data-content-id={`guides/${guide.id}`}
 >
   <div class="flex items-center gap-2 mb-3">
     <span class:list={["w-1.5 h-1.5 rounded-full shrink-0", colorClass]}></span>

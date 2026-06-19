@@ -11,7 +11,8 @@ const { href, title, tagline, eyebrow } = Astro.props;
 
 <a
   href={href}
-  class="neuo-raised group block bg-paper border border-border rounded-[2px] p-5 hover:border-accent hover:bg-paper-warm transition-colors duration-200"
+  class="neuo-raised relative group block bg-paper border border-border rounded-[2px] p-5 hover:border-accent hover:bg-paper-warm transition-colors duration-200"
+  data-content-id={href.replace(/^\//, '')}
 >
   {eyebrow && (
     <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">{eyebrow}</p>

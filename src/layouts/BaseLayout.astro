@@ -101,5 +101,6 @@ const fullTitle = title.includes('-') ? title : `${title} - ${siteName}`;
   </head>
   <body class="min-h-screen bg-paper text-ink">
     <slot />
+    <script>import '@/scripts/reading-tracker';</script>
   </body>
 </html>

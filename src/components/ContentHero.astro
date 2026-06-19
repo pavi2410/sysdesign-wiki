@@ -1,4 +1,6 @@
 ---
+import ReadingActions from '@/components/ReadingActions.astro';
+
 interface Props {
   breadcrumb: string;
   breadcrumbHref: string;
@@ -7,9 +9,24 @@ interface Props {
   title: string;
   tagline: string;
   tags: string[];
+  // Reading tracker — present only on content pages
+  contentId?: string;
+  contentType?: 'lesson' | 'guide' | 'system';
+  contentHref?: string;
 }
 
-const { breadcrumb, breadcrumbHref, categoryLabel, categoryColorClass, title, tagline, tags } = Astro.props;
+const {
+  breadcrumb,
+  breadcrumbHref,
+  categoryLabel,
+  categoryColorClass,
+  title,
+  tagline,
+  tags,
+  contentId,
+  contentType,
+  contentHref,
+} = Astro.props;
 ---
 
 <section class="bg-paper-warm border-b border-border relative">
@@ -31,5 +48,15 @@ const { breadcrumb, breadcrumbHref, categoryLabel, categoryColorClass, title, ta
         <span class="font-mono text-[0.7rem] text-tag-text border border-border px-2 py-1 rounded-[2px]">{tag}</span>
       ))}
     </div>
+
+    {contentId && contentType && contentHref && (
+      <ReadingActions
+        contentId={contentId}
+        title={title}
+        tagline={tagline}
+        href={contentHref}
+        type={contentType}
+      />
+    )}
   </div>
 </section>

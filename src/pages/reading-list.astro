@@ -1,0 +1,217 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Nav from '@/components/Nav.astro';
+import Footer from '@/components/Footer.astro';
+---
+
+<BaseLayout
+  title="Reading List - SysDesignWiki"
+  description="Your saved pages and reading history on SysDesignWiki."
+>
+  <Nav />
+
+  <main class="pt-16">
+    <section class="max-w-4xl mx-auto px-6 pt-14 pb-4">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-accent mb-2">Your progress</p>
+      <h1 class="font-serif text-4xl font-bold text-ink mb-2">Reading List</h1>
+      <p class="text-ink-light">Pages you've saved for later and topics you've already covered.</p>
+    </section>
+
+    <!-- Saved for later -->
+    <section class="max-w-4xl mx-auto px-6 py-8">
+      <div class="flex items-center gap-3 mb-5">
+        <svg class="w-4 h-4 text-accent shrink-0" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+        <h2 class="font-serif text-xl font-bold text-ink">Saved for later</h2>
+        <span id="list-count" class="font-mono text-[0.65rem] text-ink-muted"></span>
+      </div>
+
+      <div id="list-items" class="space-y-2"></div>
+
+      <div id="list-empty" class="hidden neuo-inset border border-border rounded-[2px] px-6 py-10 text-center">
+        <svg class="w-8 h-8 text-ink-muted mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+        <p class="text-sm text-ink-muted">Nothing saved yet.</p>
+        <p class="text-sm text-ink-muted mt-1">Hit <strong class="text-ink font-medium">Save for later</strong> on any concept, capability, or case study.</p>
+      </div>
+    </section>
+
+    <!-- Already read -->
+    <section class="max-w-4xl mx-auto px-6 py-8 pb-20">
+      <div class="flex items-center gap-3 mb-5">
+        <svg class="w-4 h-4 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <path d="M22 4 12 14.01l-3-3"/>
+        </svg>
+        <h2 class="font-serif text-xl font-bold text-ink">Already read</h2>
+        <span id="read-count" class="font-mono text-[0.65rem] text-ink-muted"></span>
+      </div>
+
+      <div id="read-items" class="space-y-2"></div>
+
+      <div id="read-empty" class="hidden neuo-inset border border-border rounded-[2px] px-6 py-10 text-center">
+        <svg class="w-8 h-8 text-ink-muted mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <path d="M22 4 12 14.01l-3-3"/>
+        </svg>
+        <p class="text-sm text-ink-muted">Nothing read yet.</p>
+        <p class="text-sm text-ink-muted mt-1">Open any page and hit <strong class="text-ink font-medium">Mark as read</strong> when you're done.</p>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<script>
+  import { getList, getRead, removeFromList, unmarkRead, addToList } from '@/scripts/reading-store';
+  import type { ReadingItem } from '@/scripts/reading-store';
+
+  const TYPE_LABELS: Record<string, string> = {
+    lesson: 'Concept',
+    guide: 'Capability',
+    system: 'Case Study',
+  };
+
+  const TYPE_COLORS: Record<string, string> = {
+    lesson: 'bg-blue-500',
+    guide: 'bg-violet-500',
+    system: 'bg-emerald-600',
+  };
+
+  function timeAgo(ts: number): string {
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60_000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  function renderItem(item: ReadingItem, actions: HTMLElement): HTMLElement {
+    const el = document.createElement('div');
+    el.className =
+      'neuo-raised relative flex items-start gap-4 bg-paper border border-border rounded-[2px] px-5 py-4';
+    el.dataset.itemId = item.id;
+
+    el.innerHTML = `
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-1.5 h-1.5 rounded-full shrink-0 ${TYPE_COLORS[item.type] ?? 'bg-ink-muted'}"></span>
+          <span class="font-mono text-[0.6rem] uppercase tracking-[0.15em] text-ink-muted">${TYPE_LABELS[item.type] ?? item.type}</span>
+          <span class="font-mono text-[0.6rem] text-ink-muted ml-auto">${timeAgo(item.timestamp)}</span>
+        </div>
+        <a href="${item.href}" class="font-serif text-lg font-bold text-ink hover:text-accent transition-colors block leading-snug">
+          ${item.title}
+        </a>
+        <p class="text-sm text-ink-muted mt-0.5 leading-relaxed line-clamp-2">${item.tagline}</p>
+      </div>
+    `;
+
+    el.appendChild(actions);
+    return el;
+  }
+
+  function makeListActions(item: ReadingItem): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex flex-col gap-1.5 shrink-0';
+
+    const markReadBtn = document.createElement('button');
+    markReadBtn.className =
+      'neuo-btn-ghost inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-medium border border-border text-ink-light hover:border-accent hover:text-accent transition-colors whitespace-nowrap';
+    markReadBtn.innerHTML =
+      '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Mark as read';
+    markReadBtn.addEventListener('click', () => {
+      // importing dynamically to avoid circular: markRead removes from list
+      import('@/scripts/reading-store').then(({ markRead }) => {
+        markRead(item);
+        render();
+      });
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className =
+      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-medium text-ink-muted hover:text-ink transition-colors whitespace-nowrap';
+    removeBtn.innerHTML =
+      '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Remove';
+    removeBtn.addEventListener('click', () => {
+      removeFromList(item.id);
+      render();
+    });
+
+    wrap.appendChild(markReadBtn);
+    wrap.appendChild(removeBtn);
+    return wrap;
+  }
+
+  function makeReadActions(item: ReadingItem): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex flex-col gap-1.5 shrink-0';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className =
+      'neuo-btn-ghost inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-medium border border-border text-ink-light hover:border-accent hover:text-accent transition-colors whitespace-nowrap';
+    saveBtn.innerHTML =
+      '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Save again';
+    saveBtn.addEventListener('click', () => {
+      unmarkRead(item.id);
+      addToList(item);
+      render();
+    });
+
+    const unreadBtn = document.createElement('button');
+    unreadBtn.className =
+      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-medium text-ink-muted hover:text-ink transition-colors whitespace-nowrap';
+    unreadBtn.innerHTML =
+      '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Remove';
+    unreadBtn.addEventListener('click', () => {
+      unmarkRead(item.id);
+      render();
+    });
+
+    wrap.appendChild(saveBtn);
+    wrap.appendChild(unreadBtn);
+    return wrap;
+  }
+
+  function render() {
+    const listItems  = document.getElementById('list-items')!;
+    const listEmpty  = document.getElementById('list-empty')!;
+    const listCount  = document.getElementById('list-count')!;
+    const readItems  = document.getElementById('read-items')!;
+    const readEmpty  = document.getElementById('read-empty')!;
+    const readCount  = document.getElementById('read-count')!;
+
+    const list = getList();
+    const read = getRead();
+
+    // Reading list section
+    listItems.innerHTML = '';
+    listCount.textContent = list.length > 0 ? `${list.length} item${list.length !== 1 ? 's' : ''}` : '';
+    listEmpty.classList.toggle('hidden', list.length > 0);
+    list.forEach((item) => listItems.appendChild(renderItem(item, makeListActions(item))));
+
+    // Read history section
+    readItems.innerHTML = '';
+    readCount.textContent = read.length > 0 ? `${read.length} item${read.length !== 1 ? 's' : ''}` : '';
+    readEmpty.classList.toggle('hidden', read.length > 0);
+    read.forEach((item) => readItems.appendChild(renderItem(item, makeReadActions(item))));
+  }
+
+  // Initial render
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', render);
+  } else {
+    render();
+  }
+
+  // Keep in sync with other tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'sysdesign:read' || e.key === 'sysdesign:list') render();
+  });
+</script>
