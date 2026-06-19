@@ -307,12 +307,12 @@ h6 {
 
 .prose-content > ol > li {
   counter-increment: prose-counter;
-  @apply flex items-start gap-2.5 text-sm text-ink-light;
+  @apply text-sm text-ink-light pl-6 relative;
 }
 
 .prose-content > ol > li::before {
   content: counter(prose-counter) ".";
-  @apply font-mono font-semibold text-accent shrink-0 mt-0;
+  @apply font-mono font-semibold text-accent absolute left-0 top-0;
 }
 
 .prose-content > ul {
