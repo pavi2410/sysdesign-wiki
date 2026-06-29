@@ -3,6 +3,10 @@ dist/
 # generated types
 .astro/
 
+# generated OG font descriptors (see scripts/generate-og-fonts.mjs)
+src/lib/og-fonts.generated.ts
+src/assets/fonts/
+
 # dependencies
 node_modules/
 
