@@ -8,7 +8,7 @@ export const ogImageOptions: ImageResponseOptions = {
   width: OG_WIDTH,
   height: OG_HEIGHT,
   fonts: ogFonts,
-  fontFamilies: ['Fraunces', 'IBM Plex Sans'],
+  fontFamilies: ['Source Serif 4', 'IBM Plex Sans'],
   headers: {
     'Cache-Control': 'public, max-age=31536000, immutable',
   },

@@ -8,13 +8,13 @@ const outputFile = join(root, 'src/lib/og-fonts.generated.ts');
 
 /** Descriptor entries for Takumi's `fonts` option — see https://takumi.kane.tw/docs/typography-and-fonts#loading-fonts */
 const fonts = [
-  { file: 'fraunces-700.woff2', name: 'Fraunces', weight: 700 },
-  { file: 'ibm-plex-sans-400.ttf', name: 'IBM Plex Sans', weight: 400 },
-  { file: 'ibm-plex-sans-600.ttf', name: 'IBM Plex Sans', weight: 600 },
+  { file: 'source-serif-4-700.woff2', name: 'Source Serif 4', weight: 700, googleFamily: 'Source Serif 4:opsz,wght@8..60,700' },
+  { file: 'ibm-plex-sans-400.ttf', name: 'IBM Plex Sans', weight: 400, googleFamily: 'IBM Plex Sans:wght@400' },
+  { file: 'ibm-plex-sans-600.ttf', name: 'IBM Plex Sans', weight: 600, googleFamily: 'IBM Plex Sans:wght@600' },
 ];
 
-async function fetchGoogleFont(family, weight) {
-  const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=swap`;
+async function fetchGoogleFont(googleFamily) {
+  const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googleFamily)}&display=swap`;
   const css = await (await fetch(url)).text();
   const match = css.match(/src:\s*url\((.+?)\)/);
   if (!match) throw new Error(`Font URL not found for ${family}:${weight}`);
@@ -29,7 +29,7 @@ await mkdir(fontsDir, { recursive: true });
 
 const entries = [];
 
-for (const { file, name, weight } of fonts) {
+for (const { file, name, weight, googleFamily } of fonts) {
   const target = join(fontsDir, file);
   let bytes;
 
@@ -37,7 +37,7 @@ for (const { file, name, weight } of fonts) {
     bytes = await readFile(target);
     console.log(`Using cached ${file}`);
   } catch {
-    const response = await fetchGoogleFont(name, weight);
+    const response = await fetchGoogleFont(googleFamily);
     if (!response.ok) throw new Error(`Failed to download ${file}`);
     bytes = Buffer.from(await response.arrayBuffer());
     await writeFile(target, bytes);

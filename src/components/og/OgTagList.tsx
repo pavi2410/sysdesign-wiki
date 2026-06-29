@@ -1,14 +1,19 @@
+import { og } from '@/components/og/og-tokens';
+
 export function OgTagList({ tags }: { tags: string[] }) {
   return (
-    <div tw="flex gap-2.5">
+    <div tw="flex flex-wrap" style={{ gap: 10 }}>
       {tags.map((tag) => (
         <div
           key={tag}
-          tw="text-sm rounded-lg"
+          tw="font-semibold"
           style={{
-            color: '#6b6b6b',
-            backgroundColor: '#f0eeeb',
-            padding: '6px 14px',
+            fontSize: og.tag,
+            color: og.tagText,
+            backgroundColor: og.tagBg,
+            border: `1px solid ${og.border}`,
+            borderRadius: 3,
+            padding: og.tagPad,
           }}
         >
           {tag}

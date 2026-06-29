@@ -1,73 +1,56 @@
 import type { CollectionEntry } from 'astro:content';
+import { OgBackground } from '@/components/og/OgBackground';
 import { OgBranding } from '@/components/og/OgBranding';
+import { OgLabel } from '@/components/og/OgLabel';
 import { OgTagList } from '@/components/og/OgTagList';
+import { og, ogTitleSize } from '@/components/og/og-tokens';
 import { guideCategoryLabels, guideCategoryHexColors } from '@/lib/categories';
 
 export function GuideOgImage({ guide }: { guide: CollectionEntry<'guides'> }) {
-  const color = guideCategoryHexColors[guide.data.category] ?? '#6b4c3b';
-  const tags = guide.data.tags.slice(0, 5);
+  const color = guideCategoryHexColors[guide.data.category] ?? og.accent;
+  const tags = guide.data.tags.slice(0, 4);
+  const titleSize = ogTitleSize(guide.data.title, og.titleLg, og.titleMd, 56);
 
   return (
     <div
       tw="flex flex-col relative overflow-hidden"
       style={{
-        width: 1200,
-        height: 630,
-        backgroundColor: '#fafaf8',
-        fontFamily: 'IBM Plex Sans',
+        width: og.width,
+        height: og.height,
+        backgroundColor: og.paper,
+        fontFamily: og.sans,
       }}
     >
-      <div tw="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: color }} />
+      <OgBackground accent={color} />
       <div
-        tw="absolute rounded-full"
-        style={{
-          top: -80,
-          right: -80,
-          width: 400,
-          height: 400,
-          backgroundColor: color,
-          opacity: 0.05,
-        }}
-      />
-      <div
-        tw="absolute rounded-full"
-        style={{
-          bottom: -60,
-          left: -60,
-          width: 250,
-          height: 250,
-          backgroundColor: color,
-          opacity: 0.03,
-        }}
-      />
-      <div tw="flex flex-col justify-between flex-1" style={{ padding: '56px 64px' }}>
-        <div tw="flex justify-between items-center">
+        tw="flex flex-col justify-between flex-1 relative"
+        style={{ padding: `${og.padY}px ${og.padX}px` }}
+      >
+        <div tw="flex justify-between items-start" style={{ gap: 20 }}>
           <OgBranding />
           <div
-            tw="text-sm font-semibold rounded-full"
+            tw="font-bold shrink-0"
             style={{
+              fontSize: og.badge,
               backgroundColor: color,
               color: 'white',
-              padding: '6px 18px',
+              borderRadius: 3,
+              padding: og.badgePad,
             }}
           >
             {guideCategoryLabels[guide.data.category]}
           </div>
         </div>
-        <div tw="flex flex-col gap-4">
-          <div
-            tw="text-sm font-semibold uppercase"
-            style={{ letterSpacing: '0.15em', color }}
-          >
-            Capability Guide
-          </div>
+        <div tw="flex flex-col" style={{ gap: 24, maxWidth: 1000 }}>
+          <OgLabel color={color}>Capability guide</OgLabel>
           <h1
             tw="font-bold m-0"
             style={{
-              fontFamily: 'Fraunces',
-              fontSize: 60,
-              color: '#1a1a1a',
-              lineHeight: 1.1,
+              fontFamily: og.serif,
+              fontSize: titleSize,
+              color: og.ink,
+              lineHeight: 1.06,
+              letterSpacing: '-0.02em',
             }}
           >
             {guide.data.title}
@@ -75,10 +58,10 @@ export function GuideOgImage({ guide }: { guide: CollectionEntry<'guides'> }) {
           <p
             tw="m-0"
             style={{
-              fontSize: 22,
-              color: '#4a4a4a',
-              lineHeight: 1.4,
-              maxWidth: 700,
+              fontSize: og.body,
+              color: og.inkLight,
+              lineHeight: 1.38,
+              maxWidth: 900,
             }}
           >
             {guide.data.tagline}
